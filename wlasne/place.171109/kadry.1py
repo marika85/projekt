@@ -1,0 +1,4820 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// Perseus Spolka z o.o 
+// Wszystkie prawa zastrzezone
+// 
+// Data utworzenia: 2002.11.27
+//////////////////////////////////////////////////////////////////////////////
+% REJDEFTABLE # tablica z rejestami
+%<< REJDEFTABLE # tablica z rejestami  
+                     
+40,0,0,"KARTOTEK.RXR",place\podatnik,1       # informacje o pracownikach
+,0,0,"HISTORIA.RXR",kadry\historia,1         # zapisy do kartotek-przebieg zatrudnienia
+,0,0,"PRZEBIEG.RXR",kadry\przebieg,1         # zapisy do kartotek-przebieg zatrudnienia
+,0,0,"NIEOBEC.RXR",kadry\nieobec,1           # zapisy do kartotek-nieobecnosci
+,0,0,"NADGODZ.RXR",kadry\nadgodz,1           # zapisy do kartotek-nadgodziny
+,0,0,"URLOPY.RXR",kadry\urlopy,1             # zapisy do kartotek-urlopy
+,0,0,"KDPARAM.RXR",kadry\kdparam,1           # rejestr stawek proc.podatku
+41,0,0,"KODZATR.RXR",kadry\kodzatr,1         # rejestr kodow dla przebiegu zatrudnienia
+42,0,0,"ROZWIAZ.RXR",kadry\rozwiaz,1         # rejestr rozwiazania umowy
+43,0,0,"RODZNIEO.RXR",kadry\rodznieo,1       # rejestr rodzajow nieobecnosci
+46,0,0,"ZAWOD.RXR",kadry\zawod,1             # rejestr zawodow
+45,0,0,"WYKSZT.RXR",kadry\wykszt,1           # rejestr wyksztalcenia
+,0,0,"PPRAP1.RXR",place\pprap1,1             # rejestr danych do raportow Programu Platnika
+,0,0,"KDPARAM.RXR",kadry\kdparam,1           # rejestr stawek proc.podatku
+,0,0,"GUSZAP.RXR",kadry\guszap,1             # zapisy do rejestru "gus"
+// TEMP
+,0,0,"NIEOBEC1.RXR",nieobec1,2               # tmp dla informacje o pracownikach
+,0,0,"KART_DRK.RJR",kart_drk,2               # tmp dla informacje o pracownikach
+,0,0,"HIST_DRK.RJR",hist_drk,2               # tmp dla informacje o pracownikach
+,0,0,"NIEO_DRK.RJR",nieo_drk,2               # tmp dla informacje o pracownikach
+,0,0,"NADG_DRK.RJR",nadg_drk,2               # tmp dla informacje o pracownikach
+,0,0,"PRZE_DRK.RJR",prze_drk,2               # tmp dla informacje o pracownikach
+,0,0,"URL_DRK.RJR",url_drk,2                 # tmp dla informacje o pracownikach
+,0,0,"KARTDRK.RXR",.,2                       # tmp dla informacje o pracownikach
+,0,0,"HISTTMP.RXR",.,2                       # tmp dla HISTORIA.RXR
+,0,0,"PRZEBTMP.RXR",.,2                      # tmp dla BRZEBIEG.RXR
+,0,0,"NIEOBTMP.RXR",.,2                      # tmp dla NIEOBEC.RXR
+,0,0,"NADGODTMP.RXR",.,2                      # tmp dla NADGODZ.RXR
+,0,0,"URLOPTMP.RXR",.,2                      # tmp dla URLOPY.RXR
+,0,0,"KARTDRK1.RXR",.,2                      # tmp wydrukow
+,0,0,"GUSTMP.RXR",.,2                        # tmp dla zapisow - GUS
+,0,0,"GUS_Z.RXR",kadry\gus_z,1               # rejestr danych GUS
+// --------------------
+,,0,"PLC_JUB.RJR",place\plc_jub,1            # nagrody jubileuszowe
+
+// -----------------------------------
+% DIALOG-PASEK2.DLG
+##DEFWINDOW = 11,4,11,75,ACHP,,,,,"Zapisywanie danych. Prosz|e czeka|c !!"
+
+% uzupelnij_sum.alg
+exitalg[0]
+% DISPLAY_PASEK.ALG
+disptlo:
+    if(lp/liczbarekordow < pr/sm) ExitAlg[0]
+  DispText["±"]
+        pr := pr + 1
+    goto disptlo
+
+
+// -------------------------------
+// definicja rejestru
+// ------------------------------
+% KARTDRK.RXR # TEMP
+1 # symbol pola - klucza
+1 # identyfikator klucza
+KARTDRK # nazwa danych
+
+% KARTDRK1.RXR # TEMP
+1 # symbol pola - klucza
+1 # identyfikator klucza
+KARTDRK1 # nazwa danych
+
+% KARTDRK.DBF
+1,string,10,2,1,,N    # symbol  pracownika
+2,string,30,2,2       # Nazwisko
+3,string,15,2         # imie 1
+4,string,15,2         # imie 2
+5,string,20,2         # miejsce zamieszkania
+6,string,10,2         # kod pocztowy
+7,string,20,2         # wojewodztwo,gmina,dzielnica
+8,string,50,2         # ulica
+9,string,10,2         # nr domu
+10,string,5,2         # nr lokalu
+11,Ydate              # data urodzenia
+12,string,20,2        # miejsce urodzenia
+13,string,15,2        # nr dowodu osobistego
+14,string,11          # nr Pesel
+15,string,10          # nr Nip
+16,string,15,2        # imie ojca
+17,string,15,2        # imie matki
+18,string,15          # telefon
+19,string,,416,5      # symbol Urzedu Skarbowego
+20,string,20,2        # poczta
+21,string,15          # faks
+22,string,,496,3      # wydzial
+23,string,,448,4      # STANOWISko
+24,log                # czy naliczac nowe place
+25,log                # czy pobierac podatek
+26,2100               # symbol pracownika w rejestrze kontrahentow
+27,2000,,2            # symbol konto 
+28,dic,,47            # charakter zatrudnienia
+29,kwota              # liczba dni chorobowych w danym roku
+30,string,50,2        # nazwa konta bankowego -1
+31,string,50,2        # numer konta bankowego -1
+32,string,20,2,7      # numer AKT
+33,kwota              # kwota wolna od podatku/miesiac
+34,kwota              # koszt uzyskania przychodow
+35,string,,464,6      # kod tytu|lu ubezpieczenia dla Programu Platnika
+36,kwota              # l.osob do zasilku rodzinnego
+37,kwota              # l.osob do zasilku pielegnacyjnego
+38,string,3           # wymiar czasu pracy 1
+39,string,3           # wymiar czasu pracy 2
+40,string,50,2        # nazwa konta bankowego -2
+41,string,50,2        # numer konta bankowego -2
+42,log                # malzonek do zasilku rodzinnego
+43,kwota              # Kwota wynagrodz.z poprzedniego miejsca pracy
+44,kwota              # Suma podstaw emeryt-rentowa
+45,kwota              # Suma podstaw chorob-wypadk
+46,kwota              # Suma podst.opodatkowania
+47,kwota              # Procent podatku
+48,log                # Czy cala wyplata na konto
+49,kwota              # zaniechanie podatku do wysokosci %
+50,kwota              # Przelec na rachunek 1
+51,kwota              # Przelac na rachunek 2
+60,string,30,2        # Nazwisko panienskie
+61,dic,,111           # Plec
+62,string,,704        # zawod
+63,string,50,2        # charakter pracy
+64,string,50,2        # wyksztalcenie
+65,string,50,2        # Rodzaj wyksztalcenia
+66,string,20,2        # jezyk 1
+67,string,20,2        # jezyk 2
+68,string,20,2        # jezyk 3
+69,string,30,2        # forma naboru pracownika(sposob pozyskania) 
+70,Ydate              # data zatrudnienia
+71,string,20,2        # Gmina/Dzielnica
+72,Ydate              # data wyga|sni|ecia umowy na czas okreslony
+73,Ydate              # badania okresowe (do kiedy sa wazne)
+74,Ydate              # dow.osobisty kiedy wydany 
+75,string,30          # dow.osobisty przez kogo wydany
+76,string,,672        # sposob rozwiazania umowy
+77,Ydate              # data zwolnienia
+78,string,15,2        # Nr legitymacji ubezpieczeniowej
+79,log                # Czy jest to podstawowe miejsce pracy
+80,kwota              # wynagrodzenie podstawowe
+81,string,15,2        # Nr paszportu
+82,log                # Czy jest zatrudniony
+83,ulong              # liczba dni do stazowego
+84,ulong              # liczba lat do stazowego 
+85,ulong              # liczba miesiecy  do stazowego
+86,ulong              # liczba dni do jubileuszowego
+87,ulong              # liczba lat  do jubileuszowego
+88,ulong              # liczba miesiecy  do jubileuszowego
+89,dic,,45            # miesiac, dzien czy godzina dla stawki zaszeregowania
+90,kwota              # zaniechanie podatku do kwoty 
+91,Ydate              # data od kiedy zaniechac podatek
+92,string,20,2        # Powiat
+93,dic,,114           # rodzaj umowy o prace
+94,string,20,2        # miejsce wykonywania pracy
+99,ulong,,,8,,NM      # numer rekordu
+
+% KARTDRK.DIC         # slownik do danych o kliencie
+"sym",1,Estring            # symbol  pracownika
+"nazwisko",2,Estring       # Nazwisko
+"imie1",3,Estring          # imie 1
+"imie2",4,Estring          # imie 2
+"miasto",5,Estring         # miejsce zamieszkania
+"kod",6,Estring            # kod pocztowy
+"wojew",7,Estring          # wojewodztwo,gmina,dzielnica
+"ulica",8,Estring          # ulica
+"dom",9,Estring            # nr domu
+"lokal",10,Estring         # nr lokalu
+"datau",11,Edata           # data urodzenia
+"miejsce_u",12,Estring     # miejsce urodzenia
+"dowod",13,Estring         # nr dowodu osobistego
+"pesel",14,Estring         # nr Pesel
+"nip",15,Estring           # nr Nip
+"im_oj",16,Estring         # imie ojca
+"im_ma",17,Estring         # imie matki
+"telefon",18,Estring       # telefon
+"urzad",19,Estring         # symbol urzedu
+"poczta",20,Estring        # poczta
+"faks",21,Estring          # faks
+"wydzial",22,Estring       # wydzial
+"stanow",23,Estring        # stanowisko
+"pnaliczac",24,Elog        # czy naliczac nowe place
+"ppobierac",25,Elog        # czy pobierac podatek
+"kontrahent",26,Estring    # symbol pracownika w rejestrze kontrahentow
+"konto",27,Estring         # symbol konto 
+"charakter",28,Estring     # charakter zatrudnienia
+"dnichorob",29,Ekwota      # liczba dni chorobowych w danym roku
+"nazwa_bank",30,Estring    # nazwa konta bankowego -1
+"numer_bank",31,Estring    # numer konta bankowego -1
+"numerakt",32,Estring      # numer AKT
+"k_zw",33,Ekwota           # kwota wolna od podatku
+"k_uzys",34,Ekwota         # koszt uzyskania przychodow
+"kodprac",35,Estring       # kod tytu|lu ubezpieczenia dla Programu Platnika
+"os_rodz",36,Ekwota        # l.osob do zasilku rodzinnego
+"os_piel",37,Ekwota        # l.osob do zasilku pielegnacyjny
+"wymiar1",38,Estring       # wymiar czasu pracy 1
+"wymiar2",39,Estring       # wymiar czasu pracy 2
+"nazwa_bank2",40,Estring   # nazwa konta bankowego -2
+"numer_bank2",41,Estring   # numer konta bankowego -2
+"rodzmalzonek",42,Elog     # malzonek do zasilku rodzinnego
+"bo_wyplat",43,Ekwota      # Kwota wynagrodz.z poprzedniego miejsca pracy
+"bo_podst_er",44,Ekwota    # Suma podstaw emeryt-rentowa
+"bo_podst_cw",45,Ekwota    # Suma podstaw chorob-wypadk
+"bo_podstopod",46,Ekwota   # Suma podst.opodatkowania
+"bo_proc",47,Ekwota        # Procent podatku
+"wypdobanku",48,Elog       # czy cala wyplata na konto
+"zaniechanie",49,Ekwota    # zaniechanie podatku do wysokosci %
+"dobanku1",50,Ekwota       # Przelec na rachunek 1
+"dobanku2",51,Ekwota       # Przelac na rachunek 2
+"nazwisko_pan",60,Estring  # Nazwisko panienskie
+"plec",61,Estring          # plec
+"zawod",62,Estring         # zawod
+"charpracy",63,Estring     # charakter pracy
+"wykszt",64,Estring        # wyksztalcenie
+"rodzwykszt",65,Estring    # Rodzaj wyksztalcenia
+"jezyk1",66,Estring        # jezyk 1
+"jezyk2",67,Estring        # jezyk 2
+"jezyk3",68,Estring        # jezyk 3
+"formnaboru",69,Estring    # forma naboru pracownika(sposob pozyskania) 
+"dzatrud",70,Edata         # data zatrudnienia
+"gmina",71,Estring         # Gmina/Dzielnica
+"dwygasumowy",72,Edata     # data wyga|sni|ecia umowy na czas okreslony
+"dbadania",73,Edata        # badania okresowe (do kiedy sa wazne)
+"ddowod",74,Edata          # dow.osobisty kiedy wydany 
+"ktowydal",75,Estring      # dow.osobisty przez kogo wydany
+"rozwumowy",76,Estring     # sposob rozwiazania umowy(slownik)
+"dzwolnien",77,Edata       # data zwolnienia
+"nrlegit",78,Estring       # Nr legitymacji ubezpieczeniowej
+"podstawowe",79,Elog       # Czy jest to podstawowe miejsce pracy
+"wynagrodz",80,Ekwota      # wynagrodzenie podstawowe
+"paszport",81,Estring      # Nr paszportu
+"czyzatrud",82,Elog        # Czy jest zatrudniony
+"dnistaz",83,Ekwota         # liczba dni do stazowego
+"latastaz",84,Ekwota        # liczba lat do stazowego 
+"miesstaz",85,Ekwota        # liczba miesiecy  do stazowego
+"dnijubil",86,Ekwota        # liczba dni do jubileuszowego
+"latajubil",87,Ekwota       # liczba lat  do jubileuszowego
+"miesjubil",88,Ekwota       # liczba miesiecy  do jubileuszowego
+"miegodz",89,Estring        # miesiac, dzien czy godzina dla stawki zaszeregowania
+"kwotazaniech",90,Ekwota    # zaniechanie podatku do kwoty 
+"dzaniech",91,Edata         # data od kiedy zaniechac podatek
+"powiat",92,Estring        # Powiat
+"rodzumowy",93,Estring     # rodzaj umowy o prace
+"miejscepr",94,Estring     # miejsce wykonywania pracy
+"dokid",99,Ekwota          # numer rekordu
+
+% KARTDRK1.DBF
+%< KARTDRK.DBF
+110,kwota             # srednie wynagrodzenie
+111,Ydate,,,2         # data rozpoczecia
+112,Ydate             # data zakonczenia
+113,string,,656       # kod rodzaju zatrudnienia
+114,string,,448       # stanowisko
+115,string,3          # wymiar czasu pracy 1
+116,string,3          # wymiar czasu pracy 2
+117,kwota             # kwota miesiecznego wynagrodzenia z przebiegu
+118,dic,,45           # miesiac, dzien czy godzina dla stawki zaszeregowania
+119,kwota             # liczba dni wykorzyst.urlop wypocz.
+120,Ydate             # wych1
+121,Ydate             # wych2
+122,Ydate             # wych1
+123,Ydate             # wych2
+124,Ydate             # wych1
+125,Ydate             # wych2
+126,Ydate             # wych1
+127,Ydate             # wych2
+128,Ydate             # wych1
+129,Ydate             # wych2
+130,Ydate             # wych1
+131,Ydate             # wych2
+132,Ydate             # wych1
+133,Ydate             # wych2
+134,Ydate             # wych1
+135,Ydate             # wych2
+136,Ydate             # wych1
+137,Ydate             # wych2
+138,Ydate             # wych1
+139,Ydate             # wych2
+140,Ydate             # bezplatny1
+141,Ydate             # bezplatny2
+142,Ydate             # bezplatny1
+143,Ydate             # bezplatny2
+144,Ydate             # bezplatny1
+145,Ydate             # bezplatny2
+146,Ydate             # bezplatny1
+147,Ydate             # bezplatny2
+148,Ydate             # bezplatny1
+149,Ydate             # bezplatny2
+150,Ydate             # bezplatny1
+151,Ydate             # bezplatny2
+152,Ydate             # bezplatny1
+153,Ydate             # bezplatny2
+154,Ydate             # bezplatny1
+155,Ydate             # bezplatny2
+156,Ydate             # bezplatny1
+157,Ydate             # bezplatny2
+158,Ydate             # bezplatny1
+159,Ydate             # bezplatny2
+160,Ydate             # wojsko1
+161,Ydate             # wojsko2
+162,Ydate             # wojsko1
+163,Ydate             # wojsko2
+164,Ydate             # wojsko1
+165,Ydate             # wojsko2
+166,Ydate             # wojsko1
+167,Ydate             # wojsko2
+168,Ydate             # wojsko1
+169,Ydate             # wojsko2
+170,Ydate             # inne1
+171,Ydate             # inne2
+172,Ydate             # inne1
+173,Ydate             # inne2
+174,Ydate             # inne1
+175,Ydate             # inne2
+176,Ydate             # inne1
+177,Ydate             # inne2
+178,Ydate             # inne1
+179,Ydate             # inne2
+180,Ydate             # inne1
+181,Ydate             # inne2
+182,Ydate             # inne1
+183,Ydate             # inne2
+184,Ydate             # inne1
+185,Ydate             # inne2
+186,Ydate             # inne1
+187,Ydate             # inne2
+188,Ydate             # inne1
+189,Ydate             # inne28
+190,kwota	           #urlop- godziny wykorzystane
+191,kwota            # urlop na zadanie - wykorzystane dni
+
+% KARTDRK1.DIC         # slownik do danych o kliencie
+%< KARTDRK.DIC
+"wynsrednie",110,Ekwota    # srednie wynagrodzenie
+"dataod1",111,Edata         # data rozpoczecia
+"datado1",112,Edata         # data zakonczenia
+"kodzatrud1",113,Estring    # kod rodzaju zatrudnienia
+"stanow1",114,Estring       # stanowisko
+"wymiar11",115,Estring      # wymiar czasu pracy 1
+"wymiar21",116,Estring      # wymiar czasu pracy 2
+"wynagrodz1",117,Ekwota     # kwota miesiecznego wynagrodzenia
+"miegodz1",118,Estring      # miesiac, dzien czy godzina dla stawki zaszeregowania
+"ldniurlop",119,Ekwota     # kwota miesiecznego wynagrodzenia
+"wychow10",120,Edata     # 
+"wychow20",121,Edata     # 
+"wychow11",122,Edata     # 
+"wychow21",123,Edata     # 
+"wychow12",124,Edata     # 
+"wychow22",125,Edata     # 
+"wychow13",126,Edata     # 
+"wychow23",127,Edata     # 
+"wychow14",128,Edata     # 
+"wychow24",129,Edata     # 
+"wychow15",130,Edata     # 
+"wychow25",131,Edata     # 
+"wychow16",132,Edata     # 
+"wychow26",133,Edata     # 
+"wychow17",134,Edata     # 
+"wychow27",135,Edata     # 
+"wychow18",136,Edata     # 
+"wychow28",137,Edata     # 
+"wychow19",138,Edata     # 
+"wychow29",139,Edata     # 
+"bezplat10",140,Edata     # 
+"bezplat20",141,Edata     # 
+"bezplat11",142,Edata     # 
+"bezplat21",143,Edata     # 
+"bezplat12",144,Edata     # 
+"bezplat22",145,Edata     # 
+"bezplat13",146,Edata     # 
+"bezplat23",147,Edata     # 
+"bezplat14",148,Edata     # 
+"bezplat24",149,Edata     # 
+"bezplat15",150,Edata     # 
+"bezplat25",151,Edata     # 
+"bezplat16",152,Edata     # 
+"bezplat26",153,Edata     # 
+"bezplat17",154,Edata     # 
+"bezplat27",155,Edata     # 
+"bezplat18",156,Edata     # 
+"bezplat28",157,Edata     # 
+"bezplat19",158,Edata     # 
+"bezplat29",159,Edata     # 
+"wojsko10",160,Edata     # 
+"wojsko20",161,Edata     # 
+"wojsko11",162,Edata     # 
+"wojsko21",163,Edata     # 
+"wojsko12",164,Edata     # 
+"wojsko22",165,Edata     # 
+"wojsko13",166,Edata     # 
+"wojsko23",167,Edata     # 
+"wojsko14",168,Edata     # 
+"wojsko24",169,Edata     # 
+"inne10",170,Edata     # 
+"inne20",171,Edata     # 
+"inne11",172,Edata     # 
+"inne21",173,Edata     # 
+"inne12",174,Edata     # 
+"inne22",175,Edata     # 
+"inne13",176,Edata     # 
+"inne23",177,Edata     # 
+"inne14",178,Edata     # 
+"inne24",179,Edata     # 
+"inne15",180,Edata     # 
+"inne25",181,Edata     # 
+"inne16",182,Edata     # 
+"inne26",183,Edata     # 
+"inne17",184,Edata     # 
+"inne27",185,Edata     # 
+"inne18",186,Edata     # 
+"inne28",187,Edata     # 
+"inne19",188,Edata     # 
+"inne29",189,Edata     # 
+"lgdzurlop",190,Ekwota  #urlop godz wykorzyst
+"ldniurlopz",191,Ekwota  # urlop na zadanie - dni wykorz.
+// ---------------------------------------
+
+% TABLICA-AKCJI
+%< RODZNIEOALGO.XXX
+%< ROZWIAZALGO.XXX
+%< KODZATRALGO.XXX
+%< ZAWODALGO.XXX
+%< WYKSZTALGO.XXX
+%< PPRAP1ALGO.XXX
+%<<TABLICA-AKCJI
+
+// -------------------------------------------
+% PPRAP1.RXR 
+1 # symbol pola - klucza
+1 # identyfikator klucza
+PPRAP1 
+
+
+"Powt|orzony symbol !" 
+"Zmieniasz dane ?"
+"Dodajesz nowe dane ?" 
+"Usun|a|c raport z rejestru ?" 
+"Chcesz doda|c jeszcze jeden  raport  ?" 
+"%s - nie ma takiego raportu w rejestrze.$Czy chcesz doda|c nowy ?" 
+"Nie ma |zadnych  raport|ow w rejestrze !"
+"Rejestr  raport|ow pusty - wstawiasz pierwszy  ?"
+"Nie ma raportu o takim symbolu.$Znale|x|c nast|epny ?"
+"%s - brak raportu o takim symbolu !"
+% PPRAP1.DBF
+%<PODATNIK.DB1
+1,string,10,2,1         # symbol  pracownika
+%<PODATNIK.DB3
+150,string,10,2,10      # symbol raportu
+151,string,8            # identyfikator raportu
+152,string,1,2          # typ identyfikatora(P-PESEL,N-NIP,R-REGON,1-dow.os,2-paszport
+153,string,11,2         # identyfikatora(PESEL,NIP,REGON,dow.os,paszport
+154,Ydate               # data wypelnienia raportu
+156,string,6,2          # wymiar
+157,string,30,2         # Nazwisko stare
+158,string,15,2         # imie 1 stare
+159,Ydate               # data urodzenia stare
+160,string,15,2         # nr dowodu lub paszportu stare
+161,string,11           # nr Pesel stare
+162,string,10           # nr Nip stare
+163,Ydate               # data zmiany stare
+164,string,1,2          # typ identyfikatora(P-PESEL,N-NIP,R-REGON,1-dow.os,2-paszport
+
+% PPRAP1.DIC 
+%<PODATNIK.DIC
+"symrap",150,Estring        # symbol raportu
+"identrap",151,Estring      # identyfikator raportu
+"typid",152,Estring         # typ identyfikatora(P-PESEL,N-NIP,R-REGON,1-dow.os,2-paszport
+"ident",153,Estring         # identyfikatora(PESEL,NIP,REGON,dow.os,paszport
+"datarap",154,Edata         # data wypelnienia raportu
+"wymiar",156,Estring        # wymiar czasu pracy
+"st_nazwisko",157,Estring   # Nazwisko stare
+"st_imie1",158,Estring      # imie 1 stare
+"st_datau",159,Edata        # data urodzenia stare
+"st_ident",160,Estring      # nr dowodu lub paszportu stare
+"st_pesel",161,Estring      # nr Pesel stare
+"st_nip",162,Estring        # nr Nip stare
+"st_dzmiany",163,Edata      # data zmiany stare
+"st_typid",164,Estring      # nr typ identyfikat stare
+
+// --------------------------------------------
+% PLC_JUB.RJR # inicjalizacja rejestru
+100
+1
+"PLC_JUB"
+"PLC_JUB"
+
+"Powt|orzony liczba lat !"
+"Zmieniasz liczb|e lat ?"
+"Czy doda|c te liczb|e lat ?"
+"Czy usun|a|c te liczb|e lat ?"
+"Czy doda|c nast|epn|a liczb|e lat ?"
+"Rekord z t|a liczb|a lat nie istnieje !$Czy doda|c rekord z t|a liczb|a lat ?"
+"Rejestr jest pusty !"
+"Rejestr jest pusty !$Wprowadzasz pierwsz|a liczb|e lat  ?"
+"Nie ma rekordu z t|a liczb|a lat.$Znale|x|c nast|epny ?"
+// --------------------------------------------
+% PLC_JUB.DBF # struktura rekordu
+0,log,,,,,D              # usuwanie "w miejscu"
+100,string,2,2,1,,N      # liczba lat
+110,kwota                # procent wynagrodzenia
+// --------------------------------------------
+% PLC_JUB.DIC # slownik pol rekordu
+"PLC_lat",100,Estring    # symbol pracownika
+"PLC_kwt",110,Ekwota     # linia
+// -------------------------------------------
+% PLC_JUB.BOX # okienko do wprowadzania i modyfikacji danych
+D = "Rejestr do lat jubileuszowych"
+"Liczba pe|lnych lat:",100,A
+"",,T
+"Procent wynagrodzenia:",110,A
+// --------------------------------------------
+% PLC_JUB.CHK # sprawdzanie poprawnosci wybranych pol
+OK := .T.
+ERRMESS := "Pole musi by|c wype|lnione liczb|a!"
+ID := 100
+if (PLC_lat = "") goto error
+if (StringNaLiczbe[PLC_lat] = .) goto error
+goto __OK
+error:
+BEEP[0]
+OK := .N.
+__OK:
+// --------------------------------------------
+% PLC_JUB.BUT # "buttony" do rejestru 
+PRZYCISK_CANCELID = 0
+"%D%odanie lat",5,1
+"%M%odyfikacja lat",4,1   # modyfikacja
+"%U%suni|ecie lat",6,1
+"Pole: @        ",7,1
+@5,0,1               # Koniec
+// --------------------------------------------
+% PLC_JUB.MEN # menu z rubrykami
+D = 30,"Rejestr do nagr|od jubileuszowych",A
+100,,,,6,"Lata"
+110,,,,7,"Procent"
+
+// ---------------------------------------------------------
+// urlopy o pracownikach
+// ---------------------------------------------------------
+// definicja rejestru
+% URLOPTMP.RXR
+1 # symbol pola - klucza
+1 # identyfikator klucza
+URLOPTMP # nazwa danych
+% URLOPY.RXR
+1 # symbol pola - klucza
+1 # identyfikator klucza
+URLOPY # nazwa danych
+% URLOPY.DBF
+//0,log,,,,,D
+%< URLOPTMP.DBF
+% URLOPTMP.DBF
+1,string,20,2,4       # symbol  pracownika
+12,ulong,,,2          # ROK
+13,string,,688        # kod urlopu
+14,string,30,2        # nazwa urlopu
+16,xkwota,,0              # liczba dni urlopu zaleglego pozostale
+17,xkwota,,0              # liczba dni urlopu biezacego pozostale
+18,xkwota,,0              # liczba dni wykorzystanego urlopu  
+19,xkwota,,0              # liczba dni pozostalego urlopu
+99,ulong,,,1          # dowiazanie do naglowka (pole 99)
+20,xkwota,,0              # dni urlopu zaleglego bo
+21,xkwota,,0              # dni urlopu biezacego bo
+22,kwota              # ilosc godzin w dniowce
+23,kwota              # ilosc godzin urlopu zaleglego bo
+24,kwota              # ilosc godzin urlopu biezacego bo
+25,kwota              # ilosc godzin wykorzystanych
+26,kwota              # ilosc godzin do wykorzystania
+27,xkwota,,0              # dni urlopu na zadanie bo
+28,xkwota,,0              # dni urlopu na zadanie wykorzystane
+29,xkwota,,0              # dni urlopu na zadanie do wykorzystania 
+30,kwota              # do wykorzystania godziny zaleglego
+31,kwota              # do wykorzystania godziny biezacego
+12,0,,,3              # klucz zlozony rok (1999)
+1,0,,,3               # plus symbol pracownika
+99,0,,,5
+12,0,,,5
+12,0,,,6		#klucz zlozony rok(RRRR)
+1,0,,,6			# symbol pracownika
+13,0,,,6		# kod nieobecnosci(urlopu)
+% URLOPTMP.DIC,URLOPY.DIC # slownik do danych o kliencie
+"sym",1,Estring            # symbol  pracownika
+"rok",12,Ekwota            # ROK
+"kodurlopu",13,Estring     # kod urlopu
+"nazwaurlopu",14,Estring   # nazwa urlopu
+"ldnizalegly",16,Ekwota    # liczba dni urlopu zaleglego pozostalo
+"ldnibiezacy",17,Ekwota    # liczba dni urlopu biezacego pozostalo
+"ldniwykorz",18,Ekwota     # liczba dni wykorzystanego urlopu  
+"ldnipozost",19,Ekwota     # liczba dni pozostalego urlopu
+"dokidzap",99,Ekwota       # dowiazanie do naglowka (pole 99)
+"ldnizaleglybo",20,Ekwota    # liczba dni urlopu zaleglego z bo
+"ldnibiezacybo",21,Ekwota    # liczba dni urlopu biezacego z bo
+"przelicznik",22,Ekwota              # ilosc godzin w dniowce
+"lgdzzaleglybo",23,Ekwota              # ilosc godzin urlopu zaleglego bo
+"lgdzbiezacybo",24,Ekwota              # ilosc godzin urlopu biezacego bo
+"lgdzwykorz",25,Ekwota              # ilosc godzin wykorzystanych
+"lgdzpozost",26,Ekwota              # ilosc godzin do wykorzystania
+"ldnizadbo",27,Ekwota              # dni urlopu na zadanie bo
+"ldnizadwykorz",28,Ekwota              # dni urlopu na zadanie wykorzystane
+"ldnizadpozost",29,Ekwota              # dni urlopu na zadanie do wykorzystania 
+"lgdzzalegly",30,Ekwota              # do wykorzystania godziny zaleglego
+"lgdzbiezacy",31,Ekwota              # do wykorzystania godziny biezacego
+//
+// ----------------------------------
+// ----------------------------------
+% KODZATR.RXR,XKODZATR.RXR # rejestr plac
+1 # symbol pola - klucza
+1 # identyfikator klucza
+KODZATR # nazwa danych
+# buttony - menu
+# buttony - box
+"Powt|orzony kod !" 
+"Zmieniasz dane ?"
+"Dodajesz nowy kod ?" 
+"Usun|a|c ten kod z rejestru ?" 
+"Chcesz doda|c jeszcze jeden kod ?" 
+"%s - nie ma takiego kodu w rejestrze.$Czy chcesz doda|c nowy ?" 
+"Nie ma |zadnego kodu w rejestrze !"
+"Rejestr kod|ow pusty - wstawiasz pierwszy ?"
+"Nie ma kodu o takim symbolu.$Znale|x|c nast|epny ?"
+"%s - brak kodu o takim symbolu !"
+% KODZATR.DBF
+0,log,,,,,D           # usuwanie "w miejscu"
+1,string,10,2,1,,N    # symbol kodu
+2,string,100,2         # nazwa kodu
+3,log                 # Czy liczyc do jubileuszu
+4,log                 # Czy liczyc do stazu
+% KODZATR.DIC
+"kodzatrud",1,Estring,"Kod"       # symbol kodu
+"nazwakodu",2,Estring,"Nazwa"     # nazwa kodu
+"dojubil",3,Elog,"Jubilusz"       # Czy liczyc do jubileuszu
+"dostazu",4,Elog,"Sta|z"          # Czy liczyc do stazu
+
+% KODZATR.BOX
+D = "Kod zatrudnienia"
+"Kod",1
+"Nazwa",2
+"Do nagrody jubileuszowej",3
+"Do sta|zu",4
+
+// -----------------------------------
+// rejestr nadgodzin
+// -----------------------------------
+
+// definicja rejestru
+% NADGODTMP.RXR
+1 # symbol pola - klucza
+1 # identyfikator klucza
+NADGODTMP # nazwa danych
+
+% NADGODZ.RXR
+1 # symbol pola - klucza
+1 # identyfikator klucza
+NADGODZ # nazwa danych
+% NADGODZ.DBF
+//0,log,,,,,D
+%< NADGODTMP.DBF
+
+% NADGODTMP.DBF
+1,string,20,2,4       # symbol  pracownika
+11,Ydate,,,2          # data dla nadgodzin
+12,string,3        # rodzaj nadgodziny( 50 lub 100)
+13,string,10        #sk³adnik rozliczaj¹cy wynagrodzenie 
+14,string,10           # sk³adnik rozliczajacy dodatek
+15,kwota              # liczba godzin
+16,string,40              # uwagi
+17,string,20,2        # symbol listy plac 
+99,ulong,,,1          # dowiazanie do naglowka (pole 99)
+18,string,10          # rodzaj dodatkowej godziny pracy
+99,0,,,3              # klucz zlozony dowiazanie do naglowka
+11,0,,,3              # plus data rozpoczecia pracy
+
+% NADGODTMP.DIC,NADGODZ.DIC # slownik do danych o nieobecnosciach
+"sym",1,Estring            # symbol  pracownika
+"data",11,Edata          # data wystapienia nadgodzin
+"rodzaj",12,Estring      # rodzaj nadgodziny
+"skladnor",13,Estring    # skladnik rozliczajacy wynagrodzenie
+"skladdod",14,Estring      # skladnik rozliczajacy dodatek
+"lgodz",15,Ekwota        # liczba godzin
+"uwagi",16,Estring      # uwagi
+"lista",17,Estring         # symbol listy plac z zasadniczym
+"dokidzap",99,Ekwota       # dowiazanie do naglowka (pole 99)
+"rodzgodz",18,Estring      # rodzaj ( nadgodzina, dy¾ur itp)
+// -----------------------------------
+// rejestr nieobecnosci
+// -----------------------------------
+
+// definicja rejestru
+% NIEOBTMP.RXR
+1 # symbol pola - klucza
+1 # identyfikator klucza
+NIEOBTMP # nazwa danych
+
+% NIEOBEC.RXR
+1 # symbol pola - klucza
+1 # identyfikator klucza
+NIEOBEC # nazwa danych
+% NIEOBEC.DBF
+//0,log,,,,,D
+%< NIEOBTMP.DBF
+
+% NIEOBTMP.DBF
+1,string,20,2,4       # symbol  pracownika
+11,Ydate,,,2          # data rozpoczecia
+12,Ydate              # data zakonczenia
+13,string,,688        # kod nieobecnosci
+14,string,30,2        # nazwa nieobecnosci
+16,dic,,110           # kod choroby
+17,kwota              # liczba dni kalendarzowych
+18,kwota              # liczba dni roboczych
+19,kwota              # liczba godzin
+20,string,20,2        # symbol listy plac z wynagrodzeniem zasadniczym
+21,dic,,112           # podwiazanie do sposobu liczenia
+22,kwota              # liczba minut
+23,log                # Czy liczyc do jubileuszu
+24,log                # Czy liczyc do stazu
+25,Ydate              # data listy plac
+99,ulong,,,1          # dowiazanie do naglowka (pole 99)
+26,log                # czy urlop na zadanie
+27,string,20,2        # symbol listy plac z uwzgledniona nieobecnoscia
+28,string,30          # kalengrupa
+29,kwota              # podstawa emerytalnego i rentowego i zdrowotnego
+30,log                # czy podlega ubezpieczeniom emerytalnym i rentowym w okresie wychowawczego/macierzynskiego
+31,log                # czy podlega zdrowotnemu w okresie wychowawczego
+32,log                # nieobecnosc anulowana 
+33,string,,480        # kod stowarzyszony - dla wyrownania
+99,0,,,3              # klucz zlozony dowiazanie do naglowka
+11,0,,,3              # plus data rozpoczecia pracy
+1,0,,,5			#klucz- do sprawdzenia czy nalczac podstawe chorobowego symbol pracownika
+27,0,,,5		# symbol listy rozliczajacej nieobecnosc
+11,0,,,5              # data rozpoczecia
+
+% NIEOBTMP.DIC,NIEOBEC.DIC # slownik do danych o nieobecnosciach
+"sym",1,Estring            # symbol  pracownika
+"dataod",11,Edata          # data rozpoczecia
+"datado",12,Edata          # data zakonczenia
+"kodnieob",13,Estring      # kod nieobecnosci
+"nazwanieob",14,Estring    # nazwa nieobecnosci
+"kod_chor",16,Estring      # kod choroby
+"ldnikal",17,Ekwota        # liczba dni kalendarzowych
+"ldnirob",18,Ekwota        # liczba dni roboczych
+"lgodzin",19,Ekwota        # liczba godzin
+"lista",20,Estring         # symbol listy plac z zasadniczym
+"kodalgo",21,Estring       # podwiazanie do sposobu liczenia
+"lminut",22,Ekwota        # liczba minut
+"dojubil",23,Elog          # Czy liczyc do jubileuszu
+"dostazu",24,Elog          # Czy liczyc do stazu
+"datawypl",25,Edata        # data listy plac
+"dokidzap",99,Ekwota       # dowiazaie do naglowka (pole 99)
+"urlnz",26,Elog            # urlop na zadanie
+"lista1",27,Estring         # symbol listy plac z nieobecnoscia
+"kalen",28,Estring          # kalengrupa
+"stawkaw",29,Ekwota        # stawka (wprowadzac gdy rozna od zasiˆku pielegnacyjnego)
+"uer",30,Elog              # czy podlega uzbezpieczeniu emerytalno- rentowemu
+"uz",31,Elog               # czy podlega ubezpieczeniu zdrowotnemu
+"anulowana",32,Elog		#nieobecnosc anulowana
+"koddodatk",33,Estring     # kod dodatkowy dla wyliczenia wyrownania zasilku 
+% NIEOBEC1.RXR
+1 # symbol pola - klucza
+1 # identyfikator klucza
+NIEOBEC1 # nazwa danych
+
+% NIEOBEC1.DBF
+%< NIEOBTMP.DBF
+%< NIEOBEC1.DB1
+
+% NIEOBEC1.DB1
+140,string,50          #
+141,string,30          #
+142,string,30          #
+143,kwota              #
+144,kwota              #
+145,kwota              #
+146,kwota              #
+147,kwota              #
+150,kwota              #
+151,kwota              #
+152,kwota              #
+153,kwota              #
+154,kwota              #
+155,kwota              #
+156,kwota              #
+157,kwota              #
+158,kwota              #
+159,kwota              #
+160,kwota              #
+161,kwota              #
+162,kwota              #
+163,kwota              #
+164,kwota              #
+165,kwota              #
+166,kwota              #
+167,kwota              #
+168,kwota              #
+169,kwota              #
+170,kwota              #
+171,kwota              #
+172,kwota              #
+173,kwota              #
+174,kwota              #
+175,kwota              #
+176,kwota              #
+177,kwota              #
+178,kwota              #
+179,kwota              #
+180,kwota              #
+181,kwota              #
+182,kwota              #
+183,kwota              #
+184,kwota              #
+185,kwota              #
+186,kwota              #
+187,kwota              #
+188,kwota              #
+190,kwota              #
+191,kwota              #
+192,kwota              #
+193,kwota              #
+194,kwota              #
+195,kwota              #
+196,kwota              #
+197,kwota              #
+198,kwota              #
+199,kwota              #
+200,kwota              #
+201,kwota              #
+202,kwota              #
+203,kwota              #
+204,kwota              #
+205,kwota              #
+206,kwota              #
+207,kwota              #
+210,kwota
+211,kwota		# liczba dni roboczych w miesiacu
+% NIEOBEC1.DIC
+%< NIEOBTMP.DIC
+%< NIEOBEC1.DI1
+
+% NIEOBEC1.DI1
+"nazwisko",140,Estring       #
+"imie1",141,Estring          #
+"imie2",142,Estring          #
+"ldniswieto",143,Ekwota      # 
+"ldniwolne",144,Ekwota       # 
+"ldninocne",145,Ekwota       # 
+"ldninadlicz",146,Ekwota     # 
+"ldnidyzur",147,Ekwota       # 
+"dni0",150,Ekwota            # 
+"godzin0",151,Ekwota         # 
+"minut0",152,Ekwota          # 
+"ldnikal0",153,Ekwota        # 
+"ldnikal1",154,Ekwota        # 
+"ldnikal2",155,Ekwota        # 
+"ldnikal3",156,Ekwota        # 
+"ldnikal4",157,Ekwota        # 
+"ldnikal5",158,Ekwota        # 
+"ldnikal6",159,Ekwota        # 
+"ldnikal7",160,Ekwota        # 
+"ldnikal8",161,Ekwota        # 
+"ldnikal9",162,Ekwota        # 
+"ldnikal10",163,Ekwota       # 
+"ldnikal11",164,Ekwota       # 
+"ldnikal12",165,Ekwota       # 
+"ldnikal13",166,Ekwota       # 
+"ldnikal14",167,Ekwota       # 
+"ldnikal15",168,Ekwota       # 
+"ldnikal16",169,Ekwota       # 
+"ldnikal17",170,Ekwota       # 
+"lgodzin0",171,Ekwota        # 
+"lgodzkal1",172,Ekwota        # 
+"lgodzkal2",173,Ekwota        # 
+"lgodzkal3",174,Ekwota        # 
+"lgodzkal4",175,Ekwota        # 
+"lgodzkal5",176,Ekwota        # 
+"lgodzkal6",177,Ekwota        # 
+"lgodzkal7",178,Ekwota        # 
+"lgodzkal8",179,Ekwota        # 
+"lgodzkal9",180,Ekwota        # 
+"lgodzkal10",181,Ekwota       # 
+"lgodzkal11",182,Ekwota       # 
+"lgodzkal12",183,Ekwota       # 
+"lgodzkal13",184,Ekwota       # 
+"lgodzkal14",185,Ekwota       # 
+"lgodzkal15",186,Ekwota       # 
+"lgodzkal16",187,Ekwota       # 
+"lgodzkal17",188,Ekwota       # 
+"ldnirob0",190,Ekwota        # 
+"ldnirob1",191,Ekwota        # 
+"ldnirob2",192,Ekwota        # 
+"ldnirob3",193,Ekwota        # 
+"ldnirob4",194,Ekwota        # 
+"ldnirob5",155,Ekwota        # 
+"ldnirob6",196,Ekwota        # 
+"ldnirob7",197,Ekwota        # 
+"ldnirob8",198,Ekwota        # 
+"ldnirob9",199,Ekwota        # 
+"ldnirob10",200,Ekwota       # 
+"ldnirob11",201,Ekwota       # 
+"ldnirob12",202,Ekwota       # 
+"ldnirob13",203,Ekwota       # 
+"ldnirob14",204,Ekwota       # 
+"ldnirob15",205,Ekwota       # 
+"ldnirob16",206,Ekwota       # 
+"ldnirob17",207,Ekwota       # 
+"lgodzkal0",210,Ekwota
+"ldnirobk",211,Ekwota  	# liczba dni roboczych w miesiacu
+// ----------------------------------
+// do drukowania
+// ----------------------------------
+% URL_DRK.RJR          # pomocniczy rejestr do drukowania definicji deklaracji
+1
+1
+"URL_DRK"
+"URL_DRK"
+% URL_DRK.DBF
+%< KART_DR1.DBF
+%< URL_DR1.DBF
+%< KART_DR2.DBF
+
+% URL_DR1.DBF
+30,string,4              # ROK
+31,string,,688        # kod urlopu
+32,string,30,2        # nazwa urlopu
+33,ulong              # liczba dni urlopu zaleglego
+34,ulong              # liczba dni urlopu biezacego
+35,ulong              # liczba dni wykorzystanego urlopu  
+36,ulong              # liczba dni pozostalego urlopu
+37,ulong              # liczba dni urlopu zaleglego
+38,ulong              # liczba dni urlopu biezacego
+39,ulong             # liczba godz urlopu zaleglego bo
+40,ulong             # liczba godz urlopu biezacego bo
+41,ulong             # liczba godz urlopu zaleglego pozostale
+42,ulong             # liczba godz urlopu biezacego pozostale
+43,ulong             # liczba godz wykorzystanego urlopu
+44,ulong             # liczba godz pozostalego urlopu
+45,ulong             # liczba dni urlopu na rzadanie bo
+46,ulong             # liczba dni urlopu na rzadanie wykorzystana
+47,ulong             # liczba dni urlopu na rzadanie pozostala
+% URL_DRK.DIC
+%< KART_DR1.DIC
+%< URL_DR1.DIC
+%< KART_DR2.DIC
+
+% URL_DR1.DIC
+"rok",30,Estring,"Rok"                          # ROK
+"kodurlopu",31,Estring,"Kod urlopu"            # kod urlopu
+"nazwaurlopu",32,Estring,"Opis urlopu"         # nazwa urlopu
+"ldnizaleglybo",37,Ekwota,"Dni zaleg|le bo"         # liczba dni urlopu zaleglego bo
+"ldnibiezacybo",38,Ekwota,"Dni bie|z|ace bo"        # liczba dni urlopu biezacego bo
+"ldnizalegly",33,Ekwota,"Dni zaleg|le"         # liczba dni urlopu zaleglego pozostale
+"ldnibiezacy",34,Ekwota,"Dni bie|z|ace"        # liczba dni urlopu biezacego pozostale
+"ldniwykorz",35,Ekwota,"Dni urlopu"            # liczba dni wykorzystanego urlopu  
+"ldnipozost",36,Ekwota,"Pozosta|lo dni"            # liczba dni pozostalego urlopu
+"lgdzzaleglybo",39,Ekwota,"Godz zaleg|le bo"    # liczba godz urlopu zaleglego bo
+"lgdzbiezacybo",40,Ekwota,"Godz bie|z|ace bo"   # liczba godz urlopu biezacego bo
+"lgdzzalegly",41,Ekwota,"Godz zaleg|le"         # liczba godz urlopu zaleglego pozostale
+"lgdzbiezacy",42,Ekwota,"Godz bie|z|ace"        # liczba godz urlopu biezacego pozostale
+"lgdzwykorz",43,Ekwota,"Godz urlopu"            # liczba godz wykorzystanego urlopu  
+"lgdzpozost",44,Ekwota,"Pozosta|lo godz"        # liczba godz pozostalego urlopu
+"ldnizadbo",45,Ekwota,"Dni |z|adanie bo"        # liczba dni urlopu na rzadanie bo
+"ldnizadwykorz",46,Ekwota,"Dni |z|adan.wykorzyst." # liczba dni urlopu na rzadanie wykorzystana
+"ldnizadpozost",47,Ekwota,"Dni |z|adanie pozost."  # liczba dni urlopu na rzadanie pozostala
+% URL_DRK.BOX
+%< KART_DR1.BOX
+%< URL_DR1.BOX
+%< KART_DR2.BOX
+
+% URL_DR1.BOX
+"Rok",30,A
+"Kod urlopu",31,A
+"Opis urlopu",32,A
+"Dni zaleg|le bo",37,A
+"Dni bie|z|ace bo",38,A
+"Dni zaleg|le",33,A
+"Dni bie|z|ace",34,A
+"Dni urlopu",35,A
+"Pozosta|lo dni",36,A
+"Godz zaleg|le bo",39,A
+"Godz bie|z|ace bo",40,A
+"Godz zaleg|le",41,A
+"Godz bie|z|ace",42,A
+"Godz urlopu",43,A
+"Pozosta|lo godz",44,A
+"Dni |z|adanie bo",45,A
+"Dni |z|adan.wykorzyst.",46,A
+"Dni |z|adanie pozost.",47,A
+// -----------------------------------
+// Rejestr rodzajow skladnikow plac
+// -----------------------------------
+% RODZNIEO.RXR  # rejestr rodzajow nieobecnosci
+1 # symbol pola - klucza
+1 # identyfikator klucza
+RODZNIEO # nazwa danych
+# buttony - menu
+# buttony - box
+"Powt|orzony symbol !" 
+"Zmieniasz dane ?"
+"Dodajesz nowe dane ?" 
+"Usun|a|c ten rodzaj z rejestru ?" 
+"Chcesz doda|c jeszcze jeden rodzaj ?"
+"%s - nie ma takiego rodzaju w rejestrze.$Czy chcesz doda|c nowy ?" 
+"Nie ma |zadnego rodzaju w rejestrze !"
+"Rejestr rodzaj|ow pusty - wstawiasz pierwszy ?"
+"Nie ma rodzaju o takim symbolu.$Znale|x|c nast|epny ?"
+"%s - brak rodzaju o takim symbolu !"
+
+% RODZNIEO.DBF # rejestr plac - struktura rekordu
+0,log,,,,,D           # usuwanie "w miejscu"
+1,string,10,2,1,,N    # symbol nieobecnosci
+2,string,90,2         # rodzaj niobecnosci
+3,string,,480,3       # symbol zgodny z Programem Platnika (do plac)
+4,dic,,112            #  kod do algorytmow wyliczenia placy zasadniczej
+5,log                 # Czy liczyc do jubileuszu
+6,log                 # Czy liczyc do stazu
+7,string,10,2	      # symbol skladnika rozliczajacego nieobecnosc	
+
+% RODZNIEO.DIC,RODZNIEO-KOLUMNY.DIC # slownik  rejestru plac
+"rodznieo",1,Estring,"Symbol"      # symbol 
+"nazwarodz",2,Estring,"Nazwa"      # rodzaj nieobecnosci
+"rodzsklad",3,Estring,"Rodzaj"     # rodzaj skladnika
+"kodalgo",4,Estring,"Kod"          # kod do algorytmow wyliczenia placy zasadniczej
+"dojubil",5,Elog,"J"               # Czy liczyc do jubileuszu
+"dostazu",6,Elog,"S"               # Czy liczyc do stazu
+"skladnieo",7,Estring,"Sk|ladnik"		# skladnik rozliczajacy nieobecnosc
+
+% RODZNIEO.BOX
+D = "Rodzaje nieobecno|sci"
+"Symbol",1
+"Nazwa",2
+"Rodzaj",3
+"Kod",4
+"Do nagrody jubileuszowej",5
+"Do sta|zu",6
+"Sk|ladnik rozliczaj|acy nieobecno|s|c",7
+// --------------------------------------
+// rejestr zawodow
+// --------------------------------------
+
+% ZAWOD.RXR,XZAWOD.RXR # rejestr kodow zawodow
+1 # symbol pola - klucza
+1 # identyfikator klucza
+ZAWOD # nazwa danych
+# buttony - menu
+# buttony - box
+"Powt|orzony zaw|od !" 
+"Zmieniasz dane ?"
+"Dodajesz nowy zaw|od ?" 
+"Usun|a|c ten zaw|od z rejestru ?" 
+"Chcesz doda|c jeszcze jeden zaw|od ?" 
+"%s - nie ma takiego zawodu w rejestrze.$Czy chcesz doda|c nowy ?" 
+"Nie ma |zadnego zawodu w rejestrze !"
+"Rejestr zawod|ow pusty - wstawiasz pierwszy ?"
+"Nie ma zawodu o takim symbolu.$Znale|x|c nast|epny ?"
+"%s - brak zawodu o takim symbolu !"
+
+% ZAWOD.DBF # zawod  - struktura rekordu
+0,log,,,,,D  
+1,string,50,2,1,,N    # zawod
+2,string,10,2,2       # kod zawodu
+% ZAWOD.DIC # slownik  rejestru
+"zawod",1,Estring        # zawod
+"kod_zawod",2,Estring     # kod zawodu
+% ZAWOD.BOX
+D = "Zaw|od"
+"Zaw|od",1
+"Kod",2
+// --------------------------------------
+// rejestr kodow wyksztalcen
+// --------------------------------------
+
+% WYKSZT.RXR # rejestr plac
+1 # symbol pola - klucza
+1 # identyfikator klucza
+WYKSZT # nazwa danych
+# buttony - menu
+# buttony - box
+"Powt|orzony kod !" 
+"Zmieniasz dane ?"
+"Dodajesz nowy kod ?" 
+"Usun|a|c ten kod z rejestru ?" 
+"Chcesz doda|c jeszcze jeden kod ?" 
+"%s - nie ma takiego kodu w rejestrze.$Czy chcesz doda|c nowy ?" 
+"Nie ma |zadnego kodu w rejestrze !"
+"Rejestr kod|ow pusty - wstawiasz pierwszy ?"
+"Nie ma kodu o takim symbolu.$Znale|x|c nast|epny ?"
+"%s - brak kodu o takim symbolu !"
+
+% WYKSZT.DBF # rejestr  - struktura rekordu
+0,log,,,,,D           # usuwanie "w miejscu"
+1,string,50,2,1,,N    # WYKSZT
+2,string,2,2,2       # kod wyksztalcenia
+% WYKSZT.DIC # slownik  rejestru
+"wykszt",1,Estring        # WYKSZT
+"kod_wykszt",2,Estring        # kod WYKSZT
+
+% WYKSZT.BOX
+D = "Wykszta|lcenie"
+"Nazwa",1
+"Kod",2
+// ---------------------------------------
+// sposoby rozwiazania umowy
+// ---------------------------------------
+
+% ROZWIAZ.RXR # rejestr plac
+1 # symbol pola - klucza
+1 # identyfikator klucza
+ROZWIAZ # nazwa danych
+# buttony - menu
+# buttony - box
+"Powt|orzony kod !" 
+"Zmieniasz dane ?"
+"Dodajesz nowy kod ?" 
+"Usun|a|c ten kod z rejestru ?" 
+"Chcesz doda|c jeszcze jeden kod ?" 
+"%s - nie ma takiego kodu w rejestrze.$Czy chcesz doda|c nowy ?" 
+"Nie ma |zadnego kodu w rejestrze !"
+"Rejestr kod|ow pusty - wstawiasz pierwszy ?"
+"Nie ma kodu o takim symbolu.$Znale|x|c nast|epny ?"
+"%s - brak kodu o takim symbolu !"
+
+% ROZWIAZ.DBF # rejestr  - struktura rekordu
+0,log,,,,,D           # usuwanie "w miejscu"
+1,string,35,2,1,,N    # symbol sposobu rozwiazania umowy
+2,string,50,2         # sposob rozwiazania umowy
+
+% ROZWIAZ.DIC # slownik  rejestru
+"rozwiaz",1,Estring     # symbol sposobu rozwiazania umowy
+"sposob",2,Estring     # sposob rozwiazania umowy
+
+// -------------------------------------
+% KART_DR1.DBF
+1,string,20,2,2       # symbol  pracownika
+2,string,30,2,9       # Nazwisko
+3,string,15,2         # imie 1
+4,string,15,2         # imie 2
+5,log                 # Czy pracownik jest zatrudniony
+6,string,,496,3       # wydzial
+7,string,,448,4       # STANOWISko
+
+% KART_DR2.DBF
+108,log                 # Czy jest to podstawowe miejsce pracy
+109,string,20,2,7       # numer AKT
+110,dic,,111           # Plec
+111,Ydate              # data zatrudnienia
+112,Ydate              # data zwolnienia
+113,string,30,2        # sposob rozwiazania umowy(slownik)
+114,Ydate              # umowa na czas okreslony (kiedy wygasa)
+115,kwota              # wynagrodzenie podstawowe
+116,string,20,2        # miejsce zamieszkania
+117,string,10,2        # kod pocztowy
+118,string,20,2        # wojewodztwo,gmina,dzielnica
+119,string,20,2        # Gmina/Dzielnica
+120,string,20,2        # poczta
+121,string,30,2        # ulica
+122,string,5,2         # nr domu
+123,string,5,2         # nr lokalu
+124,Ydate              # data urodzenia
+125,string,20,2        # miejsce urodzenia
+126,string,15,2        # nr dowodu osobistego
+127,Ydate              # dow.osobisty kiedy wydany 
+128,string,30,2        # dow.osobisty przez kogo wydany
+129,string,15,2        # Nr paszportu
+130,string,11          # nr Pesel
+131,string,10          # nr Nip
+132,string,15,2        # imie ojca
+133,string,15,2        # imie matki
+134,string,15          # telefon
+135,string,15          # faks
+136,string,,416,5      # symbol Urzedu Skarbowego
+137,string,,464,6      # kod tytu|lu ubezpieczenia dla Programu Platnika
+138,dic,,47            # charakter zatrudnienia
+139,string,50,2        # nazwa konta bankowego -1
+140,string,50,2        # numer konta bankowego -1
+141,kwota              # l.osob do zasilku rodzinnego
+142,kwota              # l.osob do zasilku pielegnacyjnego
+143,string,3           # wymiar czasu pracy 1
+144,string,3           # wymiar czasu pracy 2
+145,string,50,2        # nazwa konta bankowego -2
+146,string,50,2        # numer konta bankowego -2
+147,log                # malzonek do zasilku rodzinnego
+148,string,30,2        # Nazwisko panienskie
+149,string,,704        # zawod
+150,string,50,2        # charakter pracy
+151,string,50,2        # wykszta|lcenie
+152,string,50,2        # Rodzaj wyksztalcenia
+153,string,20,2        # jezyk 1
+154,string,20,2        # jezyk 2
+155,string,20,2        # jezyk 3
+156,string,30,2        # forma naboru pracownika(sposob pozyskania) 
+157,Ydate              # badania okresowe (do kiedy sa wazne)
+158,string,15,2        # Nr legitymacji ubezpieczeniowej
+159,dic,,45            # miesiac, dzien czy godzina dla stawki zaszeregowania
+198,string,70,,1       # Klucz
+199,ulong,,,8,,NM      # numer rekordu
+160,Ydate              # szkolenia bhp (do kiedy sa wazne)
+
+% KART_DR1.DIC
+"sym",1,Estring,"Symbol"                        # symbol  pracownika
+"nazwisko",2,Estring,"Nazwisko"                 # Nazwisko
+"imie1",3,Estring,"Imie 1"                      # imie 1
+"imie2",4,Estring,"Imie 2"                      # imie 2
+"czyzatrud",5,Elog,"Czy zatrudniony"            # Czy jest satrudniony
+"wydzial",6,Estring,"Kom|orka org."             # wydzial
+"stanow",7,Estring,"Stanowisko"                 # stanowisko
+
+% KART_DR1.BOX
+"Symbol pracownika:",1
+"Nazwisko:",2
+"Imie 1.:",3
+"Czy zatrudniony:",5
+"Wydzia|l:",6
+"Stanowisko:",7
+% KART_DR2.DIC
+"podstawowe",108,Elog,"Podst.miejsce pracy"      # Czy jest to podstawowe miejsce pracy
+"numerakt",109,Estring,"Numer AKT"               # numer AKT
+"plec",110,Estring,"P|le|c"                      # plec
+"dzatrud",111,Edata,"D.zatrudnienia"             # data zatrudnienia
+"dzwolnien",112,Edata,"D.zwolnienia"             # data zwolnienia
+"rozwumowy",113,Estring,"Spos.rozwi|az.umowy"    # sposob rozwiazania umowy(slownik)
+"dwygasumowy",114,Edata,"D.ko|nca umowy"         # umowa na czas okreslony (kiedy wygasa)
+"wynagrodz",115,Ekwota,"Wynagrodz.podst."        # wynagrodzenie podstawowe
+"miasto",116,Estring,"Miejsce zamieszk."         # miejsce zamieszkania
+"kod",117,Estring,"Kod pocz."                    # kod pocztowy
+"wojew",118,Estring,"Wojew|odztwo"               # wojewodztwo,gmina,dzielnica
+"gmina",119,Estring,"Gmina"                      # Gmina/Dzielnica
+"poczta",120,Estring,"Poczta"                    # poczta
+"ulica",121,Estring,"Ulica"                      # ulica
+"dom",122,Estring,"Nr domu"                      # nr domu
+"lokal",123,Estring,"Nr lok."                    # nr lokalu
+"datau",124,Edata,"D.urodz"                      # data urodzenia
+"miejsce_u",125,Estring,"Miejsce urodz."         # miejsce urodzenia
+"dowod",126,Estring,"Dow|od osobisty"            # nr dowodu osobistego
+"ddowod",127,Edata,"D.wyd.dowodu"                # dow.osobisty kiedy wydany 
+"ktowydal",128,Estring,"Kto wyda|l dow|od"       # dow.osobisty przez kogo wydany
+"paszport",129,Estring,"Nr paszportu"            # Nr paszportu
+"pesel",130,Estring,"Nr Pesel"                   # nr Pesel
+"nip",131,Estring,"Nr Nip"                       # nr Nip
+"im_oj",132,Estring,"Imie ojca"                  # imie ojca
+"im_ma",133,Estring,"Imie matki"                 # imie matki
+"telefon",134,Estring,"Telefon"                  # telefon
+"faks",135,Estring,"Faks"                        # faks
+"urzad",136,Estring,"Urz|ad"                    # symbol urzedu
+"kodprac",137,Estring,"Kod tyt.ubezpiecz."       # kod tytu|lu ubezpieczenia dla Programu Platnika
+"charakter",138,Estring,"Charakter zatrud"       # charakter zatrudnienia
+"nazwa_bank",139,Estring,"Konto bankowego-1"     # nazwa konta bankowego -1
+"numer_bank",140,Estring,"Nr rachunku-1"         # numer konta bankowego -1
+"os_rodz",141,Ekwota,"L.os|ob-zas.rodz."         # l.osob do zasilku rodzinnego
+"os_piel",142,Ekwota,"L.os|ob-zas.piel."         # l.osob do zasilku pielegnacyjny
+"wymiar1",143,Estring,"Wymiar1"                  # wymiar czasu pracy 1
+"wymiar2",144,Estring,"Wymiar2"                  # wymiar czasu pracy 2
+"nazwa_bank2",145,Estring,"Konto bankowe-2"      # nazwa konta bankowego -2
+"numer_bank2",146,Estring,"Nr rachunku-2"        # numer konta bankowego -2
+"rodzmalzonek",147,Elog,"Ma|l|zonek-zas.rodz."   # malzonek do zasilku rodzinnego
+"nazwisko_pan",148,Estring,"Nazwisko panie|nskie"# Nazwisko panienskie
+"zawod",149,Estring,"Zaw|od"                     # zawod
+"charpracy",150,Estring,"Charakter pracy"        # charakter pracy
+"wykszt",151,Estring,"Wykszta|lcenie"            # wykszta|lcenie
+"rodzwykszt",152,Estring,"Rodzaj wykszta|lcenia" # Rodzaj wyksztalcenia
+"jezyk1",153,Estring,"J|ezyk 1"                  # jezyk 1
+"jezyk2",154,Estring,"J|ezyk 2"                  # jezyk 2
+"jezyk3",155,Estring,"J|ezyk 3"                  # jezyk 3
+"formnaboru",156,Estring,"Forma naboru"          # forma naboru pracownika(sposob pozyskania) 
+"dbadania",157,Edata,"D.bada|n"                  # badania okresowe (do kiedy sa wazne)
+"nrlegit",158,Estring,"Nr legit.ubezpiecz."      # Nr legitymacji ubezpieczeniowej
+"miegodz",159,Estring,"Stawka na:"               # miesiac, dzien czy godzina dla stawki zaszeregowania
+"rejklucz",198,Estring,"Symbol klucza"           # klucz
+"dokid",199,Ekwota,"Numer"                       # numer rekordu
+"dwygasbhp",160,Edata,"BHP"			# data waznosci szkolenia bhp
+// ---------------------------------
+
+% KART_DRK.RJR          # pomocniczy rejestr do drukowania definicji deklaracji
+1
+1
+"KART_DRK"
+% KART_DRK.DBF
+%< KART_DR1.DBF
+%< KART_DR2.DBF
+
+% KART_DRK.DIC
+%< KART_DR1.DIC
+%< KART_DR2.DIC
+
+% KART_DRK.box
+"Symbol:",1
+"Nazwisko:",2
+"Imie 1.:",3
+"Imie 2.:",4
+"Czy zatrudniony:",5
+"Kom|orka organizacyjna:",6
+"Stanowisko:",7
+%< KART_DR2.BOX
+% KART_DR2.BOX
+"Podstawowe miejsce pracy:",108
+"Numer AKT:",109
+"P|le|c:",110
+"Data zatrudnienia:",111
+"Data zwolnienia:",112
+"Spos|ob rozwi|azania stosunku pracy:",113
+"Data ko|nca umowy:",114
+"Wynagrodzenie podstawowe:",115
+"Rodzaj stawki wynagrodzenia:",159
+"Wymiar1:",143             
+"Wymiar2:",144
+"Miejsce zamieszkania:",116
+"Kod pocztowy:",117
+"Wojew|odztwo:",118
+"Gmina:",119
+"Poczta:",120
+"Ulica:",121
+"Nr domu:",122
+"Nr lokalu:",123
+"Data urodzenia:",124
+"Miejsce urodzenia:",125
+"Urz|ad:",136
+"Kod tytu|lu ubezpieczenia:",137
+"Charakter zatrudnienia",138
+"Liczba os|ob-zas.rodz.:",141
+"Liczba os|ob-zas.piel.:",142
+"Ma|l|zonek-zas.rodz.:",147
+"Zawod",149
+"Wykszta|lcenie:",151
+"Rodzaj wykszta|lcenia:",152
+"J|ezyk 1.:",153
+"jezyk 2.:",154
+"jezyk 3.:",155
+"Data wa|zno|sci bada|n:",157
+"Nr legitymacji ubezpieczeniowej:",158 
+"Data wa|zno|sci szkolenia BHP:",160
+// ------------------------------
+// historia zatrudnienia
+// ------------------------------
+// --------
+% HISTTMP.RXR
+1 # symbol pola - klucza
+1 # identyfikator klucza
+HISTTMP # nazwa danych
+% HISTORIA.RXR
+1 # symbol pola - klucza
+1 # identyfikator klucza
+HISTORIA # nazwa danych
+% HISTORIA.DBF
+//0,log,,,,,D
+%< HISTTMP.DBF
+% HISTTMP.DBF
+1,string,20,2,4       # symbol  pracownika
+11,Ydate,,,2          # data rozpoczecia
+12,Ydate              # data zakonczenia
+13,string,50,2        # pracodawca
+14,string,,672        # sposob rozwiazania umowy
+15,log                # Czy wchodzi do nagrody jubileusz.
+16,log                # Czy wchodzi do dodatku stazowego
+19,ulong              # liczba lat pracy
+20,ulong              # liczba miesiecy pracy
+21,ulong              # liczba dni pracy
+22,ulong              # liczba lat urlop bezplatny
+23,ulong              # liczba miesiecy urlop bezplatny
+24,ulong              # liczba dni urlop bezplatny
+99,ulong,,,1          # dowiazanie do naglowka (pole 99)
+99,0,,,3              # klucz zlozony dowiazanie do naglowka
+11,0,,,3              # plus data rozpoczecia pracy
+
+% HISTTMP.DIC,HISTORIA.DIC # slownik do danych o kliencie
+"sym",1,Estring            # symbol  pracownika
+"dataod",11,Edata          # data rozpoczecia
+"datado",12,Edata          # data zakonczenia
+"pracod",13,Estring        # pracodawca
+"rozwiazanie",14,Estring   # sposob rozwiazania umowy
+"jubileusz",15,Elog        # Czy wchodzi do nagrody jubileusz.
+"stazowy",16,Elog          # Czy wchodzi do dodatku stazowego
+"lata",19,Ekwota           # liczba lat pracy
+"miesiace",20,Ekwota       # liczba miesiecy  pracy
+"dni",21,Ekwota            # liczba dni  pracy
+"latabez",22,Ekwota        # liczba lat urlop bezplatny
+"miesiacebez",23,Ekwota    # liczba miesiecy urlop bezplatny
+"dnibez",24,Ekwota         # liczba dni urlop bezplatny
+"dokidzap",99,Ekwota       # dowiazanie do naglowka (pole 99)
+
+% HIST_DRK.RJR          # pomocniczy rejestr do drukowania historii zatrudnienia
+1
+1
+"HIST_DRK"
+"HIST_DRK"
+% HIST_DRK.DBF
+%< KART_DR1.DBF
+%< HIST_DR1.DBF
+%< KART_DR2.DBF
+
+% HIST_DR1.DBF
+30,Ydate              # data rozpoczecia
+31,Ydate              # data zakonczenia
+32,string,50,2        # pracodawca
+33,string,,672        # sposob rozwiazania umowy
+34,log                # Czy wchodzi do nagrody jubileusz.
+35,log                # Czy wchodzi do dodatku stazowego
+36,ulong              # liczba lat pracy
+37,ulong              # liczba miesiecy pracy
+38,ulong              # liczba dni pracy
+39,ulong              # liczba lat urlop bezplatny
+40,ulong              # liczba miesiecy urlop bezplatny
+41,ulong              # liczba dni urlop bezplatny
+
+% HIST_DRK.DIC
+%< KART_DR1.DIC
+%< HIST_DR1.DIC
+%< KART_DR2.DIC
+
+% HIST_DR1.DIC
+"dataod",30,Edata,"Data rozpocz|ecia pracy"                     # data rozpoczecia
+"datado",31,Edata,"Data zako|nczenia pracy"                     # data zakonczenia
+"pracod",32,Estring,"Pracodawca"                                # pracodawca
+"rozwiazanie",33,Estring,"Spos|ob rozwi|azania umowy"           # sposob rozwiazania umowy
+"jubileusz",34,Elog,"Czy wchodzi do nagrody jubileuszowej"      # Czy wchodzi do nagrody jubileusz.
+"stazowy",35,Elog,"Czy wchodzi do dodatku sta|zowego"           # Czy wchodzi do dodatku stazowego
+"lata",36,Ekwota,"Liczba lat pracy"                             # liczba lat pracy
+"miesiace",37,Ekwota,"Liczba miesi|ecy  pracy"                  # liczba miesiecy  pracy
+"dni",38,Ekwota,"Liczba dni  pracy"                             # liczba dni  pracy
+"latabez",39,Ekwota,"Liczba lat urlopu bezp|latnego"            # liczba lat urlop bezplatny
+"miesiacebez",40,Ekwota,"Liczba miesi|ecy urlopu bezp|latnego"  # liczba miesiecy urlop bezplatny
+"dnibez",41,Ekwota,"Liczba dni urlopu bezp|latnego"             # liczba dni urlop bezplatny
+
+% HIST_DRK.BOX
+%< KART_DR1.BOX
+%< HIST_DR1.BOX
+%< KART_DR2.BOX
+
+% HIST_DR1.BOX
+"Data pocz|atku",30,A
+"Data ko|nca",31,A
+"Pracodawca",32,A
+"Spos|ob rozwiazania umowy",33,A
+"Czy wchodzi do jubileuszu",34,A
+"Czy wchodzi dostazowy",35,A
+"Liczba lat pracy",36,A
+"Liczba miesi|ecy pracy",37,A
+"Liczba dni pracy",38,A
+"Liczba lat urlopu bezp|latnego",39,A
+"Liczba miesi|ecy urlopu bezp|latnego",40,A
+"Liczba dni urlopu bezp|latnego",41,A
+
+// ----------------------------------
+// definicja rejestru z parametrami
+// ----------------------------------
+
+
+% KDPARAM.RXR,XKDPARAM.RXR # rejestr opisow
+100 # symbol pola - klucza
+1 # identyfikator klucza
+KDPARAM # nazwa danych
+# buttony - menu
+# buttony - box
+"Powt|orzona pozycja !" 
+"Zmieniasz dane?"
+"Dodajesz nowe dane ?" 
+"Usun|a|c dane z rejestru ?" 
+"Chcesz doda|c  ?" 
+"%s - nie ma takiego rekordu w rejestrze.$Czy chcesz doda|c nowy ?" 
+"Nie ma |zadnych danych w rejestrze !"
+"Rejestr pusty - wstawiasz|a pozycj|e ?"
+"Nie ma danych o takim symbolu.$Znale|x|c nast|epne ?"
+"%s - brak danych o takim symbolu !"
+
+% KDPARAM.DBF # rejestr STAWEK PODATKOWYCH - struktura rekordu
+0,log,,,,,D            # usuwanie "w miejscu"
+100,string,2,,1,,N     # rok podatkowy
+101,Ydate              # data urodzenia
+
+% KDPARAM.DIC # slownik do danych o kliencie
+"rokpod",100,Estring      # rok podatkowy
+"aktualizacja",101,Edata  # data urodzenia
+
+// -----------------------------------
+// przebieg zatrudnienia
+// -----------------------------------
+% PRZEBTMP.RXR
+1 # symbol pola - klucza
+1 # identyfikator klucza
+PRZEBTMP # nazwa danych
+% PRZEBIEG.RXR
+1 # symbol pola - klucza
+1 # identyfikator klucza
+PRZEBIEG # nazwa danych
+% PRZEBIEG.DBF
+//0,log,,,,,D
+%< PRZEBTMP.DBF
+% PRZEBTMP.DBF
+1,string,20,2,4       # symbol  pracownika
+11,ydate,,,2          # data rozpoczecia
+12,ydate              # data zakonczenia
+13,string,,656        # kod rodzaju zatrudnienia
+14,string,,448        # stanowisko
+15,string,3           # wymiar czasu pracy 1
+16,string,3           # wymiar czasu pracy 2
+17,kwota              # kwota miesiecznego wynagrodzenia, pozycja1
+18,string,50,2        # opis kodu zatrudnienia
+19,string,,672        # powod zakonczenia okresu zatrunienia
+20,string,50,2        # dodatkowy opis
+21,dic,,45            # miesiac, dzien czy godzina dla stawki zaszeregowania
+22,dic,,114           # rodzaj umowy
+23,Ydate              # data konca umowy na czas okreslony
+99,ulong,,,1          # dowiazanie do naglowka (pole 99)
+24,kwota              # dodatek funkcyjny ,pozycja2 
+25,kwota              # pozycja3
+26,string,,193         # skladnik powiazany z pozycja1
+27,string,,193         # skladnik powiazany z pozycja2
+28,string,,193         # skladnik powiazany z pozycja3
+29,kwota              # pozycja4
+30,string,,193         # skladnik powiazany z pozycja4
+31,kwota              # pozycja5
+32,string,,193         # skladnik powiazany z pozycja5
+33,kwota              # pozycja6
+34,string,,193         # skladnik powiazany z pozycja6
+35,kwota              # pozycja7
+36,string,,193         # skladnik powiazany z pozycja7
+37,kwota              # pozycja8
+38,string,,193         # skladnik powiazany z pozycja8
+39,kwota              # pozycja9
+40,string,,193         # skladnik powiazany z pozycja9
+41,kwota              # pozycja10
+42,string,,193         # skladnik powiazany z pozycja10
+43,log                # anulowany 
+44,string,30	      # harmonogram	
+99,0,,,3              # klucz zlozony dowiazanie do naglowka
+11,0,,,3              # plus data rozpoczecia pracy
+1,0,,,5
+11,0,,,5
+% PRZEBTMP.DIC,PRZEBIEG.DIC # slownik do danych o kliencie
+"sym",1,Estring            # symbol  pracownika
+"dataod",11,Edata          # data rozpoczecia
+"datado",12,Edata          # data zakonczenia
+"kodzatrud",13,Estring     # kod rodzaju zatrudnienia
+"stanow",14,Estring        # stanowisko
+"wymiar1",15,Estring       # wymiar czasu pracy 1
+"wymiar2",16,Estring       # wymiar czasu pracy 2
+"wynagrodz",17,Ekwota      # kwota miesiecznego wynagrodzenia
+"opiszatrud",18,Estring    # opis kodu zatrudnienia
+"zakonczen",19,Estring     # powod zakonczenia okresu zatrunienia
+"opis",20,Estring          # dodatkowy opis
+"miegodz",21,Estring       # miesiac, dzien czy godzina dla stawki zaszeregowania
+"rodzumowy",22,Estring     # rodzaj umowy
+"dataumowy",23,Edata       # data konca umowy na czas okreslony
+"dokidzap",99,Ekwota       # dowiazanie do naglowka (pole 99)
+"funkcyjny",24,Ekwota       # funkcyjny, skladnik2
+"pozycja3",25,Ekwota         # pozycja3
+"skladnik1",26,Estring      # skladnik powiazany z pozycja1
+"skladnik2",27,Estring      # skladnik powiazany z pozycja2
+"skladnik3",28,Estring      # skladnik powiazany z pozycja3
+"pozycja4",29,Ekwota         # pozycja4
+"skladnik4",30,Estring      # skladnik powiazany z pozycja4
+"pozycja5",31,Ekwota         # pozycja5
+"skladnik5",32,Estring      # skladnik powiazany z pozycja5
+"pozycja6",33,Ekwota         # pozycja6
+"skladnik6",34,Estring      # skladnik powiazany z pozycja6
+"pozycja7",35,Ekwota         # pozycja7
+"skladnik7",36,Estring      # skladnik powiazany z pozycja7
+"pozycja8",37,Ekwota         # pozycja8
+"skladnik8",38,Estring      # skladnik powiazany z pozycja8
+"pozycja9",39,Ekwota         # pozycja9
+"skladnik9",40,Estring      # skladnik powiazany z pozycja9
+"pozycja10",41,Ekwota         # pozycja10
+"skladnik10",42,Estring      # skladnik powiazany z pozycja10
+"anulowana",43,Elog          # anulowany( odpowiedniosc do nieobec)
+"kalengrupa",44,Estring		# harmonogram
+% PRZE_DRK.RJR          # pomocniczy rejestr do drukowania definicji deklaracji
+1
+1
+"PRZE_DRK"
+"PRZE_DRK"
+% PRZE_DRK.DBF
+%< KART_DR1.DBF
+%< PRZE_DR1.DBF
+%< KART_DR2.DBF
+
+% PRZE_DR1.DBF
+30,Ydate              # data rozpoczecia
+31,Ydate              # data zakonczenia
+32,string,,656        # kod rodzaju zatrudnienia
+33,string,,448        # stanowisko
+34,string,3           # wymiar czasu pracy 1
+35,string,3           # wymiar czasu pracy 2
+36,kwota              # kwota miesiecznego wynagrodzenia
+37,string,50,2        # opis kodu zatrudnienia
+38,dic,,45            # miesiac, dzien czy godzina dla stawki zaszeregowania
+39,dic,,114           # rodzaj umowy
+40,Ydate              # data konca umowy na czas okreslony
+50,kwota              # pozycja2
+51,kwota              # pozycja3
+52,string,,193           # skladnik powiazany z pozycja1
+53,string,,193           # skladnik powiazany z pozycja2
+54,string,,193           # skladnik powiazany z pozycja3
+55,kwota              # pozycja4
+56,string,,193           # skladnik powiazany z pozycja4
+57,kwota              # pozycja5
+58,string,,193           # skladnik powiazany z pozycja5
+59,kwota              # pozycja6
+60,string,,193           # skladnik powiazany z pozycja6
+61,kwota              # pozycja7
+62,string,,193           # skladnik powiazany z pozycja7
+63,kwota              # pozycja8
+64,string,,193           # skladnik powiazany z pozycja8
+65,kwota              # pozycja9
+66,string,,193           # skladnik powiazany z pozycja9
+67,kwota              # pozycja10
+68,string,,193           # skladnik powiazany z pozycja10
+69,string,25		#harmonogram
+% PRZE_DRK.DIC
+%< KART_DR1.DIC
+%< PRZE_DR1.DIC
+%< KART_DR2.DIC
+
+% PRZE_DR1.DIC
+"dataod",30,Edata,"Data od"                             # data rozpoczecia
+"datado",31,Edata,"Data do"                             # data zakonczenia
+"kodzatrud",32,Estring,"Kod rodzaju zatrudnienia"       # kod rodzaju zatrudnienia
+"stanow",33,Estring,"Stanowisko"                        # stanowisko
+"wymiar1",34,Estring,"Wymiar czasu pracy 1"             # wymiar czasu pracy 1
+"wymiar2",35,Estring,"Wymiar czasu pracy 2"             # wymiar czasu pracy 2
+"wynagrodz1",36,Ekwota,"Kwota wynagrodzenia"            # kwota miesiecznego wynagrodzenia
+"opiszatrud",37,Estring,"Opis kodu zatrudnienia"        # opis kodu zatrudnienia
+"miegodz1",38,Estring,"Miesiac, dzien czy godzina"      # miesiac, dzien czy godzina dla stawki zaszeregowania
+"rodzumowy1",39,Estring,"Rodzaj umowy"                  # rodzaj umowy
+"dataumowy1",40,Edata,"Data ko|nca umowy"               # data ko|nca umowy
+"funkcyjny",50,Ekwota,"Dod. funkcyjny"                    # funkcyjny,skladnik2
+"pozycja3",51,Ekwota,"Element wyn.3"                    # pozycja3
+"skladnik1",52,Estring,"Sk|ladnik1"                     # sk|ladnik powiazany z pozycja1
+"skladnik2",53,Estring,"Sk|ladnik2"                     # sk|ladnik powiazany z pozycja2
+"skladnik3",54,Estring,"Sk|ladnik3"                     # sk|ladnik powiazany z pozycja3
+"pozycja4",55,Ekwota,"Element wyn.4"                    # pozycja4
+"skladnik4",56,Estring,"Sk|ladnik4"                     # sk|ladnik powiazany z pozycja4
+"pozycja5",57,Ekwota,"Element wyn.5"                    # pozycja5
+"skladnik5",58,Estring,"Sk|ladnik5"                     # sk|ladnik powiazany z pozycja5
+"pozycja6",59,Ekwota,"Element wyn.6"                    # pozycja6
+"skladnik6",60,Estring,"Sk|ladnik6"                     # sk|ladnik powiazany z pozycja6
+"pozycja7",61,Ekwota,"Element wyn.7"                    # pozycja7
+"skladnik7",62,Estring,"Sk|ladnik7"                     # sk|ladnik powiazany z pozycja7
+"pozycja8",63,Ekwota,"Element wyn.8"                    # pozycja8
+"skladnik8",64,Estring,"Sk|ladnik8"                     # sk|ladnik powiazany z pozycja8
+"pozycja9",65,Ekwota,"Element wyn.9"                    # pozycja9
+"skladnik9",66,Estring,"Sk|ladnik9"                     # sk|ladnik powiazany z pozycja9
+"pozycja10",67,Ekwota,"Element wyn.10"                    # pozycja10
+"skladnik10",68,Estring,"Sk|ladnik10"                     # sk|ladnik powiazany z pozycja10
+"kalengrupa",69,Estring,"Harmonogram"			#harmonogram
+% PRZE_DRK.BOX
+%< KART_DR1.box
+%< PRZE_DR1.BOX
+%< KART_DR2.BOX
+
+% PRZE_DR1.BOX
+"Data pocz|atku: ",30,A
+"Data ko|nca: ",31,A
+"Kod rodzaju zatrudnienia",32,A
+"Stanowisko",33,A
+"Harmonogram",69,A
+"Wymiar czasu pracy 1",34,A
+"Wymiar czasu pracy 2",35,A
+"Kwota wynagrodzenia",36,A
+"Sk|ladnik 1:",52,A
+"Opis kodu zatrudnienia",37,A
+"Miesiac, dzien czy godzina",38,A
+"Rodzaj umowy",39,A
+"Element wynagrodzenia 2:",50,A
+"Sk|ladnik 2:",53,A
+"Element wynagrodzenia 3:",51,A
+"Sk|ladnik 3:",54,A
+"Element wynagrodzenia 4:",55,A
+"Sk|ladnik 4:",56,A
+"Element wynagrodzenia 5:",57,A
+"Sk|ladnik 5:",58,A
+"Element wynagrodzenia 6:",59,A
+"Sk|ladnik 6:",60,A
+"Element wynagrodzenia 7:",61,A
+"Sk|ladnik 7:",62,A
+"Element wynagrodzenia 8:",63,A
+"Sk|ladnik 8:",64,A
+"Element wynagrodzenia 9:",65,A
+"Sk|ladnik 9:",66,A
+"Element wynagrodzenia 10:",67,A
+"Sk|ladnik 10:",68,A
+// ------------------------------------------
+// aktualne dane o przebiegu zatrudnienia
+// ------------------------------------------
+
+% POBIERZ-AKTUALNE-DANE-Z-PRZEBIEGU.ALG
+    if(not(RejOp["PP:ZnajdzRek",sym])) ExitAlg[1]
+    rozwumowy := ""
+    dzwolnien := ''
+    czyzatrud := .N.
+    stanow    := ""
+    kalengrupa := ""
+    wymiar1   := ""
+    wymiar2   := ""
+    rodzumowy := ""
+    wynagrodz := .
+    miegodz   := ""
+    funkcyjny := .
+    pozycja3 := .
+    pozycja4 := .
+    pozycja5 := .
+    pozycja6 := .
+    pozycja7 := .
+    pozycja8 := .
+    pozycja9 := .
+    pozycja10 := .
+    skladnik1 := ""
+    skladnik2 := ""
+    skladnik3 := ""
+    skladnik4 := ""
+    skladnik5 := ""
+    skladnik6 := ""
+    skladnik7 := ""
+    skladnik8 := ""
+    skladnik9 := ""
+    skladnik10 := ""
+    data_poczk := ''
+petla:
+    if(Not(RejWezP_S["PP:sym"] == sym)) ExitAlg[0]
+    dataod    := RejWezP_D["PP:dataod"]
+    datado    := RejWezP_D["PP:datado"]
+    if(dataod > d_dzisiaj) goto next
+    if(Not(dataod > d_dzisiaj)and (datado = '')) goto ok_przebieg
+    if(Not(dataod > d_dzisiaj)and (datado > d_dzisiaj)) goto ok_przebieg
+// to chyba powoduje zerowanie danych
+    if(RejWezP_S["PP:zakonczen"]="") goto dalej1
+//
+    if(dzwolnien='') goto pomin1
+    if(dzwolnien > datado) goto dalej1
+pomin1:
+// to jest zmiana sposobu zwalniania pracownika 
+//      - dotychczas zwol.nastepowalo w dniu konca okresu przebiegu pracy
+//      - obecnie na nastepny dzien
+    if(Not(datado < d_dzisiaj)) czyzatrud := .T.
+    if(Not(datado < d_dzisiaj)) goto dalej1
+// tu sprawdzenie czy chronologia przebiegow
+    if(not(data_poczk='') and  data_poczk>dataod) goto dalej1
+    data_poczk := dataod
+    dzwolnien := datado
+    rozwumowy := RejWezP_S["PP:zakonczen"]
+    czyzatrud := .N.
+    stanow    := RejWezP_S["PP:stanow"]
+    kalengrupa := RejWezP_S["PP:kalengrupa"]
+    wymiar1   := RejWezP_S["PP:wymiar1"]
+    wymiar2   := RejWezP_S["PP:wymiar2"]
+    rodzumowy := RejWezP_S["PP:rodzumowy"]
+    wynagrodz := RejWezP_K["PP:wynagrodz"]
+    miegodz   := RejWezP_S["PP:miegodz"]
+    funkcyjny := RejWezP_K["PP:funkcyjny"]
+    pozycja3 := RejWezP_K["PP:pozycja3"]
+    pozycja4 := RejWezP_K["PP:pozycja4"]
+    pozycja5 := RejWezP_K["PP:pozycja5"]
+    pozycja6 := RejWezP_K["PP:pozycja6"]
+    pozycja7 := RejWezP_K["PP:pozycja7"]
+    pozycja8 := RejWezP_K["PP:pozycja8"]
+    pozycja9 := RejWezP_K["PP:pozycja9"]
+    pozycja10 := RejWezP_K["PP:pozycja10"]
+    skladnik1 := RejWezP_S["PP:skladnik1"]
+    skladnik2 := RejWezP_S["PP:skladnik2"]
+    skladnik3 := RejWezP_S["PP:skladnik3"]
+    skladnik4 := RejWezP_S["PP:skladnik4"]
+    skladnik5 := RejWezP_S["PP:skladnik5"]
+    skladnik6 := RejWezP_S["PP:skladnik6"]
+    skladnik7 := RejWezP_S["PP:skladnik7"]
+    skladnik8 := RejWezP_S["PP:skladnik8"]
+    skladnik9 := RejWezP_S["PP:skladnik9"]
+    skladnik10 := RejWezP_S["PP:skladnik10"]
+dalej1:
+    goto next
+ok_przebieg:
+// tu sprawdzenie czy chronologia przebiegow
+    if(not(data_poczk='') and  data_poczk>dataod) goto next
+    data_poczk := dataod
+        czyzatrud := .T.
+        rozwumowy := ""
+        dzwolnien := ''
+        stanow    := RejWezP_S["PP:stanow"]
+        kalengrupa := RejWezP_S["PP:kalengrupa"]
+        wymiar1   := RejWezP_S["PP:wymiar1"]
+        wymiar2   := RejWezP_S["PP:wymiar2"]
+        rodzumowy := RejWezP_S["PP:rodzumowy"]
+        wynagrodz := RejWezP_K["PP:wynagrodz"]
+        miegodz   := RejWezP_S["PP:miegodz"]
+    funkcyjny := RejWezP_K["PP:funkcyjny"]
+    pozycja3 := RejWezP_K["PP:pozycja3"]
+    pozycja4 := RejWezP_K["PP:pozycja4"]
+    pozycja5 := RejWezP_K["PP:pozycja5"]
+    pozycja6 := RejWezP_K["PP:pozycja6"]
+    pozycja7 := RejWezP_K["PP:pozycja7"]
+    pozycja8 := RejWezP_K["PP:pozycja8"]
+    pozycja9 := RejWezP_K["PP:pozycja9"]
+    pozycja10 := RejWezP_K["PP:pozycja10"]
+    skladnik1 := RejWezP_S["PP:skladnik1"]
+    skladnik2 := RejWezP_S["PP:skladnik2"]
+    skladnik3 := RejWezP_S["PP:skladnik3"]
+    skladnik4 := RejWezP_S["PP:skladnik4"]
+    skladnik5 := RejWezP_S["PP:skladnik5"]
+    skladnik6 := RejWezP_S["PP:skladnik6"]
+    skladnik7 := RejWezP_S["PP:skladnik7"]
+    skladnik8 := RejWezP_S["PP:skladnik8"]
+    skladnik9 := RejWezP_S["PP:skladnik9"]
+    skladnik10 := RejWezP_S["PP:skladnik10"]
+  ExitAlg[0]
+next:
+  if(RejOp["PP:WezNastepnyRek",""]) goto petla
+  ExitAlg[0]
+
+// ----------------------------------
+// konwersja danych
+// ----------------------------------
+% konwersjarej_kadr.alg
+//okalert["kadry"]
+rejop["A:otworzrejsprawdz","KARTOTEK.RXR"]
+rejop["a:zamknijrej",""]
+rejop["A:otworzrejsprawdz","HISTORIA.RXR"]
+rejop["a:zamknijrej",""]
+rejop["A:otworzrejsprawdz","PRZEBIEG.RXR"]
+rejop["B:otworzrej","kartotek.rxr"]
+rejop["A:zmienkluczrej","4"]
+if(not(rejop["A:wezpierwszyrek",""])) goto zamknij_prze
+if(not(pustepole["A:kalengrupa"])) goto zamknij_prze
+if(not(rejop["B:wezpierwszyrek",""])) goto zamknij_prze
+petla_b:
+pracownik := rejwezp_s["b:sym"]
+kalengrupa := rejwezp_s["b:kalengrupa"]
+if(kalengrupa="") kalengrupa := "<podstawowy>"
+if(not(rejop["A:znajdzrek",pracownik])) goto nastepny_b
+petla_a:
+rejwstawp_s["A:kalengrupa",kalengrupa]
+if(rejop["A:weznastepnyrekn",""]) goto petla_a
+nastepny_b:
+if(rejop["b:weznastepnyrek",""]) goto petla_b
+zamknij_prze:
+rejop["a:zamknijrej",""]
+rejop["b:zamknijrej",""]
+rejop["A:otworzrejsprawdz","NIEOBEC.RXR"]
+rejop["a:zamknijrej",""]
+rejop["A:otworzrejsprawdz","NADGODZ.RXR"]
+rejop["a:zamknijrej",""]
+rejop["A:otworzrejsprawdz","URLOPY.RXR"]
+rejop["a:zamknijrej",""]
+rejop["A:otworzrejsprawdz","RODZNIEO.RXR"]
+rejop["a:zamknijrej",""]
+
+// ----------------------------------
+// Weryfikacja powiazan pracownikow
+// ----------------------------------
+% POWIAZANIA_PRACOWNIKOW.ALG
+ rejop["A:otworzrejsprawdz","KARTOTEK.RXR"]
+ rejop["B:otworzrej","kartotek.rxr"]
+if(not(rejop["A:wezpierwszyrek",""])) goto zamknij
+petla_a:
+symbol := ""
+if(pustepole["A:sym_prac"]) goto nastepny_a
+symx := rejwezp_s["a:sym_prac"]
+petla_b:
+if(rejop["b:znajdzrek",symx]) goto jest_b
+rejwstawp_s["a:sym_prac",symx]
+goto nastepny_a
+jest_b: 
+symbol := rejwezp_s["b:sym"]
+if(not(pustepole["b:sym_prac"])) symx := rejwezp_s["b:sym_prac"] 
+if(not(pustepole["b:sym_prac"])) goto petla_b
+rejwstawp_s["a:sym_prac",rejwezp_s["b:sym"]]
+nastepny_a:
+if(rejop["a:weznastepnyrek",""]) goto petla_a
+rejop["a:zmienkluczrej","10"]
+rejop["a:wezpierwszyrek",""]
+klucz := rejwezp_s["a:sym"]
+kluczx := rejwezp_s["a:sym_prac"]
+petla_a1:
+if(pustepole["a:sym_prac"]) goto nastepny_a1
+if(rejop["b:znajdzrek",rejwezp_s["a:sym_prac"]]) goto nastepny_a1
+if(rejwezp_s["a:sym_prac"]==kluczx) rejwstawp_s["a:sym_prac",klucz]
+if(rejwezp_s["a:sym"]==klucz) rejwstawp_s["a:sym_prac",""]
+nastepny_a1:
+if(not(rejop["a:weznastepnyrek",""])) goto zamknij
+if(kluczx==rejwezp_s["a:sym_prac"]) goto petla_a1
+klucz := rejwezp_s["a:sym"]
+kluczx := rejwezp_s["a:sym_prac"]
+goto petla_a1
+zamknij:
+rejop["A:zamknijrej",""]
+rejop["B:zamknijrej",""]
+// ----------------------------------
+// ----------------------------------
+// Weryfikacja zbiorczego wykazu urlopow
+// ----------------------------------
+% weryfikuj_urlopy_zbiorcze.alg
+  rejop["c:otworzrejsprawdz","KARTOTEK.RXR"]
+  rejop["xx:otworzrejsprawdz","nieobec.rxr"]
+  rejop["xx:zmienkluczrej","4"]
+  rejop["bb:otworzrejsprawdz","urlopy.rxr"]
+  RejOp["BB:ZmienKluczRej","3"]
+  if(not(rejop["c:wezpierwszyrek",""])) goto koniec
+ustawczekajinfo["start2","przygotowanie danych"]
+petla_prac:
+  klucz := ""
+  nazwarodz := ""
+  l_godz := .
+  l_dni := .
+  l_zad := .
+  pracownik := rejwezp_s["c:sym"]
+  if(not(rejop["xx:znajdzrek",pracownik])) goto nastepny_prac
+petla_xx:
+  rodzsklad  := ""
+  xrodzskl   := RejWezP_S["xx:kodnieob"]
+  czy_zadanie := rejwezp_l["xx:urlnz"]
+  CallAlg["POBIERZ-RODZAJ-NIEOBECNOSCI"]
+ if(Not(rodzsklad="1")) goto nastepny_xx
+  rok := StrCut[ToStr["#RejWezP_D[""xx:dataod""]#S"],0,2]
+  if(rok<"80")      klucz := "20"+rok
+  if(Not(rok<"80")) klucz := "19"+rok
+ if(not(RejOp["BB:ZnajdzRek",klucz+"*"+pracownik])) goto nastepny_xx
+  l_godz := l_godz+ rejwezp_k["xx:lgodzin"]
+  l_dni  := l_dni + RejWezP_K["xx:ldnirob"]
+  if(czy_zadanie) l_zad := l_zad+RejWezP_K["xx:ldnirob"]
+ nastepny_xx:
+ if(rejop["xx:weznastepnyrekn",""]) goto petla_xx 
+ if(not(RejOp["BB:ZnajdzRek",klucz+"*"+pracownik])) goto nastepny_prac
+ustawczekajinfo["nastepny",""+pracownik]
+ xrejwstawp_k["bb:ldniwykorz",l_dni]
+ xrejwstawp_k["bb:lgdzwykorz",l_godz]
+ xrejwstawp_k["bb:ldnizadwykorz",l_zad]
+ xrejwstawp_k["bb:ldnipozost",rejwezp_k["bb:ldnizaleglybo"] + rejwezp_k["bb:ldnibiezacybo"] - l_dni]
+ xrejwstawp_k["bb:lgdzpozost",rejwezp_k["bb:lgdzzaleglybo"] + rejwezp_k["bb:lgdzbiezacybo"] - l_godz]
+ l_dni_zal :=  rejwezp_k["bb:ldnizaleglybo"] - l_dni
+ l_godz_zal :=  rejwezp_k["bb:lgdzzaleglybo"] - l_godz
+ xrejwstawp_k["bb:ldnizalegly",l_dni_zal]
+ if(l_dni_zal<0) xrejwstawp_k["bb:ldnizalegly",0]
+ xrejwstawp_k["bb:lgdzzalegly",l_godz_zal]
+ if(l_godz_zal<0) xrejwstawp_k["bb:lgdzzalegly",0]
+ xrejwstawp_k["bb:ldnibiezacy",rejwezp_k["bb:ldnibiezacybo"]]
+ xrejwstawp_k["bb:lgdzbiezacy",rejwezp_k["bb:lgdzbiezacybo"]]
+ if(l_dni_zal<0) xrejwstawp_k["bb:ldnibiezacy",rejwezp_k["bb:ldnibiezacybo"] +l_dni_zal]
+ if(l_godz_zal<0)xrejwstawp_k["bb:lgdzbiezacy",rejwezp_k["bb:lgdzbiezacybo"] +l_godz_zal]
+ xrejwstawp_k["bb:ldnizadpozost",rejwezp_k["bb:ldnizadbo"]-l_zad]
+ rejop["bb:zapiszrek",""] 
+nastepny_prac:
+if(rejop["c:weznastepnyrek",""]) goto petla_prac
+koniec:
+ustawczekajinfo["stop",""]
+rejop["c:zamknijrej",""]
+rejop["xx:zamknijrej",""]
+rejop["bb:zamknijrej",""]
+//
+// aktualizacja danych w kartotece
+// ----------------------------------
+
+% KARTOTEK-AKTUALIZACJA-DANYCH.ALG
+  RejOp["PR:OtworzRej1","KDPARAM.RXR"]
+  if(Not(RejOp["PR:WezPierwszyRek",""])) goto dodaj
+  if(Not(RejWezP_D["PR:aktualizacja"] = d_dzisiaj)) goto aktualizuj
+  RejOp["PR:ZamknijRej",""]
+  ExitAlg[0]
+dodaj:
+  RejOp["PR:DodajRek",""]
+aktualizuj:
+  RejOp["AA:OtworzRejsprawdz","KARTOTEK.RXR"]
+  RejOp["PP:OtworzRejsprawdz","PRZEBIEG.RXR"]
+  RejOp["PP:ZmienKluczRej","4"]
+ if(Not(RejOp["AA:WezPierwszyRek",""])) goto koniec
+petla:
+  sym := RejWezP_S["AA:sym"]
+  if(CallAlg["POBIERZ-AKTUALNE-DANE-Z-PRZEBIEGU"]=1) goto next
+  CallAlg["ZAPISZ-AKTUALNE-DANE-DO-KARTOTEKI"]
+next:
+  if(RejOp["AA:WezNastepnyRek",""]) goto petla
+koniec:
+  RejOp["AA:ZamknijRej",""]
+  RejOp["PP:ZamknijRej",""]
+  RejWstawP_D["PR:aktualizacja",d_dzisiaj]
+  RejOp["PR:ZamknijRej",""]
+  
+% ZAPISZ-AKTUALNE-DANE-DO-KARTOTEKI.ALG
+  xRejWstawP_L["AA:czyzatrud",czyzatrud]
+  xRejWstawP_D["AA:dzwolnien",dzwolnien]
+  xRejWstawP_S["AA:rozwumowy",rozwumowy]
+  xRejWstawP_S["AA:stanow",stanow]
+  xRejWstawP_S["AA:wymiar1",wymiar1]
+  xRejWstawP_S["AA:wymiar2",wymiar2]
+  xRejWstawP_S["AA:rodzumowy",rodzumowy]
+  xRejWstawP_K["AA:wynagrodz",wynagrodz]
+  xRejWstawP_S["AA:miegodz",miegodz]
+  RejOp["AA:ZapiszRek",""]
+// =========================
+// pomocnicze
+// =========================
+
+% USUN-SKLADNIKI.ALG
+// zamiast rejestru b zmienna rejb
+  RejOp[rejb+"ZmienKluczRej","1"]
+// usuwaj zapisy
+  petla:
+    if(not RejOp[rejb+"ZnajdzRek",dokid_txt]) ExitAlg[0]
+    RejOp[rejb+"UsunRek",""]
+  goto petla
+
+% PRZENIES-POLA.ALG
+// zamiana "T: na rej+", b na rejb
+  RejOp[rej+"ZmienKluczRej","2"]
+  if(Not(RejOp[rej+"WezPierwszyRek",""]))  ExitAlg[0]
+  dokid := RejwezP_K["A:dokid"]
+petla:
+  RejOp[rejb+"DodajRek",""]
+  RejOp[rej+"PrzeniesPola",rejb]
+  RejOp[rejb+"ZapiszRek",""]
+  RejWstawP_K[rejb+"dokidzap",dokid]
+  if(RejOp[rej+"WezNastepnyRek",""]) goto petla
+
+% SPRAWDZ-CZY-SA-DATY.ALG
+  if(dataod='' or datado='') ExitAlg[1]
+  ExitAlg[0]    
+
+% SPRAWDZ-PRZEDZIAL-DAT.ALG
+  if(dataod>datado) ExitAlg[0]
+  ExitAlg[1]
+
+% POBIERZ-RODZAJ-NIEOB.ALG
+  if(Not(RejOp["EA:ZnajdzRek",xrodzskl])) ExitAlg[0]
+  kd  := RejWezP_S["EA:rodzsklad"]  
+  
+% POBIERZ-RODZAJ-NIEOBECNOSCI.ALG
+  RejOp["EA:OtworzRej1","RODZNIEO.RXR"]
+  if(Not(RejOp["EA:ZnajdzRek",xrodzskl])) goto zamknij
+      rodzsklad  := RejWezP_S["EA:rodzsklad"]
+      nazwarodz  := RejWezP_S["EA:nazwarodz"]
+      kodalgo    := RejWezP_S["EA:kodalgo"]
+      dostazu    := RejWezP_L["EA:dostazu"]
+      dojubil    := RejWezP_L["EA:dojubil"]
+      skladnieo  := RejWezP_S["EA:skladnieo"]
+zamknij:
+  RejOp["EA:ZamknijRej",""]
+  
+% UZUPELNIJ-DANE-PRACOWNIKA.ALG
+    RejWstawP_S[rej+"sym",RejwezP_S["A:sym"]]
+    RejWstawP_K[rej+"dokidzap",RejwezP_K["A:dokid"]]
+    
+% UZUPELNIJ-DANE-PRACOWNIKA1.ALG
+    RejWstawP_S[rej+"sym",RejwezP_S["sym"]]
+    RejWstawP_K[rej+"dokidzap",RejwezP_K["dokid"]]
+    
+% KONTROLA-PRZENIKANIA-PRZEDZIALOW-CZASU.ALG
+   dataod1   := RejWezP_D[rej+"dataod"]
+   datado1   := RejWezP_D[rej+"datado"]
+   if(datado1='') datado1   := dataod1
+   pracownik   := RejWezP_S[rej+"sym"]
+   if(datado1='') datado1 := d_dzisiaj
+   przenikanie := .N.
+   r_rekpos11    := RejWezP_K[rej+"RejestrRekPos"]
+   RejOp[rej+"ZmienKluczRej","2"]
+   RejOp[rej+"WezpierwszyRek",""]
+petla:
+  if(rejwezp_l[rej+"anulowana"]) goto next
+  r_rekpos1    := RejWezP_K[rej+"RejestrRekPos"]
+  if(r_rekpos1=r_rekpos11) goto next
+  if(Not(pracownik==RejWezP_S[rej+"sym"])) goto next
+  if(CallAlg["SPRAWDZ-PRZENIKANIE"]=1) przenikanie := .T.
+  if(przenikanie) OkAlert["Wprowadzone przedzia|ly czasu pokrywaj|a si|e$z przedzia|lami wprowadzonymi wcze|sniej !!"]
+  if(przenikanie) goto koniec
+next:
+  if(RejOp[rej+"WezNastepnyRek",""]) goto petla
+koniec:
+  RejOp[rej+"UstawRekPos",ToStr["#r_rekpos11#S"]]
+  if(przenikanie) ExitAlg[1]
+  ExitAlg[0]
+
+% SPRAWDZ-PRZENIKANIE.ALG
+ dataod2   := RejWezP_D[rej+"dataod"]
+ datado2   := RejWezP_D[rej+"datado"]
+ if(datado2='') datado2   := dataod2
+ iF((dataod1>dataod2)and(dataod1>datado2)) ExitAlg[0]
+ iF((datado1<dataod2)and(datado1<datado2)) ExitAlg[0]
+ ExitAlg[1]
+
+% PODZIAL-NIEOBECNOSCI.ALG
+defzmiennaK["lgodz_sum",0]
+defzmiennaK["lmin_sum",0]
+defzmiennaK["ldni_sum",0]
+  dataod1 := RejWezP_D["N:dataod"]
+  datado1 := RejWezP_D["N:datado"]
+petla1:
+  datado  := ''
+  dataod2 := ''
+  datado2 := ''
+  mies    := A_DATE[dataod1,"M"]
+  datado  := dataod1
+petla:
+  datado  := datado+1
+  if(datado>datado1) ExitAlg[0]
+  if(mies=A_DATE[datado,"M"]) goto petla
+  datado := datado-1
+  if(Not(datado=datado1)) dataod2 := datado+1
+  if(Not(datado=datado1)) datado2 := datado1
+  if(Not(datado=datado1)) datado1 := datado
+  CallAlg["DODAJE-KOLEJNY-PRZEDZIAL"]
+  goto petla1
+
+% DODAJE-KOLEJNY-PRZEDZIAL.ALG
+  RejOp["TX:DodajRek",""]
+  RejOp["N:PrzeniesPola","TX:"]
+  xRejWstawP_K["TX:dokidzap",RejWezP_K["A:dokid"]]
+  RejOp["TX:ZapiszRek",""]
+  xRejWstawP_D["TX:dataod",dataod1]
+  xRejWstawP_D["TX:datado",datado1]
+  dataod   := dataod1
+  datado   := datado1
+  ldnikal  := 0
+  ldnirob  := 0
+  lminut   := 0
+  lgodzin  := 0
+  lminuts   := 0
+  lgodzins  := 0
+  lminutw   := 0
+  lgodzinw  := 0
+  CallAlg["PRZYGOTUJ-DANE-DLA-KALENDARZA"]
+  xRejWstawP_K["TX:ldnikal",ldnikal]
+  xRejWstawP_K["TX:ldnirob",ldnirob]
+  xRejWstawP_K["TX:lminut",lminut]
+  xRejWstawP_K["TX:lgodzin",lgodzin]
+  ldni_sum := ldni_sum+ldnirob
+  lgodz_sum := lgodz_sum+lgodzin
+  lmin_sum := lmin_sum+lminut
+  RejOp["TX:ZapiszRek",""]
+// okalert["kolejny przedzial dataod="+rejwezp_d["tx:dataod"]+"$datado="+rejwezp_d["tx:datado"]+"$godziny="+rejwezp_k["tx:lgodzin"]]
+  dataod1 := dataod2
+  datado1 := datado2
+
+% ZAPISZ-OSTATNI-PRZEDZIAL.ALG
+  xRejWstawP_D["N:dataod",dataod1]
+  xRejWstawP_D["N:datado",datado1]
+  dataod := dataod1
+  datado := datado1
+  ldnikal := 0
+  ldnirob := 0
+  lminut  := 0
+  lgodzin := 0
+  lminuts   := 0
+  lgodzins  := 0
+  lminutw   := 0
+  lgodzinw  := 0
+  CallAlg["PRZYGOTUJ-DANE-DLA-KALENDARZA"]
+  xRejWstawP_K["N:ldnikal",ldnikal]
+  xRejWstawP_K["N:ldnirob",ldnirob]
+  xRejWstawP_K["N:lgodzin",lgodzin]
+  xRejWstawP_K["N:lminut",lminut]
+  RejOp["N:ZapiszRek",""]
+
+% ZAPISZ-OSTATNI-PRZEDZIAL-TX.ALG
+    xRejWstawP_D["TX:dataod",dataod1]
+    xRejWstawP_D["TX:datado",datado1]
+        dataod := dataod1
+        datado := datado1
+        ldnikal := 0
+        ldnirob := 0
+        lminut  := 0
+        lgodzin := 0
+  lminuts   := 0
+  lgodzins  := 0
+  lminutw   := 0
+  lgodzinw  := 0
+  CallAlg["PRZYGOTUJ-DANE-DLA-KALENDARZA"]
+    xRejWstawP_K["TX:ldnikal",ldnikal]
+    xRejWstawP_K["TX:ldnirob",ldnirob]
+    xRejWstawP_K["TX:lgodzin",lgodzin]
+    xRejWstawP_K["TX:lminut",lminut]
+  RejOp["TX:ZapiszRek",""]
+
+% SPRAWDZ-DLUGOSC-CHOROBY-W-ROKU.ALG
+  RejOp["EA:OtworzRej1","RODZNIEO.RXR"]
+  kd       := ""
+  xrodzskl := RejWezP_S["N:kodnieob"]
+  CallAlg["POBIERZ-RODZAJ-NIEOB"]
+  RejOp["EA:ZamknijRej",""]
+//  IF(kd="313" or kd="314" or kd="331" or kd="332" or kd="333" or kd="334" or kd="312") goto sprawdz_dni
+  IF(kd="331" or kd="332" or kd="312") goto sprawdz_dni
+  ExitAlg[1]
+  sprawdz_dni:
+  if(kd="312") goto sprawdz_zop
+  IF(ch_ldni=. or ch_ldni=0) ExitAlg[1]
+  IF(Not(ch_suma < ch_ldni)) ExitAlg[1]
+  if(Not(ch_suma+l_dni_razem > ch_ldni)) ExitAlg[1]
+  ExitAlg[0]
+  sprawdz_zop:
+  IF(ch_ldnizop=. or ch_ldnizop=0) ExitAlg[1]
+  IF(Not(ch_sumazop < ch_ldnizop)) ExitAlg[1]
+  if(Not(ch_sumazop+l_dni_razem > ch_ldnizop)) ExitAlg[1]
+  ExitAlg[0]
+
+% SPRAWDZ-DLUGOSC-CHOROBY-W-PRZEDZIALE.ALG
+  RejOp["EA:OtworzRej1","RODZNIEO.RXR"]
+        kd       := ""
+        xrodzskl := RejWezP_S["N:kodnieob"]
+  CallAlg["POBIERZ-RODZAJ-NIEOB"]
+  RejOp["EA:ZamknijRej",""]
+//    IF(Not(kd="313")and Not(kd="314")and Not(kd="331")and Not(kd="332")and Not(kd="333")and Not(kd="334")) ExitAlg[1]
+    IF(Not(kd="331") and Not(kd="332")) ExitAlg[1]
+    IF(l_dni_grani=. or l_dni_grani=0) ExitAlg[1]
+    IF(Not(l_dni_razem < l_dni_grani + 1)) ExitAlg[1]
+  ExitAlg[0]
+// msz - przeniesione
+  
+% POBIERZ-PARAMETRY-PARCHOR.ALG
+  RejOp["PC:OtworzRej1","PARCHOR.RXR"]
+  if(Not(RejOp["PC:WezPierwszyRek",""])) goto koniec
+        ch_ldni     := RejWezP_K["PC:ch_ldni"]
+        ch_ldni50     := RejWezP_K["PC:ch_ldni50"]
+        ch_ldnizop     := RejWezP_K["PC:ch_ldnizop"]
+        ch_rok      := RejWezP_S["PC:ch_rok"]
+        l_dni_niepl := RejWezP_K["PC:l_dni_niepl"]
+        l_dni_grani := RejWezP_K["PC:l_dni_grani"]
+koniec:
+  RejOp["PC:ZamknijRej",""]
+
+% SUMUJ-LICZBE-DNI-CHOROBY.ALG
+  if(RejWezP_K["N:LiczbaRekordow"]=1) ExitAlg[0]
+        rok_nr      := A_DATE[Poczrok_ksieg,"Y"]
+        r_rekpos11  := RejWezP_K["N:RejestrRekPos"]
+  RejOp["N:ZmienKluczRej","2"]
+  RejOp["N:WezpierwszyRek",""]
+  RejOp["EA:OtworzRej1","RODZNIEO.RXR"]
+petla:
+        r_rekpos1    := RejWezP_K["N:RejestrRekPos"]
+    if(r_rekpos1=r_rekpos11) goto next
+    if(rejwezp_l["n:anulowana"]) goto next
+    if(Not(rok_nr=A_DATE[RejWezP_D["N:dataod"],"Y"])) goto next
+//    if(RejWezP_S["N:kodalgo"]="4") ch_suma := ch_suma+RejWezP_K["N:ldnikal"]
+//    if(RejWezP_S["N:kodalgo"]="5") ch_suma := ch_suma+RejWezP_K["N:ldnikal"]
+        kd       := ""
+        xrodzskl := RejWezP_S["N:kodnieob"]
+  CallAlg["POBIERZ-RODZAJ-NIEOB"]
+//    IF(kd="313" or kd="314" or kd="331" or kd="332" or kd="333" or kd="334") ch_suma := ch_suma+RejWezP_K["N:ldnikal"]
+    IF(kd="331" or kd="332")) ch_suma := ch_suma+RejWezP_K["N:ldnikal"]
+    IF(kd="312") ch_sumazop := ch_sumazop+RejWezP_K["N:ldnikal"]
+next:
+  if(RejOp["N:WezNastepnyRek",""]) goto petla
+  RejOp["N:UstawRekPos",ToStr["#r_rekpos11#S"]]
+  RejOp["EA:ZamknijRej",""]
+
+% DAJ-MOZLIWOSC-WPISANIA-KODU.ALG
+        xrodzskl  := ""
+        rodzsklad := ""  
+        kodalgo   := ""
+        nazwarodz := ""
+        dojubil   := .N.
+        dostazu   := .N.
+  ExDialogOp["IdzDoDialogu","PODAJ-NOWY-KOD-NIEOBECNOSCI"]
+
+// Poniewa|z suma nieobecno|sci w pracy z powodu choroby pracownika 
+// przekroczy|la liczb|e dni p|laconych przez zak|lad pracy, nast|api
+// podzia|l wprowadzonej nieobecno|sci na dwie cz|e|sci:
+//    1. Wynagrodzenie chorobowe pokrywane przez pracodawc|e,
+//    2. Zasi|lek chorobowy pokrywany przez ZUS,
+// dlatego nale|zy uzupe|lni|c kod choroby, kt|ory odpowiada zasi|lkowi 
+// chorobowemu wyp|lacanemu przez ZUS.
+% PODAJ-NOWY-KOD-NIEOBECNOSCI.DLG
+##DEFWINDOW = ,,,,ADP,white/black&white/black,black/white&black/white,lgreen/black&white/black
+##11,FD,P,,,,yellow/blue&black/white,,,,ZMIENNA:opis1
+##12,FD,P,,,,yellow/blue&black/white,,,,ZMIENNA:opis2
+##13,FD,P,,,,yellow/blue&black/white,,,,ZMIENNA:opis3
+##14,FD,P,,,,yellow/blue&black/white,,,,ZMIENNA:opis4
+##15,FD,P,,,,yellow/blue&black/white,,,,ZMIENNA:opis5
+##16,FD,P,,,,yellow/blue&black/white,,,,ZMIENNA:opis6
+##17,FD,P,,,,yellow/blue&black/white,,,,ZMIENNA:opis7
+##10,0,0,,,,&&black/lwhite,&&white/lblue,,,ZMIENNA:xrodzskl,string:688
+##1,,ADP,,@3
+##2,,ADP,,@4
+#11                                                                  #
+#12                                                                  #
+#13                                                                  #
+#14                                                                  #
+#15                                                                  #
+#16                                                                  #
+#17                                                                  #
+
+
+Nowy kod nieobecno|sci: #10         #   
+
+ 
+                   #1          #
+% TABLICA-AKCJI-PODAJ-NOWY-KOD-NIEOBECNOSCI
+"AKCJA-PRZED-WYSWIETLENIEM",PODAJ-NOWY-KOD-NIEOBECNOSCI-PRZED
+"AKCJA-BUTTON1",PODAJ-NOWY-KOD-NIEOBECNOSCI-AKCEPTUJESZ
+
+% PODAJ-NOWY-KOD-NIEOBECNOSCI-PRZED.ALG
+  ExDialogOp["IdzDoPozycji","10"]
+
+% PODAJ-NOWY-KOD-NIEOBECNOSCI-SPRAWDZ.ALG
+
+% PODAJ-NOWY-KOD-NIEOBECNOSCI-AKCEPTUJESZ.ALG
+    IF(Not(xrodzskl="")) goto koniec
+    OkAlert["Nale|zy wprowadzi|c nowy kod nieobecno|sci !!"]
+  ExDialogOp["IdzDoPozycji","10"]
+  Exitalg[0]
+koniec:
+  CallAlg["POBIERZ-RODZAJ-NIEOBECNOSCI"]
+if(not(rodzsklad=="331")) goto sprawdz_312
+if(YesNAlert["Wprowadzony zosta|l kod wynagrodzenia chorobowego$mimo i|z suma dni choroby w roku przekroczy|la$liczb|e dni choroby pracownika, za kt|or|a p|laci pracodawca.$Czy tak ma by|c ?"]) goto ok
+exdialogop["idzdopozycji","10"]
+exitalg[0]
+sprawdz_312:
+if(not(rodzsklad=="312")) goto ok
+if(YesNAlert["Wprowadzony zosta|l kod zasi|lku opieku|nczego$mimo i|z suma dni pobierania zasi|lku w roku przekroczy|la$limit dni pobierania zasi|lku opieku|nczego.$Czy tak ma by|c ?"]) goto ok
+exdialogop["idzdopozycji","10"]
+exitalg[0]
+ok:
+  RejOp["ZapiszRek",""]
+  ExDialogOp["KoniecWykonywania",""]
+
+% POPRAW-PRZEDZIALY.ALG
+  if(CallAlg["SPRAWDZ-CZY-BYL-PODZIAL"]=1) goto podzielony
+        dataod1 := RejWezP_D["N:dataod"]
+        datado1 := RejWezP_D["N:datado"]
+        dataod11 := dataod1
+        if(kd="331") datado11 := dataod1+(ch_ldni-ch_suma-1)
+        if(kd="312") datado11 := dataod1+(ch_ldnizop-ch_sumazop-1)
+        dataod12 := datado11+1
+        datado12 := datado1
+//okalert[""+dataod11+"$"+datado11+"$"+dataod12+"$"+datado12]
+        dataod1  := dataod12
+        datado1  := datado12
+  CallAlg["DODAJE-KOLEJNY-PRZEDZIAL"]
+        dataod1  := dataod11
+        datado1  := datado11
+  CallAlg["ZAPISZ-OSTATNI-PRZEDZIAL"]
+  CallAlg["POPRAW-KODCHOR-I-KODALGO-TX"]
+  ExitAlg[0]
+podzielony:
+  CallAlg["POPRAW-PRZEDZIAL-TX"]
+  CallAlg["POPRAW-KODCHOR-I-KODALGO-TX"]
+  CallAlg["POPRAW-KODCHOR-I-KODALGO-T"]
+
+% SPRAWDZ-CZY-BYL-PODZIAL.ALG
+  if(Not(RejOp["TX:WezPierwszyRek",""])) ExitAlg[0]
+ExitAlg[1]
+
+% POPRAW-KODCHOR-I-KODALGO-TX.ALG
+//okalert["Data graniczna  "+dataod12+"$Data od      "+RejWezP_D["TX:dataod"]]
+    IF(dataod12='') ExitAlg[0]
+  if(Not(RejOp["TX:WezPierwszyRek",""])) ExitAlg[0]
+petla:  
+    if(RejWezP_D["TX:dataod"] < dataod12) goto next
+    xRejWstawP_S["TX:kodnieob",xrodzskl]
+    xRejWstawP_S["TX:kodalgo",kodalgo]
+    xRejWstawP_S["TX:nazwanieob",nazwarodz]
+    RejWstawP_L["TX:dostazu",dostazu]
+    RejWstawP_L["TX:dojubil",dojubil]
+  RejOp["TX:ZapiszRek",""]
+next:
+  if(RejOp["TX:WezNastepnyRek",""]) goto petla
+
+% POPRAW-KODCHOR-I-KODALGO-T.ALG
+    xRejWstawP_S["N:kodnieob",xrodzskl]
+    xRejWstawP_S["N:kodalgo",kodalgo]
+    xRejWstawP_S["N:nazwanieob",nazwarodz]
+    RejWstawP_L["N:dostazu",dostazu]
+    RejWstawP_L["N:dojubil",dojubil]
+  RejOp["N:ZapiszRek",""]
+
+//@@@@
+% POPRAW-PRZEDZIAL-TX.ALG
+//okalert["Podzial okresu $"+dataod1+"$"+datado1]
+//        sprawdz := (ch_ldni-ch_suma-ldni_3)-1
+//okalert["Zla liczba dni - "+sprawdz+"$ch_suma "+ch_suma+"$ldni_3  "+ldni_3]
+        dataod11 := ''
+        datado11 := ''
+        dataod12 := ''
+        datado12 := ''
+        ldni_2   := 0
+        ldni_3   := 0
+  IF(Not(RejOp["TX:WezPierwszyRek",""])) goto koniec
+petla:
+        dataod1 := RejWezP_D["TX:dataod"]
+        datado1 := RejWezP_D["TX:datado"]
+        ldni_3   := ldni_2
+        ldni_2   := ldni_2+(datado1-dataod1+1)
+    if(kd = "331" and ch_suma+ldni_2 < ch_ldni) goto next
+    if(kd = "312" and ch_sumazop+ldni_2 < ch_ldnizop) goto next
+        dataod11 := dataod1
+        if(kd="331") datado11 := dataod1+(ch_ldni-ch_suma-ldni_3)-1
+        if(kd="312") datado11 := dataod1+(ch_ldnizop-ch_sumazop-ldni_3)-1
+    if(datado11=datado1) goto koniec1
+        dataod12 := datado11+1
+        datado12 := datado1
+    goto koniec1
+next:
+  IF(RejOp["TX:WezNastepnyRek",""]) goto petla
+        dataod1  := RejWezP_D["N:dataod"]
+        datado1  := RejWezP_D["N:datado"]
+        ldni_3   := ldni_2
+        ldni_2   := ldni_2+(datado1-dataod1+1)
+        dataod11 := dataod1
+        if(kd="331") datado11 := dataod1+(ch_ldni-ch_suma-ldni_3)-1
+        if(kd="312") datado11 := dataod1+(ch_ldnizop-ch_sumazop-ldni_3)-1
+    if(Not(datado11<datado1)) goto koniec2
+        dataod12 := datado11+1
+        datado12 := datado1
+        dataod1  := dataod11
+        datado1  := datado11
+  CallAlg["DODAJE-KOLEJNY-PRZEDZIAL"]
+        dataod1  := dataod12
+        datado1  := datado12
+  CallAlg["ZAPISZ-OSTATNI-PRZEDZIAL"]
+  ExitAlg[0]
+koniec1:
+    if(Not(datado11<datado1)) goto koniec2
+        dataod1  := dataod11
+        datado1  := datado11
+  CallAlg["ZAPISZ-OSTATNI-PRZEDZIAL-TX"]
+koniec:
+        dataod1  := dataod12
+        datado1  := datado12
+  CallAlg["DODAJE-KOLEJNY-PRZEDZIAL"]
+koniec2:
+    if(dataod12='') dataod12 := datado11+1
+
+// @@@@@
+% PODZIAL-NIEOBECNOSCI-NA-NIEPLATNE-I-PLATNE.ALG
+        rej := "TX:"
+  if(Not(RejOp["TX:WezPierwszyRek",""])) goto rejestr_N
+    if(RejWezP_D["TX:datado"] - RejWezP_D["TX:dataod"] + 1 = l_dni_niepl) goto zmien_dane
+    if(RejWezP_D["TX:datado"] - RejWezP_D["TX:dataod"] + 1 > l_dni_niepl) goto podzial_N
+    if(RejWezP_D["TX:datado"] - RejWezP_D["TX:dataod"] + 1 < l_dni_niepl) CallAlg["NIEOBECNOSCI-NIEPLATNE-I-PLATNE-ZMIEN-DANE"]
+    if(RejWezP_D["TX:datado"] - RejWezP_D["TX:dataod"] + 1 < l_dni_niepl) l_dni_niepl := l_dni_niepl - (RejWezP_D["TX:datado"] - RejWezP_D["TX:dataod"] + 1)
+//    goto podzial_N
+rejestr_N:
+        rej := "N:"
+    if(RejWezP_D["N:datado"] - RejWezP_D["N:dataod"] + 1 = l_dni_niepl) goto zmien_dane
+    if(RejWezP_D["N:datado"] - RejWezP_D["N:dataod"] + 1 < l_dni_niepl) goto zmien_dane
+podzial_N:
+        dataod11 := RejWezP_D[rej+"dataod"]
+        datado11 := RejWezP_D[rej+"datado"]
+// !!!!! teraz dobrze dziala tylko gdy liczba dni bezplatnych = 1
+        datado12 := datado11
+        datado11 := dataod11+l_dni_niepl-1
+        dataod12 := datado11+1
+//
+        dataod1  := dataod11
+        datado1  := datado11
+  if(rej="N:")  CallAlg["DODAJE-KOLEJNY-PRZEDZIAL"]
+        dataod1  := dataod12
+        datado1  := datado12
+  if(rej="N:")  CallAlg["ZAPISZ-OSTATNI-PRZEDZIAL"]
+  if(rej="TX:") CallAlg["ZAPISZ-OSTATNI-PRZEDZIAL-TX"]
+        dataod1  := dataod11
+        datado1  := datado11
+  if(rej="TX:") CallAlg["DODAJE-KOLEJNY-PRZEDZIAL"]
+        rej := "TX:"
+zmien_dane:
+  CallAlg["NIEOBECNOSCI-NIEPLATNE-I-PLATNE-ZMIEN-DANE"]
+
+% NIEOBECNOSCI-NIEPLATNE-I-PLATNE-ZMIEN-DANE.ALG
+        if(xrodzskl="") Okalert["Brak xrodzskl !!$NIEOBECNOSCI-NIEPLATNE-I-PLATNE-ZMIEN-DANE.ALG"]
+        if(xrodzskl="") ExitALg[0]
+        kodalgo   := ""
+        nazwarodz := ""
+        dojubil   := .N.
+        dostazu   := .N.
+  CallAlg["POBIERZ-RODZAJ-NIEOBECNOSCI"]
+    xRejWstawP_S[rej+"kodnieob",xrodzskl]
+    xRejWstawP_S[rej+"nazwanieob",nazwarodz]
+    xRejWstawP_S[rej+"kodalgo",kodalgo]
+    xRejWstawP_L[rej+"dostazu",dostazu]
+    xRejWstawP_L[rej+"dojubil",dojubil]
+  RejOp[rej+"ZapiszRek",""]
+
+// msz - koniec
+% PRZENIES-PRZEDZIALY.ALG
+  IF(Not(RejOp["TX:WezPierwszyRek",""])) ExitAlg[0]
+petla:
+  RejOp["N:DodajRek",""]
+  RejOp["TX:PrzeniesPola","N:"]
+  RejOp["N:ZapiszRek",""]
+  IF(RejOp["TX:WezNastepnyRek",""]) goto petla
+  
+// ====================================================
+// dane kadrowe do plac
+// ====================================================
+// -------------------------------------------
+% PLC_KDR.BOX # okienko do wprowadzania i modyfikacji danych
+D = "Rejestr danych z kadr"
+"Symbol pracownika:",100,A
+"",,T
+"Wynagrodzenie bazowe:",110,A
+"",,T
+"Wynagrodzenie zasadnicze:",120,A
+"",,T
+"Mniej z tyt.zwolnie|n 100%:",131,A
+"Mniej z tyt.zwolnie|n 80%:",132,A
+"Mniej z tyt.urlopu wypoczynkow.:",133,A
+"Mniej z tyt.ekwiwalentu za urlop:",134,A
+"Mniej z tyt.urlopu bezp|latnego:",130,A
+"",,T
+"Wyn.z tyt.zwolnie|n 100%:",141,A
+"Wyn.z tyt.zwolnie|n 80%:",142,A
+"Wyn.z tyt.urlopu wypoczynkow.:",143,A
+"Wyn.z tyt.ekwiwalentu za urlop:",144,A
+"",,T
+"Dni kal.chorobowe w roku:",200,A
+"Dni kal.chorobowe 100% w okresie:",201,A
+"Dni kal.chorobowe 80% w okresie:",202,A
+"Dni rob.wypoczynkowy w okresie:",203,A
+"Godzin rob.wypoczynkowy w okresie:",204,A
+"Dni rob.ekwiwalent w okresie:",205,A
+"Godzin rob.ekwiwalent w okresie:",206,A
+"Dni rob.bezp|latnego w okresie:",207,A
+"Godzin rob.bezp|latnego w okresie:",208,A
+"",,T
+"Wszystkie dni w miesi|acu:",301,A
+"Wszystkie godziny w miesi|acu:",302,A
+"Dni robocze w miesi|acu:",303,A
+"Godziny robocze w miesi|acu:",304,A
+"",,T
+"Wynagrodzenie podstawowe:",305,A
+// --------------------------------------------
+% PLC_KDR.CHK # sprawdzanie poprawnosci wybranych pol
+OK := .T.
+ERRMESS := "Pole musi by|c wype|lnione liczb|a!"
+ID := 100
+if (KDR_sym = "") goto error
+goto __OK
+error:
+BEEP[0]
+OK := .N.
+__OK:
+// --------------------------------------------
+% PLC_KDR.BUT # "buttony" do rejestru 
+// Ogladanie definicji pola (z modyfikacja)
+"%D%odanie",5,1
+"%M%odyfikacja",4,1   # modyfikacja
+"%U%suni|ecie",6,1
+"Rekord: @        ",7,1
+@5,0,1               # Koniec
+// --------------------------------------------
+% PLC_KDR.MEN # menu z rubrykami
+D = 50,"Rejestr do nagr|od jubileuszowych"
+100,,,,6   # identyfikator pola
+//
+//=====
+
+  
+// =====================================================
+// rejestr rodzajow nieobecnosci
+// =====================================================
+
+% RODZNIEO-DAJDANE.ALG
+  symbol_pole_rej := "rodznieo"
+  symbol_pole_brak := "Wprowad|x symbol rodzaju nieobecno|sci !"
+  symbol_tytul := "Rodzaj nieobecno|sci"
+  symbol_menu := "RODZNIEOMENU"
+  
+  symbol_jest_modif := "NIEOBEC.RXR"
+  symbol_jest_modif1 := "NIEOBEC.RXR"
+  symbol_modif_glowny_rej := "kodnieob"
+  symbol_usun_glowny_rej := "Nie mo|zna usun|a|c tego rodzaj nieobecno|sci !$ Wyst|epuje w wykazie nieobecno|sci."
+
+% RODZNIEOALGO.XXX
+"AKCJA-BUTTON1-RODZNIEO-REKORD-?.DLG",RODZNIEOREKORD-AKCEPTUJESZ
+"AKCJA-F2-POLE16-RODZNIEO-REKORD-?.DLG",!SL.gl_f2_rejestrx("XPLSKLAD.RXR","symsklad","3")
+"AKCJA-PO-POLU16-RODZNIEO-REKORD-?.DLG",!SL.gl_popolu_rejestrx("PLSKLAD.RXR","symsklad","1",rejwezp_s("skladnieo"),"") 
+"AKCJA-PRZED-POLEM16-RODZNIEO-REKORD-?.DLG",ZOBACZ_SKLADNIKI
+%< TABLICA-AKCJI-REJESTRSYMBOLE.XXX(SYMBOL_D=RODZNIEO)
+
+% RODZNIEO-MENU-0.DLG
+%< SYMBOLE-MENU-0.DLG
+% RODZNIEO-MENU-1.DLG
+%< SYMBOLE-MENU-1.DLG
+----
+% ZOBACZ_SKLADNIKI.ALG
+if(pustepole["rodzsklad"]) exitalg[0]
+rejop["usunplikrej","xplsklad.rxr"]
+rejop["xx:otworzrej","plsklad.rxr"]
+rejop["xy:otworzrej","xplsklad.rxr"]
+if(not(rejop["xx:wezpierwszyrek",""])) goto koniec
+petla_xx:
+if(not(rejwezp_s["xx:rodzskl"]==rejwezp_s["rodzsklad"])) goto nastepny_xx
+rejop["xy:dodajrek",""]
+rejop["xx:przeniespola","xy:"]
+rejop["xy:zapiszrek",""]
+nastepny_xx:
+if(rejop["xx:weznastepnyrek",""]) goto petla_xx
+koniec:
+rejop["xx:zamknijrej",""]
+//rejop["xy:zobaczdbf",""]
+rejop["xy:zamknijrej",""]
+
+% RODZNIEOREKORD-AKCEPTUJESZ.ALG   
+  if(not(pustepole["rodznieo"])) goto dalej1
+    OkAlert["Wprowad|x symbol rodzaju nieobecno|sci  !"]
+    ExDialogOp["IdzDoPozycji","10"]
+    ExitAlg[0]
+  dalej1:
+  if(not(pustepole["rodzsklad"])) goto dalej2
+    OkAlert["Wprowad|x symbol rodzaju skladnika wynagrodzenia!$(Jest to symbol zgodny z programem p|latnika.)"]
+    ExDialogOp["IdzDoPozycji","12"]
+    ExitAlg[0]
+  dalej2:
+if(pustepole["skladnieo"]) goto dalej3
+ok_zus := .N.
+ rejop["xx:otworzrej","plsklad.rxr"]
+rejop["xx:znajdzrek",rejwezp_s["skladnieo"]]
+if(rejwezp_s["xx:rodzskl"]==rejwezp_s["rodzsklad"]) ok_zus := .T.
+rejop["xx:zamknijrej",""]
+if(ok_zus) goto dalej3
+okalert["Niezgodno|s|c kodu do P|LATNIKA nieobecno|sci i sk|ladnika p|lacowego!"] 
+    ExDialogOp["IdzDoPozycji","16"]
+    ExitAlg[0]
+dalej3:
+  ExDialogOp["KoniecWykonywania",""]
+
+// --------
+// REKORD
+// --------
+% RODZNIEO.XXX
+##DEFWINDOW=,,,,ADPS
+##10,0,0,,,,&&black/lwhite,&&white/lblue,,,POLEUNIKALNE:rodznieo
+##11,0,0,,,,&&black/lwhite,&&white/lblue,,,POLE:nazwarodz
+##12,0,0,,,,&&black/lwhite,&&white/lblue,,,POLE:rodzsklad
+##13,0,0,,,,&&black/lwhite,&&white/lblue,,,POLE:kodalgo
+##16,0,0,,,,&&black/lwhite,&&white/lblue,,,POLE:skladnieo
+##8,0,0,," ",,&&black/lwhite,&&white/lblue,,,POLE:dostazu,,0,8,T
+##14,0,0,," ",,&&black/lwhite,&&white/lblue,,,POLE:dostazu,,O,8,N
+##9,0,0,," ",,&&black/lwhite,&&white/lblue,,,POLE:dojubil,,0,9,T
+##15,0,0,," ",,&&black/lwhite,&&white/lblue,,,POLE:dojubil,,0,9,T
+##200,DZ,ADP
+##201,DZ,ADPHS,,"Czy nieobecno|s|c oznaczon|a tym kodem"
+PRZYCISK_CANCELID = 2
+
+  Symbol nieobecno|sci:  #10      #   
+  Nazwa nieobecno|sci:   #11                                    #
+  Symbol zgodny z Progamem P|latnika: #12     #
+  Spos|ob wyliczania wynagrodzenia:   #13#<    
+  Sk|ladnik rozliczaj|acy nieobecno|s|c:       |!#16       #						     
+  Nieobecno|s|c oznaczon|a tym kodem:
+                                     #8# Wlicza|c do sta|zu
+
+                                     #9# Wlicza|c do jubileuszu
+% RODZNIEO-REKORD-1.DLG,RODZNIEO-REKORD-0.DLG,RODZNIEO-REKORD-3.DLG
+%<RODZNIEO.XXX
+
+
+%<REKORD-AKCEPTUJESZ-BUTT.XXX
+//
+% RODZNIEO-REKORD-2.DLG
+%<RODZNIEO.XXX
+
+%<REKORD-OK-BUTT.XXX
+
+% RODZ-NIEOBECNOSCI-MENU.DIC
+"RODZNIEO-KOLUMNY",0
+
+//
+% RODZNIEOMENU.MEN
+LINIA-DIALOG=RODZ-NIEOBECNOSCI-MENU,"Kolumny dla rodzaj|ow nieobecno|sci"
+D=,"",AB
+1,,,,10,"Symbol"
+2,,,,43,"Nazwa"
+3,,,,6,"Rodzaj"
+4,,,,5,"Kod"
+
+% LOOK-RODZAJE-NIEOBECNOSCI.ALG
+  CallSl["gl_zobacz_rejestr(""RODZNIEO.RXR"")"]
+  
+// ------------------------------------
+// kartoteka 
+// -----------------------------------
+% LOOK-KARTOTEK-XXX.ALG
+  RejOp["OtworzRejSprawdz","KARTOTEK.RXR"]
+  RejOp["ZmienKluczRej","1"]
+  if(RejOp["WezPierwszyRek",""]) goto dalej
+    pusty       := .T.
+    znajdz      := ""
+dalej:
+  porzadek    := 1
+  kwota1      := .
+  nazwa_frm   := "kartoteka_osobowa"
+  zkartoteki  := .T.
+  CallAlg["PL_PAR_READ_PARAM"]
+  rejop["kl:otworzrej","PLCROZPKLAS.RJR"]
+  if(Not(kwota1=.)) porzadek := kwota1
+  CallAlg["KARTOTEK-AKTUALIZACJA-DANYCH"]
+//  CallAlg["KARTOTEK-SPRAWDZAM"]
+  ExDialogOp["IdzDoDialogu","KARTOTEK-LOOK"]
+  RejOp["ZamknijRej",""]
+  RejOp["KL:ZamknijRej",""]
+  kwota1 := porzadek
+  CallAlg["PL_PAR_WRITE_PARAM"]
+  
+% KARTOTEK-LOOK.DLG
+##DEFWINDOW = 3,,,,BDPHS,,,,,"Kartoteka osobowa"
+##101,0,P,,,,,,,,MENU_ROZWIJANE:KARTOTEKA_MENU
+%< KARTOTEK-MENU-X.XXX
+% KARTOTEKA_MENU_XXX1
+//*90,"Operacje"
+*41,@18
+*40,@19
+*20,@20
+% KARTOTEKA_MENU_XXX2
+*0,@5
+*91,"Szukaj"
+8,@8
+9,@9
+10,@10
+% KARTOTEKA_MENU
+P = 3,,ADS
+%< KARTOTEKA_MENU_XXX2
+%< KARTOTEKA_MENU_XXX1
+*92,"Zobacz"
+42," Historia"
+43," Przebieg"
+44," Nieobecno|sci"
+46," Godziny nadliczbowe"
+45," Urlopy"
+47," Dni sta|zu"
+*93,"Drukuj"
+34," Kartoteka"
+39," Kartoteka - kolumnowy"
+
+48," Badania lekarskie"
+50," Szkolenia BHP"
+49," Ko|ncz|ace si|e umowy"
+% KARTOTEK-MENU-X.XXX
+PRZYCISK_CANCELID = 0
+##100,0,BCMP,,,,,,,,MENU_NA_REKORDY
+//##0,,ADP,,@5
+##1,,ADP,,"%W%yb|or"
+##30,B,0,,"symbol",,&&lwhite/blue,&&lwhite/yellow,,,ZMIENNA:PORZADEK,,A,2,"1"
+##31,B,0,,"nazwisko",,&&lwhite/blue,&&lwhite/magenta,,,ZMIENNA:PORZADEK,,,2,"2"
+##32,B,0,,"kom|orka",,&&lwhite/blue,&&lwhite/magenta,,,ZMIENNA:PORZADEK,,,2,"3"
+##33,B,0,,"stanowisko",,&&lwhite/blue,&&lwhite/magenta,,,ZMIENNA:PORZADEK,,,2,"4"
+##35,B,0,,"nr akt",,&&lwhite/blue,&&lwhite/magenta,,,ZMIENNA:PORZADEK,,,2,"7"
+//##70,0,0,,,,,,,,ZMIENNA:znajdz
+##46,,P,,"OK"
+##70,B,0,,,,&&black/lwhite,&&white/lblue,,,ZMIENNA:znajdz
+##301,DZ,ADPH,,"Znajd|x"
+##200,DZ,ADP,,"Kolejno|s|c"
+##201,GTD,0,,"Sortowanie:",,&&lwhite/blue,&&lwhite/magenta
+#101                                                    #   #301
+                                                             #70              #  
+                                                                               #301<
+#201       ##30       ##31        ##32        ##33           ##35             #
+
+
+#100                                                                                  #100
+
+% KARTOTEK-MENU-MODIF.XXX
+%< KARTOTEK-MENU-X.XXX
+                                        #200
+                                         #30                    #
+                         #34          #  #31                    #
+                         #39          #  #32                    # 
+              #46      # #7,0,P      #   #33                    #
+                                         #35                    #
+                                                                   #200<
+% KARTOTEK-MENU-LOOK.XXX
+%< KARTOTEK-MENU-X.XXX
+ #2                    # #8           # #30                    #
+                         #9           # #31                    #
+                         #34          # #32                    # 
+                         #39          # #33                    #
+               #46     # #7,0,ACP    #  #35                    #
+% KARTOTEK-MENU-RESZTA.XXX
+//%< KARTOTEK-MENU-X.XXX
+PRZYCISK_CANCELID = 0
+##100,0,BCP,,,,,,,,MENU_NA_REKORDY
+//##0,,ADP,,@5
+##1,,ADP,,"%W%yb|or"
+##30,B,0,,"symbol",,&&lwhite/blue,&&lwhite/yellow,,,ZMIENNA:PORZADEK,,A,2,"1"
+##31,B,0,,"nazwisko",,&&lwhite/blue,&&lwhite/magenta,,,ZMIENNA:PORZADEK,,,2,"2"
+##32,B,0,,"kom|orka",,&&lwhite/blue,&&lwhite/magenta,,,ZMIENNA:PORZADEK,,,2,"3"
+##33,B,0,,"stanowisko",,&&lwhite/blue,&&lwhite/magenta,,,ZMIENNA:PORZADEK,,,2,"4"
+##35,B,0,,"nr akt",,&&lwhite/blue,&&lwhite/magenta,,,ZMIENNA:PORZADEK,,,2,"7"
+//##70,0,0,,,,,,,,ZMIENNA:znajdz
+##46,,P,,"OK"
+##70,B,0,,,,&&black/lwhite,&&white/lblue,,,ZMIENNA:znajdz
+##301,DZ,ADPH,,"Znajd|x"
+##200,DZ,ADP,,"Kolejno|s|c"
+##201,GTD,0,,"Sortowanie:",,&&lwhite/blue,&&lwhite/magenta
+#101                                                    #   #301
+                                                             #70              #  
+                                                                               #301<
+#201       ##30       ##31        ##32        ##33           ##35             #
+
+
+#100                                                                                  
+
+
+
+
+
+
+
+
+
+
+                                                                                      #100
+
+% TABLICA-AKCJI-KARTOTEK-LOOK
+"AKCJA-PRZED-WYSWIETLENIEM",KARTOTEK-LOOK-PRZED
+"AKCJA-BUTTON8",KARTOTEK-SZUKAJWARUNEK
+"AKCJA-BUTTON9",KARTOTEK-NASTEPNA
+"AKCJA-BUTTON10",KARTOTEK-FILTR
+"AKCJA-BUTTON41",KARTOTEKMENU-DODAJ
+"AKCJA-BUTTON40",KARTOTEKMENU-MODYFIKUJ
+"AKCJA-BUTTON20",KARTOTEKMENU-USUN
+"AKCJA-BUTTON30",KARTOTEKMENU-SORTUJ
+"AKCJA-BUTTON31",KARTOTEKMENU-SORTUJ
+"AKCJA-BUTTON32",KARTOTEKMENU-SORTUJ
+"AKCJA-BUTTON33",KARTOTEKMENU-SORTUJ
+"AKCJA-BUTTON35",KARTOTEKMENU-SORTUJ
+"AKCJA-BUTTON34",!CallPyt["import kadry_g | kadry_g.prac_wydruk()"]
+//"AKCJA-BUTTON39",KARTOTEKA-DRUKUJ-KOLUMNAMI
+"AKCJA-BUTTON39",!CallPyt["import kadry_g | kadry_g.prac_wydruk_kolumnami()"]
+"AKCJA-BUTTON58",KARTOTEKREKORD-WARTOSCIPOCZ
+//"AKCJA-BUTTON59",!CallPyt["import kadry_g | kadry_g.prac_zwalniam()"]
+"AKCJA-BUTTON90",PODATNIKREKORD-PARAM-RESZTA-DANYCH
+"AKCJA-BUTTON70",KARTOTEKREKORD-XX-IDZ-DO-ZNAJDZ
+"AKCJA-BUTTON47",!CallPyt["import kadry_g | kadry_g.prac_staz()"]
+//"AKCJA-BUTTON47",KARTOTEKREKORD-NALICZ-DNI-STAZU
+"AKCJA-BUTTON42",!CallPyt["import kadry_g | kadry_g.prac_historia()"]
+//"AKCJA-BUTTON43",KARTOTEKREKORD-POKAZ-PRZEBIEG
+"AKCJA-BUTTON43",!CallPyt["import kadry_g | kadry_g.prac_przebieg()"]
+//"AKCJA-BUTTON44",KARTOTEKREKORD-POKAZ-NIEOBECNOSCI
+"AKCJA-BUTTON44",!CallPyt["import kadry_g | kadry_g.prac_nieobecnosci()"]
+"AKCJA-BUTTON46",!CallPyt["import kadry_g | kadry_g.prac_nadgodziny()"]
+"AKCJA-BUTTON45",!CallPyt["import kadry_g | kadry_g.prac_urlopy()"]
+//"AKCJA-BUTTON45",KARTOTEKREKORD-POKAZ-URLOPY
+"AKCJA-button48",KARTOTEK-SPRAWDZAM-BADANIA
+"AKCJA-button49",KARTOTEK-SPRAWDZAM-UMOWY
+"AKCJA-button50",KARTOTEK-SPRAWDZAM-BHP
+//"AKCJA-BUTTON7",KARTOTEKREKORD-ZNAJDZ
+"AKCJA-LINIAMENU100",KARTOTEKMENU-POKAZ
+
+% KARTOTEK-WAR.BOX
+D="Kartoteka osobowa"
+"Symbol pracownika:",1,A
+"Nr AKT:",32,A
+"Nazwisko:",2,A
+"Kom|orka org.: ",22,A
+"StanowisKO: ",23,A
+"Wymiar czasu pracy 1: ",38,A
+"Wymiar czasu pracy 2: ",39,A
+"P|le|c: ",61,A
+"Zaw|od: ",62,A
+"Wykszta|lcenie: ",64,A
+"Rodzaj wykszta|lcenia: ",65,A
+"Kiedy wygasa umowa: ",72,A
+"Badania okresowe wa|zne do: ",73,A
+"Forma naboru: ",69,A
+"Data zatrudnienia: ",70,A
+"Data zwolnienia: ",77,A
+"Spos|ob rozwi|azania umowy: ",76,A
+"Czy jest to podstawowe miejsce pracy: ",79,A
+"Wynagrodzenie podstawowe: ",80,A
+"Stawka na: ",89,A
+"Miejsce zamieszkania:",5,A
+"L.osob do zasi|lku rodzinnego: ",36,A
+"L.osob do zasi|lku piel|egnacyjnego: ",37,A
+"Data urodzenia:",11,A
+"Jezyk 1: ",66,A
+"Jezyk 2: ",67,A
+"Jezyk 3: ",68,A
+"Nr dow.osob.:",13,A
+"Kod tytu|lu ubezpieczenia: ",35,A
+"Nr Pesel:",14,A
+"Nr Nip:",15,A
+"Kod pocztowy:",6,A
+"Ulica:",8,A
+"Wojew|odztwo: ",7,A
+"Miejsce urodzenia: ",12,A
+"Nr dowodu osobistego: ",13,A
+"Imi|e 1:",3,A
+"Imi|e 2:",4,A
+"Imie ojca: ",16,A
+"Imie matki: ",17,A
+"Telefon: ",18,A
+"Symbol Urzedu Skarbowego: ",19,A
+"Poczta: ",20,A
+"Nazwa konta bankowego -1: ",30,A
+"Numer konta bankowego -1: ",31,A
+"Nazwa konta bankowego -2: ",40,A
+"Numer konta bankowego -2: ",41,A
+"Nazwisko panie|nskie: ",60,A
+"Gmina/Dzielnica: ",71,A
+"Data wydania dow.osobistego: ",74,A
+"Kto wyda|l dow.osobisty: ",75,A
+"Nr paszportu: ",81,A
+"Nr legitymacji ubezpieczeniowej: ",78,A
+"Rodzaj umowy: ",93,A
+
+% KARTOTEKREKORD-ZNAJDZ.ALG
+  if(znajdz="") ExitAlg[0]
+  if(not(RejOp["SzukajRek",znajdz])) ExitAlg[0]
+  ExDialogOp["WyswietlPozycje","100"]
+  ExDialogOp["IdzDoPozycji","100"]
+//  callalg["KARTOTEKREKORD-IDZ-DO-ZNAJDZ"]
+% KARTOTEKMENU-USUN.ALG
+  jestlista  := .N.
+  xpracownik := RejWezP_S["sym"]
+  CallAlg["PODATNIK-SPRAWDZAM"]
+  if(Not(jestlista)) goto usuwaj
+      OkAlert["Wskazany pracownik wyst|epuje na listach p|lac $lub w rejestrze przyporz|adkowa|n !$ Usuni|ecie jest niemo|zliwe."]
+      ExitAlg[0]
+usuwaj:
+  if(not YesNAlert["Usun|a|c informacje o pracowniku: "+RejWezP_S["nazwisko"]+" z rejestru ?"]) ExitAlg[0]
+  if(not YesNAlert["U W A G A !$Usuni|ete b|ed|a wszystkie informacje dotycz|ace pracownika:$"+RejWezP_S["nazwisko"]+" !"]) ExitAlg[0]
+  CallAlg["USUN-WSZYSTKIE-DANE-PRACOWNIKA"]
+ callsl["place_usun_klasyfikacje(""kl:"",rejwezp_s(""sym""))"]
+  RejOp["UsunRek",""]
+  ExDialogOp["UsunRekordzMenu","100"]    
+
+% USUN-WSZYSTKIE-DANE-PRACOWNIKA.ALG
+  pierwszy := .T.
+  rezygnujesz := .N.
+  dokid_txt := ToStr["#RejwezP_K[""dokid""]#S:0"]
+  tura := 0
+  rejestr := ""
+powrot:
+  tura := tura+1
+  if(tura=1) rejestr := "PRZEBIEG.RXR"
+  if(tura=2) rejestr := "HISTORIA.RXR"
+  if(tura=3) rejestr := "NIEOBEC.RXR"
+  if(tura=4) rejestr := "URLOPY.RXR"
+  RejOp["T:OtworzRejsprawdz",rejestr]
+petlazapisy:
+  if(Not(RejOp["T:ZnajdzRek",dokid_txt])) goto nextrej
+  RejOp["T:UsunRek",""]
+  goto petlazapisy
+nextrej:
+  RejOp["T:ZamknijRej",""]
+  if(not(tura=4)) goto powrot
+
+% KARTOTEK-SZUKAJWARUNEK.ALG
+  ExDialogOp["UstawWarunek","100:KARTOTEK-WAR"]
+  
+% KARTOTEK-NASTEPNA.ALG
+  ExDialogOp["UstawNastepny","100"]
+  
+% KARTOTEK-FILTR.ALG
+  ExDialogOp["UstawFiltr","100:KARTOTEK-WAR"]
+  ExDialogOp["Idzdopozycji","100"]
+
+% KARTOTEKMENU-POKAZ.ALG
+  znajdz := rejwezp_s["sym"]
+  if(porzadek=2)  znajdz := rejwezp_s["nazwisko"]
+  if(porzadek=3)  znajdz := rejwezp_s["wydzial"]
+  if(porzadek=4)  znajdz := rejwezp_s["stanow"]
+  if(porzadek=7)  znajdz := rejwezp_s["numerakt"]
+
+  Dialog_Op["WyswietlPozycje","70"]  
+
+% KARTOTEKREKORD-IDZ-DO-ZNAJDZ.ALG
+  if (znajdz == "") goto koniec
+  if (RejOp["ZnajdzRek",znajdz]) goto jest
+  if (RejOp["SzukajRek",znajdz]) goto jest  
+  if (RejOp["WezOstatniRek",""]) goto jest
+  goto koniec  
+ jest:
+  ExDialogOp["WyswietlPozycje","100"]
+ koniec:  
+  ExDialogOp["IdzDoPozycji","70"]
+
+% KARTOTEKREKORD-xx-IDZ-DO-ZNAJDZ.ALG
+  callalg["KARTOTEKREKORD-ZNAJDZ"]
+  callalg["KARTOTEKREKORD-IDZ-DO-ZNAJDZ"]
+
+% KARTOTEKREKORD-IDZ-DO-7.ALG
+  ExDialogOp["IdzDoPozycji","70"]
+
+% odczytaj_sklad_nadliczbowe.alg
+  string2     := ""
+  string3     := ""
+  string4     := ""
+  string5     := ""
+  nazwa_frm   := "filtr_nadgodz"
+  znajdz := ""
+  CallAlg["PL_PAR_READ_PARAM"]
+  skladnor1 := string2
+  skladdod1 := string3
+  skladnor2 := string4
+  skladdod2 := string5
+
+% KARTOTEK-LOOK-PRZED.ALG
+CallAlg["KARTOTEKMENU-SORTUJ-KLUCZ"]
+//  CallAlg["PODSTAW-TYTUL1"]
+//  RejOp["WezPierwszyRek",""]
+  d_pos := 100
+
+% KARTOTEKMENU-SORTUJ.ALG
+  CallAlg["KARTOTEKMENU-SORTUJ-KLUCZ"]
+//  CallAlg["PODSTAW-TYTUL1"]
+  CallAlg["KARTOTEKMENU-WYSWIETL"]
+
+% KARTOTEKMENU-SORTUJ-KLUCZ.ALG
+  if(porzadek=1)  ExDialogOp["UstawMenuParam","100:KARTOTEKMENU1,,KLUCZ,1"]
+  if(porzadek=2)  ExDialogOp["UstawMenuParam","100:KARTOTEKMENU1,,KLUCZ,2"]
+  if(porzadek=3)  ExDialogOp["UstawMenuParam","100:KARTOTEKMENU3,,KLUCZ,3"]
+  if(porzadek=4)  ExDialogOp["UstawMenuParam","100:KARTOTEKMENU4,,KLUCZ,4"]
+  if(porzadek=7)  ExDialogOp["UstawMenuParam","100:KARTOTEKMENU5,,KLUCZ,7"]
+  
+% KARTOTEKMENU-WYSWIETL.ALG
+  ExDialogOp["WyswietlPozycje","101"]
+  ExDialogOp["WyswietlPozycje","100"]
+  ExDialogOp["IdzDoPozycji","100"]
+  
+% KARTOTEK-K-MENU1.DIC
+"PODATNIK-KOLUMNY",0
+% KARTOTEK-K-MENU3.DIC
+"PODATNIK-KOLUMNY",0
+% KARTOTEK-K-MENU4.DIC
+"PODATNIK-KOLUMNY",0
+% KARTOTEK-K-MENU5.DIC
+"PODATNIK-KOLUMNY",0  
+
+// -----------------------
+// tytul okna
+// -----------------------
+% PODSTAW-TYTUL1.ALG
+if(porzadek=1)  tytul1 := " Symbol     Nr AKT     Nazwisko                         Imi|e              Zatr."
+if(porzadek=2)  tytul1 := " Symbol     Nr AKT     Nazwisko                         Imi|e              Zatr."
+if(porzadek=3)  tytul1 := " Kom|orka    Symbol     Nr AKT     Nazwisko                       Imi|e     Zatr."
+if(porzadek=4)  tytul1 := " Stanowisko      Symbol     Nr AKT     Nazwisko                  Imi|e     Zatr."
+if(porzadek=7)  tytul1 := " Nr AKT     Symbol     Nazwisko                    Imi|e                   Zatr."
+
+% KARTOTEKMENU1.MEN
+D=,"",AB
+LINIA-DIALOG=KARTOTEK-K-MENU1,"Kolumny do wyswietlania pracownik|ow"
+1,,,,10,"Symbol"
+32,,,,10,"Numer akt"
+2,,,,35,"Nazwisko"
+3,,,,19,"Imi|e"
+82,,,,1,"Z"
+
+% KARTOTEKMENU3.MEN
+D=,"",AB
+LINIA-DIALOG=KARTOTEK-K-MENU3,"Kolumny do wyswietlania pracownik|ow"
+22,,,,10,"Kom|orka"
+1,,,,10,"Symbol"
+32,,,,10,"Numer akt"
+2,,,,33,"Nazwisko"
+3,,,,10,"Imi|e"
+82,,,,1,"Z"
+
+% KARTOTEKMENU4.MEN
+D=,"",AB
+LINIA-DIALOG=KARTOTEK-K-MENU4,"Kolumny do wyswietlania pracownik|ow"
+23,,,,15,"Stanowisko"
+1,,,,10,"Symbol"
+32,,,,10,"Numer akt"
+2,,,,28,"Nazwisko"
+3,,,,10,"Imi|e"
+82,,,,1,"Z"
+
+% KARTOTEKMENU5.MEN
+D=,"",AB
+LINIA-DIALOG=KARTOTEK-K-MENU5,"Kolumny do wyswietlania pracownik|ow"
+32,,,,10,"Numer akt"
+1,,,,10,"Symbol"
+2,,,,30,"Nazwisko"
+3,,,,24,"Imi|e"
+82,,,,1,"Z"
+
+// ------------------------------------------------
+// dodawanie rekordu
+// ------------------------------------------------
+% KARTOTEKMENU-DODAJ.ALG 
+if (not DobraWersja["1.09(0)",.N.]) goto mozna_dodac
+if(strin["P",cechy_wersji]>-1) goto mozna_dodac
+  mozna := .N.
+  byl := .N.
+  ilosc_zap := 3
+  if(strin["E",cechy_wersji]>-1) ilosc_zap := 50
+  ilosc_zap_wyst := 0
+  modul := "Kadry i p|lace"
+  nazwarejestru := "PODATNIK.RXR"
+  dalej := .N.
+  tekst := "pracownik|ow"
+  CallAlg["WERSJA-BADANIE"]
+  if ((byl) and (dalej)) mozna := .T.
+  if(not(mozna)) ExitAlg[0]
+//
+  mozna_dodac:
+ d_pos    := 10
+  pierwszy := .T.
+  L_TT_PRAC_REJESTR := "PODATNIK.RXR"
+// sprawdzenie czy mozna
+
+  r_rekpos0 := RejWezP_K["RejestrRekPos"]
+  rejop["mm:otworzrej1","ZLbiorca.rxr"]
+  rejop["hi:otworzrejsprawdz","historia.rxr"]
+  rejop["hi:zmienkluczrej","1"]
+//rejop["pi:otworzrejsprawdz","przebieg.rxr"]
+//rejop["pi:zmienkluczrej","1"]
+  rejop["hit:otworzrejtemp","historia.rxr"]
+  RejOp["DodajRek",""]
+  dokid     := RejWezP_K["dokid"]
+  dokid_txt := ToStr["#RejwezP_K[""dokid""]#S:0"]
+  rezygnujesz := .N.
+// dodane maria
+  k_zw := .
+  k_uzys := .
+  CallPyt["import place_g | place_g.place_sprawdz_parametry()"]
+  if (k_zw = .) OkAlert["Miesi|eczna kwota ulgi podatkowej nie zosta|la wprowadzona !"]
+  if (k_uzys = .) OkAlert["Miesi|eczna kwota kosztu uzyskania przychodu nie zosta|la wprowadzona !"]
+//
+rejop["klx:otworzrejtemp","plcrozpklas.rjr"]
+ExDialogOp["IdzDoDialogu","KARTOTEK-MODYFIKUJ"]
+// @@@
+  if(rezygnujesz) RejOp["UsunRek",""]
+  if(rezygnujesz) ExDialogOp["UsunRekordzMenu","100"]    
+  rejop["klx:zamknijrej",""]
+// dopisanie historii dla ponownie zatrudnionego pracownika
+if(not(rejop["hit:wezpierwszyrek",""])) goto omin_wpisz
+  petla_hit:
+  rejop["hi:dodajrek",""]
+  rejop["hit:przeniespola","hi:"]
+  rejop["hi:zapiszrek",""]
+  if(rejop["hit:weznastepnyrek",""]) goto petla_hit
+  omin_wpisz:
+  rejop["hi:zamknijrej",""]
+//rejop["pi:zamknijrej",""]
+  rejop["hit:zamknijrej",""]
+  ExDialogOp["IdzDoPozycji","100"]
+  ExDialogOp["WyswietlPozycje","100"]
+  
+% KARTOTEKMENU-MODYFIKUJ.ALG
+  d_pos := 42
+  pierwszy := .N.
+  L_TT_PRAC_REJESTR := "PODATNIK.RXR"
+  if (ExDialogOp["PusteOkno","100"]) goto xx
+  rejop["mm:otworzrej1","ZLbiorca.rxr"]
+  rejop["hi:otworzrejsprawdz","historia.rxr"]
+  rejop["hi:zmienkluczrej","1"]
+  rejop["hit:otworzrejtemp","historia.rxr"]
+ rejop["klx:otworzrejtemp","plcrozpklas.rjr"]  
+ callsl["PLACE_G->place_czytaj_klasyfikacje(""klx:"")"]
+ ExDialogOp["IdzDoDialogu","KARTOTEK-MODYFIKUJ"]
+  rejop["klx:zamknijrej",""]
+  rejop["hi:zamknijrej",""]
+  rejop["hit:zamknijrej",""]
+ xx:
+  ExDialogOp["WyswietlPozycje","100"]
+  ExDialogOp["IdzDoPozycji","100"]
+  
+% KARTOTEK-STRONA-1.DLG
+##10,0,P,,,,,,,,POLEUNIKALNE:sym
+##42,0,P,,,,,,,,POLE:numerakt
+##44,0,P,,,,,black/cyan&black/white,,,POLE:dnichorob
+##11,0,P,,,,,,,,POLE:nazwisko
+##12,0,P,,,,,,,,POLE:imie1
+##13,0,P,,,,,,,,POLE:imie2
+##60,0,P,,,,,,,,POLE:nazwisko_pan
+##8,0,P,,,,,,,,POLE:plec
+##23,0,P,,,,,,,,POLE:datau
+##24,0,P,,,,,,,,POLE:miejsce_u
+##25,0,P,,,,,,,,POLE:im_oj
+##26,0,P,,,,,,,,POLE:im_ma
+##19,0,P,,,,,,,,POLE:ulica
+##20,0,P,,,,,,,,POLE:dom
+##21,0,P,,,,,,,,POLE:lokal
+##16,0,P,,,,,,,,POLE:miasto
+##17,0,P,,,,,,,,POLE:kod
+##18,0,P,,,,,,,,POLE:wojew
+##71,0,P,,,,,,,,POLE:gmina
+##22,0,P,,,,,,,,POLE:poczta
+##48,0,P,,,,,,,,POLE:os_rodz
+##55,0,P,,"( w tym %m%a|l|zonek )",,,,,,POLE:rodzmalzonek,,0,55,T
+##56,0,P,,,,,,,,POLE:rodzmalzonek,,O,55,N
+##49,0,P,,,,,,,,POLE:os_piel
+##15,0,P,,,,,,,,POLE:wydzial
+##64,0,P,,,,,,,,POLE:wykszt
+##65,0,P,,,,,,,,POLE:rodzwykszt
+##66,0,P,,,,,,,,POLE:jezyk1
+##67,0,P,,,,,,,,POLE:jezyk2
+##68,0,P,,,,,,,,POLE:jezyk3
+##78,0,P,,,,,,,,POLE:nrlegit
+##73,0,P,,,,,,,,POLE:dbadania
+##47,0,P,,,,,,,,POLE:kodprac
+Symbol pracownika:#10     #  
+Numer AKT:........#42                   #
+Nazwisko:.........#11                   #
+Imiona:#12           #-#13              #
+Nazwisko panie|nskie:#60                 #
+P|le|c:..............#8#<               
+Data/miej.urodz:#23    # #24            #
+Imi|e ojca/matki:#25       # #26         #
+Ulica:#19                                                 #
+Numer/mieszkanie    #  20#/#21#
+Miejsce zamieszk...:#16                 #
+Kod pocztowy.......:#17  #               
+Wojew|odztwo:........#18                 #
+Gmina:#71          #Poczta:#22          #
+Kom|orka org:..#15                       #
+Wykszta|lcenie:#64                                                  #
+Rodz.wykszta|l: #65                                                 #
+J|ezyki:#66       # #67      # #68       #
+Nr leg.ubez.#78     # Badania do:#73    #
+Kod tyt.ubezpiecz:..#47  #
+
+% KARTOTEK-STRONA-2.DLG
+##32,0,P,,,,,,,,POLE:urzad
+##27,0,P,,,,,,,,POLE:dowod
+##74,0,P,,,,,,,,POLE:ddowod
+##75,0,P,,,,,,,,POLE:ktowydal
+##80,0,P,,,,,,,,POLE:paszport
+##28,0,P,,,,,,,,POLE:pesel
+##29,0,P,,,,,,,,POLE:nip
+##30,0,P,,,,,,,,POLE:telefon
+##7,FD,P,,,,,,,,POLE:czyzatrud
+##31,0,P,,,,,,,,POLE:faks
+##52,0,P,,,,,,,,POLE:konto
+##41,0,P,,,,,,,,POLE:kontrahent
+##70,FD,P,,,,,,,,POLE:dzatrud
+##69,0,P,,,,,,,,POLE:formnaboru
+##62,0,P,,,,,,,,POLE:zawod
+##79,0,P,,,,,,,,POLE:rodzumowy
+##63,0,P,,,,,,,,POLE:charpracy
+##72,0,P,,,,,,,,POLE:dwygasumowy
+##14,FD,P,,,,,,,,POLE:stanow
+##50,FD,P,,,,,,,,POLE:wymiar1
+##51,FD,P,,,,,,,,POLE:wymiar2
+##9,0,P,,,,,,,,POLE:podstawowe
+##76,FD,P,,,,,,,,POLE:rozwumowy
+##77,FD,P,,,,,,,,POLE:dzwolnien
+Nr dowodu osob:..#27               #
+Data wydania:#74    #
+Kto wyda|l:...#75                                 #
+Nr Paszportu:....#80               #
+Nr Pesel:........#28       #
+Nr Nip:..........#29      #
+Telefon:.........#30         #
+Pracownik jest zatrudniony(T,N)#7#<
+Data zatrudnien:.#70    #
+Forma naboru:#69                   #
+Zaw|od:#62                          #
+Rodzaj umowy:#79                   #
+Data ko|nca umowy:#72    #
+Stanowisko:#14                     #
+Wymiar czasu pracy:#50#/#51#
+Podstawowe miejsce pracy (T,N):#9#<
+    
+Rozw.umowy:#76                      #
+Data zwolnienia:.#77    #
+
+% OLD-KARTOTEK.XXX
+//##DEFWINDOW = ,,,,ADPS
+##10,0,P,,,,,,,,POLEUNIKALNE:sym
+##42,0,P,,,,,,,,POLE:numerakt
+##44,0,P,,,,,black/cyan&black/white,,,POLE:dnichorob
+##11,0,P,,,,,,,,POLE:nazwisko
+##12,0,P,,,,,,,,POLE:imie1
+##13,0,P,,,,,,,,POLE:imie2
+##60,0,P,,,,,,,,POLE:nazwisko_pan
+##8,0,P,,,,,,,,POLE:plec
+##23,0,P,,,,,,,,POLE:datau
+##24,0,P,,,,,,,,POLE:miejsce_u
+##25,0,P,,,,,,,,POLE:im_oj
+##26,0,P,,,,,,,,POLE:im_ma
+##19,0,P,,,,,,,,POLE:ulica
+##20,0,P,,,,,,,,POLE:dom
+##21,0,P,,,,,,,,POLE:lokal
+##16,0,P,,,,,,,,POLE:miasto
+##17,0,P,,,,,,,,POLE:kod
+##18,0,P,,,,,,,,POLE:wojew
+##71,0,P,,,,,,,,POLE:gmina
+##22,0,P,,,,,,,,POLE:poczta
+##48,0,P,,,,,,,,POLE:os_rodz
+##55,0,P,,"( w tym %m%a|l|zonek )",,,,,,POLE:rodzmalzonek,,0,55,T
+##56,0,P,,,,,,,,POLE:rodzmalzonek,,O,55,N
+##49,0,P,,,,,,,,POLE:os_piel
+##15,0,P,,,,,,,,POLE:wydzial
+##64,0,P,,,,,,,,POLE:wykszt
+##65,0,P,,,,,,,,POLE:rodzwykszt
+##66,0,P,,,,,,,,POLE:jezyk1
+##67,0,P,,,,,,,,POLE:jezyk2
+##68,0,P,,,,,,,,POLE:jezyk3
+##78,0,P,,,,,,,,POLE:nrlegit
+##73,0,P,,,,,,,,POLE:dbadania
+##47,0,P,,,,,,,,POLE:kodprac
+##32,0,P,,,,,,,,POLE:urzad
+##27,0,P,,,,,,,,POLE:dowod
+##74,0,P,,,,,,,,POLE:ddowod
+##75,0,P,,,,,,,,POLE:ktowydal
+##80,0,P,,,,,,,,POLE:paszport
+##28,0,P,,,,,,,,POLE:pesel
+##29,0,P,,,,,,,,POLE:nip
+##30,0,P,,,,,,,,POLE:telefon
+##7,FD,P,,,,,,,,POLE:czyzatrud
+##31,0,P,,,,,,,,POLE:faks
+##52,0,P,,,,,,,,POLE:konto
+##41,0,P,,,,,,,,POLE:kontrahent
+##70,FD,P,,,,,,,,POLE:dzatrud
+##69,0,P,,,,,,,,POLE:formnaboru
+##62,0,P,,,,,,,,POLE:zawod
+##79,0,P,,,,,,,,POLE:rodzumowy
+##63,0,P,,,,,,,,POLE:charpracy
+##72,0,P,,,,,,,,POLE:dwygasumowy
+##14,FD,P,,,,,,,,POLE:stanow
+##50,FD,P,,,,,,,,POLE:wymiar1
+##51,FD,P,,,,,,,,POLE:wymiar2
+##9,0,P,,,,,,,,POLE:podstawowe
+##76,FD,P,,,,,,,,POLE:rozwumowy
+##77,FD,P,,,,,,,,POLE:dzwolnien
+##1,,ACP,,@3
+##2,,ACP,,@4
+##90,LBGT,P,,"RESZTA %D%ANYCH"
+##59,LBGT,P,,"%Z%wolnij pracownika"
+Symbol pracownika:#10     #  
+Numer AKT:........#42                   #³Nr dowodu osob:..#27               #
+Nazwisko:.........#11                   #³  * Data wydania:#74    #
+Imiona:#12           #-#13              #³  * Kto wyda|l:...#75               #
+Nazwisko panie|nskie:#60                 #³Nr Paszportu:....#80               #
+P|le|c:..............#8#<                 ³Nr Pesel:........#28       #
+Data/miej.urodz:#23    # #24            #³Nr Nip:..........#29      #
+Imi|e ojca/matki:#25       # #26         #³Telefon:.........#30         #
+Ulica:#19                    ##  20#/#21#³Pracownik jest zatrudniony(T,N)#7#<
+Miejsce zamieszk...:#16                 #³Data zatrudnien:.#70    #
+Kod pocztowy.......:#17  #               ³Forma naboru:#69                   #
+Wojew|odztwo:........#18                 #³Zaw|od:#62                          #
+Gmina:#71          #Poczta:#22          #³Rodzaj umowy:#79                   #
+Kom|orka org:..#15                       #³Data ko|nca umowy:#72    #
+Wykszta|lcenie:#64                       #³Stanowisko:#14                     #
+Rodz.wykszta|l:#65                       #³Wymiar czasu pracy:#50#/#51#
+J|ezyki:#66       # #67      # #68       #³Podstawowe miejsce pracy (T,N):#9#<
+Nr leg.ubez.#78     # Badania do:#73    #³Rozw.umowy:#76                      #
+Kod tyt.ubezpiecz:..#47  #               ³Data zwolnienia:.#77    #
+
+  #1        #  #2        #              #90          #    #59                 #
+
+% KARTOTEK.XXX  
+##DEFWINDOW=,,,,ADPHS,,,,,"Dane pracownika"
+PRZYCISK_CANCELID = 2
+//##100,0,ADPH,,,,,,,,WLASCIWOSCIKOLEJNY:doprzodu=1,dotylu=5
+##100,0,ADPH,,,,,,,,WLASCIWOSCI
+##5,,ADP
+##1,,ADP,,@3
+##2,,ADP,,@4
+##71,,ADP,,"Dane identyfikacyjne"
+##74,,ADP,,"Adres"
+##160,,ADP,,"Inne dane kadrowe"
+##72,,ADP,,"Kody do P|LATNIKA"
+##70,,ADP,,"Dane p|lacowe"
+##73,,ADP,,"Dane organizacyjne"
+//##59,,ADP,,"Banki"
+##159,,ADP,,"Banki"
+##58,,ADP,,"Dane pocz|atkowe"
+##59,,ADP,,"Zwolnij pracownika"//##90,,ACP,,"Reszta$danych"
+ 
+ #71                 #  #100
+
+
+ #74                 #
+
+
+ #160                #
+
+
+ #72                 #
+
+
+ #70                 #
+
+
+ #73                 #
+
+
+ #159                #                                     
+                                                                           #100
+
+ 
+#58                 #  #1       #  #2        #   #59              #
+             
+//
+% KARTOTEK-REKORD-1.DLG,KARTOTEK-REKORD-0.DLG,KARTOTEK-REKORD-3.DLG,KARTOTEK-MODYFIKUJ.DLG
+%<KARTOTEK.XXX
+//
+% KARTOTEK-REKORD-2.DLG
+%<KARTOTEK.XXX
+%<REKORD-OK-BUTT.XXX
+//
+% TABLICA-AKCJI-KARTOTEK-STRONA-1
+"AKCJA-PO-POLU12",KARTOTEK-MODYFIKUJ-PO12
+"AKCJA-PO-POLU42",KARTOTEK-PO-POLU42
+
+% TABLICA-AKCJI-KARTOTEK-STRONA-2
+
+% TABLICA-AKCJI-KARTOTEK-MODYFIKUJ
+"AKCJA-PRZED-WYSWIETLENIEM",KARTOTEK-MODYFIKUJ-PRZED
+"AKCJA-BUTTON1",KARTOTEK-MODYFIKUJ-AKCEPTUJESZ
+"AKCJA-BUTTON2",PLACE-REZYGNUJESZ-DIALOG
+//"AKCJA-BUTTON90",PODATNIKREKORD-PARAM-RESZTA-DANYCH
+"AKCJA-BUTTON59",zWALNIAM_PRACOWNIKA
+"AKCJA-BUTTON79",KARTOTEKREKORD-NALICZ-DNI-STAZ
+
+% zWALNIAM_PRACOWNIKA.ALG
+  CallPyt["import kadry_g | kadry_g.prac_zwalniam()"]
+% KARTOTEK-REKORD-DODAJ-STRONY.ALG
+//ExDialogOp["DodajStrone","100:KARTOTEK-STRONA-1"]
+//ExDialogOp["DodajStrone","100:KARTOTEK-STRONA-2"]
+ ExDialogOp["DodajStrone","100:PODATNIK-STRONA-1,71"]
+ ExDialogOp["DodajStrone","100:PODATNIK-STRONA-2,72"]
+ ExDialogOp["DodajStrone","100:PODATNIK-STRONA-3,73"]
+ ExDialogOp["DodajStrone","100:PODATNIK-STRONA-4,74"]
+ ExDialogOp["DodajStrone","100:PODATNIK-STRONA-0,70"]
+ ExDialogOp["DodajStrone","100:PODATNIK-STRONA-5,58"]
+//  ExDialogOp["DodajStrone","100:PODATNIK-STRONA-6,59"]
+ ExDialogOp["DodajStrone","100:PODATNIK-STRONA-6,159"]
+ ExDialogOp["DodajStrone","100:PODATNIK-STRONA-7,160"]
+% KARTOTEK-MODYFIKUJ-PRZED.ALG
+  CallAlg["KARTOTEK-REKORD-DODAJ-STRONY"]
+  GORA := .N.
+  jestlista   := .N.
+   pnaliczac   := RejWezP_L["pnaliczac"]
+   ppobierac   := RejWezP_L["ppobierac"]
+// dodane maria
+   k_uzys1      := RejWezP_K["k_uzys"]
+   k_zw1        := RejWezP_K["k_zw"]
+   if(not(k_uzys1=.)) k_uzys := k_uzys1
+   if(not(k_zw1=.)) k_zw := k_zw1
+   xpracownik  := RejWezP_S["sym"]
+   st_nip      := RejWezP_S["nip"]
+  st_pesel    := RejWezP_S["pesel"]
+  st_dowod    := RejWezP_S["dowod"]
+  st_imie1    := RejWezP_S["imie1"]
+  st_datau    := RejWezP_D["datau"]
+  st_nazwisko := RejWezP_S["nazwisko"]
+  CallAlg["PODATNIK-SPRAWDZAM"]
+  if(not(jestlista)) goto mozna_zmienic
+     ExDialogOp["PozycjaNieaktywna","10"]
+     ExDialogOp["PozycjaNieaktywna","180"]
+     if(sysalg["jestadminbezinfo"]=1) exdialogop["pozycjaaktywna","180"]
+     ExDialogOp["IdzDoPozycji","42"]
+     Exitalg[0]
+  mozna_zmienic:
+     ExDialogOp["PozycjaAktywna","10"]
+     ExDialogOp["PozycjaAktywna","180"]
+     ExDialogOp["IdzDoPozycji","10"]
+     Exitalg[0]
+% KARTOTEK-MODYFIKUJ-AKCEPTUJESZ.ALG   
+  if(not(RejWezP_S["sym"]="")) goto dalej1
+    OkAlert["Wprowad|x symbol pracownika !"]
+    ExDialogOp["IdzDoPozycji","10"]
+    ExitAlg[0]
+    
+dalej1:
+    if (WezPole_L["cudzoziemiec"]) goto dalej2
+    if(not((RejWezP_S["nip"]="")and(RejWezP_S["pesel"]=""))) goto dalej2
+    OkAlert["Wprowad|x NIP lub PESEL !"]
+    ExDialogOp["IdzDoPozycji","28"]
+    ExitAlg[0]
+    
+dalej2:
+    if(StrLen[RejWezP_S["pesel"]]=11 or rejwezp_s["pesel"]="") goto dalej3
+    OkAlert["Z|la d|lugo|s|c numeru PESEL !.$Numer PESEL sk|lada si|e z jedenastu znak|ow."]
+    ExDialogOp["IdzDoPozycji","28"]
+    ExitAlg[0]
+    
+dalej3:
+  ok_liczba := .T.
+  tekst     := RejWezP_S["pesel"]
+  CallAlg["SPRAWDZ-CZY-LICZBA"]
+  if(ok_liczba) goto dalej4
+    OkAlert["Nieprawid|lowe znaki w numerze PESEL pracownika !"]
+    ExDialogOp["IdzDoPozycji","28"]
+    ExitAlg[0]
+    
+dalej4:
+  ok_data := .T.
+  tekst   := RejWezP_S["pesel"]
+  if(not(WezPole_L["cudzoziemiec"])) CallAlg["POROWNAJ-PESEL-Z-DATA"]
+  
+  if(ok_data) goto dalej5
+    OkAlert["W numerze PESEL pierwsze sze|s|c cyfr to data urodzenia !"]
+    ExDialogOp["IdzDoPozycji","28"]
+    ExitAlg[0]
+    
+dalej5:
+  if(pustepole["nip"]) goto dalej6
+    if (dobrynip[rejwezp_s["nip"]]) goto dalej6
+    OkAlert["Niepoprawny numer NIP !"]
+    ExDialogOp["IdzDoPozycji","29"]
+    ExitAlg[0]
+  
+   
+dalej6:
+// tu sprawdzenie czy w przypadku nie wystapienia pola nip i pesel wypelniono pole dowod lub paszport
+  if(not(pustepole["nip"] and pustepole["pesel"])) goto dalej61
+  if(not(pustepole["dowod"] and pustepole["paszport"])) goto dalej61
+  Okalert["Wprowad|x seri|e i numer dowodu lub paszportu!"]
+  ExDialogop["idzdopozycji","27"]
+  Exitalg[0] 
+dalej61: 
+//  if(pierwszy) CallAlg["DODAJ-PRZEBIEG-NOWEGO-PRACOWNIKA"]
+if (pierwszy) CallPyt["import kadry_g | kadry_g.kadry_dodaj_przebieg1()"]
+if(pierwszy) callalgfile["place\place_wzorce_placowe.alg;place\place.py","!SL.WZORCE_PLACOWE->rejestr(1)"]
+ rejop["mm:otworzrej1","ZLbiorca.rxr"]
+  CallAlg["WPISZ-KONTO-I-KONTRAHENTA"]
+//rejop["mm:zamknijrej",""]
+  CallAlg["DODAJ-DO-REJESTRU-KONTRAHENTOW"]
+  CallAlg["ZMIANA-DANYCH-IDENTYFIKACYJNYCH"]
+  CallAlg["ZAZNACZ-ZMIANE-REJESTRU-SUMYNAR"]
+  Rejop["ZapiszRek",""]
+callsl["PLACE_G->place_przepisz_klasyfikacje(""klx:"",""kl:"",daj_zS(""sym""))"]
+  ExDialogOp["KoniecWykonywania",""]
+  
+% KARTOTEK-MODYFIKUJ-PO12.ALG
+  if(Not(RejWezP_S["plec"]="")) ExitAlg[0]
+  if(RejWezP_S["imie1"]="")     ExitAlg[0]
+  RejWstawP_S["plec","M"]
+  if(StrCut[RejWezP_S["imie1"],StrLen[RejWezP_S["imie1"]]-1,1]=="A") RejWstawP_S["plec","K"]
+  ExDialogOp["WyswietlPozycje","85"]
+  
+% KARTOTEK-PO-POLU42.ALG
+  if (pustepole["numerakt"]) ExitAlg[0]
+  if (not A_ZMIANA) ExitAlg[0]
+  nr_akt := WezPole_S["numerakt"] 
+  r_pos := WezPole_K["rejestrrekpos"]  
+  Plik_Op["DrOtworzPlik",""]
+  Plik_Op["ZmienKluczRej","7"]
+  JEST := Plik_Op["ZnajdzRek",nr_akt]
+  r1_pos := -1
+  if (JEST) r1_pos := RejWezp_k["rejestrrekpos"]
+  Plik_op["ZamknijRej",""]
+  if (not jest) ExitAlg[0]
+  if (r_pos = r1_pos) ExitAlg[0]
+  OkAlert["Powt|orzony numer akt !"]
+  A_OK := .N.  
+  
+// ----------------------------------------
+% KARTOTEK-SPRAWDZAM-BADANIA.ALG
+  nazwa_frm := "sprawdz_badania"
+  czy_badania := .T.
+  czy_badania1 := 1
+  callalg["kartotek-sprawdzam"]
+% KARTOTEK-SPRAWDZAM-umowy.ALG
+  nazwa_frm := "sprawdz_umowy"
+  czy_badania := .N.
+  czy_badania1 := 0
+  callalg["kartotek-sprawdzam"]
+% KARTOTEK-SPRAWDZAM-BHP.ALG
+  nazwa_frm := "sprawdz_bhp"
+  czy_badania := .N.
+  czy_badania1 := 2
+  callalg["kartotek-sprawdzam"]
+% KARTOTEK-SPRAWDZAM.ALG
+  puste_nie := .T.
+  jestlista  := .N.
+  datapocz := d_dzisiaj
+  datakon := d_dzisiaj+21
+  if(czy_badania1=1) exdialogop["idzdodialogu","granica_badan"]
+  if(czy_badania1=0) exdialogop["idzdodialogu","granica_umow"]
+  if(czy_badania1=2) exdialogop["idzdodialogu","granica_bhp"]
+  if(D_POS=1) exitalg[0]
+  
+  RejOp["AA:OtworzRej1","KARTOTEK.RXR"]
+  RejOp["AX:OtworzRejTemp","KARTOTEK.RXR"]
+  RejOp["AY:OtworzRejTemp","KARTOTEK.RXR"]
+  RejOp["AZ:OtworzRejTemp","KARTOTEK.RXR"]
+  if(Not(RejOp["AA:WezPierwszyRek",""])) goto koniec
+  
+petla:
+  xnazwa := RejWezP_S["AA:nazwisko"]+" "+RejWezP_S["AA:imie1"]+" "+RejWezP_S["AA:imie2"]
+  komunikat1 := .N.
+  komunikat2 := .N.
+  komunikat3 := .N.
+  if(datakon>=RejWezP_D["AA:dbadania"]and datapocz<=RejWezP_D["AA:dbadania"] and RejWezP_L["AA:czyzatrud"]) komunikat1 := .T.
+  if(RejWezP_D["AA:dbadania"]='' and RejWezP_L["AA:czyzatrud"] and not(puste_nie)) komunikat1 := .T.
+  if(RejWezP_D["AA:dwygasumowy"]='') goto pusta_data_umow
+if(datakon>=RejWezP_D["AA:dwygasumowy"] and datapocz<=RejWezP_D["AA:dwygasumowy"]) komunikat2 := .T.
+pusta_data_umow:
+  if(RejWezP_S["AA:rodzumowy"]=="CZAS OKRE|SLONY" and RejWezP_D["AA:dwygasumowy"]=''and not(puste_nie)) komunikat2 := .T.
+  if(datakon>=RejWezP_D["AA:dwygasbhp"] and datapocz<=RejWezP_D["AA:dwygasbhp"]) komunikat3 := .T.
+  if(RejWezP_D["AA:dwygasbhp"]='' and RejWezP_L["AA:czyzatrud"] and not(puste_nie)) komunikat3 := .T.
+  if(komunikat1 and czy_badania1=1) CallAlg["ZAPISZ-KOMUNIKAT-O-BADANIACH"]
+  if(komunikat2 and czy_badania1=0) CallAlg["ZAPISZ-KOMUNIKAT-O-WYGASNIECIU-UMOWY"]
+  if(komunikat3 and czy_badania1=2) CallAlg["ZAPISZ-KOMUNIKAT-O-WYGASNIECIU-bhp"]
+  if(RejOp["AA:WezNastepnyRek",""]) goto petla
+  if(rejop["ax:wezpierwszyrek",""] and czy_badania1=1) CallAlg["DRUKUJ-KOMUNIKAT2"]
+  if(rejop["ay:wezpierwszyrek",""] and czy_badania1=0) CallAlg["DRUKUJ-KOMUNIKAT"]
+  if(rejop["az:wezpierwszyrek",""] and czy_badania1=2) CallAlg["DRUKUJ-KOMUNIKAT3"]
+  if(not(rejop["ax:wezpierwszyrek",""]) and czy_badania1=1) okalert["Nie znaleziono pracownik|ow, kt|orym wa|zno|s|c $ bada|n ko|nczy si|e w okresie "+ datapocz+" - "+datakon+"!"]
+  if(not(rejop["ay:wezpierwszyrek",""])and czy_badania1=0) okalert["Nie znaleziono pracownik|ow, kt|orym umowa $ wygasa  w okresie "+ datapocz+" - "+datakon+"!"]
+  if(not(rejop["az:wezpierwszyrek",""])and czy_badania1=2) okalert["Nie znaleziono pracownik|ow, kt|orym wa|zno|s|c $ szkolenia ko|nczy si|e  w okresie "+ datapocz+" - "+datakon+"!"]
+//  CallAlg["DRUKUJ-KOMUNIKAT"]
+ koniec:  
+  RejOp["AA:ZamknijRej",""]
+  RejOp["AX:ZamknijRej",""]
+  RejOp["AY:ZamknijRej",""]
+  RejOp["AZ:ZamknijRej",""]
+  
+% DRUKUJ-KOMUNIKAT.ALG
+  IdzDowydruku["kadry\kadry_drukuj_komunikat",""]
+% DRUKUJ-KOMUNIKAT2.ALG
+  IdzDowydruku["kadry\kadry_drukuj_badania",""]
+
+% DRUKUJ-KOMUNIKAT3.ALG
+  IdzDowydruku["kadry\kadry_drukuj_BHP",""]
+
+% ZAPISZ-KOMUNIKAT-O-BADANIACH.ALG
+  RejOp["AX:DodajRek",""]
+  RejOp["AA:PrzeniesPola","AX:"]
+  RejOp["AX:ZapiszRek",""]  
+  
+% ZAPISZ-KOMUNIKAT-O-WYGASNIECIU-UMOWY.ALG
+  RejOp["AY:DodajRek",""]
+  RejOp["AA:PrzeniesPola","AY:"]
+  RejOp["AY:ZapiszRek",""]  
+  
+% ZAPISZ-KOMUNIKAT-O-WYGASNIECIU-bhp.ALG
+  RejOp["AZ:DodajRek",""]
+  RejOp["AA:PrzeniesPola","AZ:"]
+  RejOp["AZ:ZapiszRek",""]  
+  
+% granica-badan.xxx
+PRZYCISK_CANCELID = 1
+##DEFWINDOW = ,,,,ADSPH,,,,,"Wyb|or okresu"
+##10,0,P,,,,,,,,zmienna:datapocz,ydate
+##11,0,P,,,,,,,,zmienna:datakon,ydate
+##12,0,P,,"pomi|n nieuzupe|lnione",,,,,,zmienna:puste_nie,,0,12,T
+##13,0,P,,"uwzgl|ednij nieuzupe|lnione",,,,,,zmienna:puste_nie,,O,12,N
+##0,,ADP,,@3
+##1,,ADP,,@4
+% granica_badan.dlg
+%< granica-badan.xxx
+
+Termin wa|zno|sci bada|n 
+up|lywa w okresie:        #10    # - #11    #   
+
+#12                            #
+#13                            #
+
+
+ #0        #  #1        #
+//
+% granica_umow.dlg
+%< granica-badan.xxx
+
+Umowa wygasa w okresie: #10    # - #11    #   
+
+#12                            #
+#13                            #
+
+
+ #0        #  #1        #
+// ------------------------------------------
+% granica_bhp.dlg
+%< granica-badan.xxx
+
+Termin wa|zno|sci szkolenia 
+up|lywa w okresie:         #10    # - #11    #   
+
+#12                            #
+#13                            #
+
+
+ #0        #  #1        #
+//
+% TABLICA-AKCJI-GRANICA_umow,TABLICA-AKCJI-GRANICA_badan,,TABLICA-AKCJI-GRANICA_bhp
+"AKCJA-BUTTON0",GRANICA_UMOW_AKCE
+//
+% GRANICA_UMOW_AKCE.ALG
+if( not(datapocz='')) goto sprawdz1
+okalert["Wprowad|x dat|e pocz|atkow|a"]
+exdialogop["idzdopozycji","10"]
+exitalg[0]
+sprawdz1: 
+if( not(datakon='')) goto sprawdz2
+okalert["Wprowad|x dat|e ko|ncow|a"]
+exdialogop["idzdopozycji","11"]
+exitalg[0]
+sprawdz2:
+if(datapocz<= datakon) goto koniec
+okalert["Nieprawid|lowa kolejno|s|c dat"]
+exdialogop["idzdopozycji","11"]
+exitalg[0]
+koniec:
+exdialogop["koniecwykonywania",""]
+exitalg[0]
+// sposoby rozwiazania umowy o prace
+// ------------------------------------------
+
+% ROZWIAZALGO.XXX
+"AKCJA-PRZED-WYSWIETLENIEM-ROZWIAZ-REKORD-0.DLG",ROZWIAZREKORD-DODAJMODIF
+"AKCJA-PRZED-WYSWIETLENIEM-ROZWIAZ-REKORD-1.DLG",ROZWIAZREKORD-DODAJSTART
+"AKCJA-PRZED-WYSWIETLENIEM-ROZWIAZ-REKORD-2.DLG",ROZWIAZREKORD-DODAJLOOK
+"AKCJA-PRZED-WYSWIETLENIEM-ROZWIAZ-REKORD-3.DLG",ROZWIAZREKORD-DODAJSTART1
+"AKCJA-BUTTON1-ROZWIAZ-REKORD-?.DLG",ROZWIAZREKORD-AKCEPTUJESZ
+"AKCJA-BUTTON4-ROZWIAZ-REKORD-?.DLG",ROZWIAZREKORD-MODYFIKUJ
+"AKCJA-BUTTON20-ROZWIAZ-MENU-?.DLG",ROZWIAZMENU-USUN
+% ROZWIAZREKORD-AKCEPTUJESZ.ALG   
+// ----- sprawdzenie poprawnosci
+ if(not(ROZWIAZ="")) goto dalej1
+     OkAlert["Wprowad|x kod !"]
+    ExDialogOp["IdzDoPozycji","10"]
+    ExitAlg[0]
+ dalej1:
+  if(not(sposob="")) goto dalej2
+    OkAlert["Wprowad|x nazw|e kodu !"]
+    ExDialogOp["IdzDoPozycji","11"]
+    ExitAlg[0]
+  dalej2:
+  ExDialogOp["KoniecWykonywania",""]
+
+% ROZWIAZREKORD-MODYFIKUJ.ALG
+  RejOp["A:OtworzRej1","KARTOTEK.RXR"]
+  ROZWIAZ := RejWezP_S["ROZWIAZ"]
+  IF(Not(RejOp["A:WezPierwszyRek",""])) goto modyfikuj
+powrot:
+  If(ROZWIAZ==RejWezP_S["A:rozwumowy"]) goto nomodyfikuj
+  IF(RejOp["A:WezNastepnyRek",""]) goto powrot
+  goto modyfikuj
+nomodyfikuj:
+  ExDialogOp["PozycjaNiewprowadzana","*"]
+  RejOp["A:ZamknijRej",""]
+  ExitAlg[0]
+modyfikuj:
+  ExDialogOp["PozycjaAktywna","10"]
+  ExDialogOp["IdzDoPozycji","10"]
+  RejOp["A:ZamknijRej",""]
+
+% ROZWIAZREKORD-DODAJSTART1.ALG 
+// wolane przy dodawanie nowego rekordu z pola
+%< ROZWIAZREKORD-DODAJSTART.ALG
+
+% ROZWIAZREKORD-DODAJSTART.ALG 
+  ExDialogOp["PozycjaAktywna","10"]
+  ExDialogOp["IdzDoPozycji","10"]
+
+% ROZWIAZREKORD-DODAJMODIF.ALG 
+  ROZWIAZ := RejWezP_S["ROZWIAZ"]
+  RejOp["A:OtworzRej1","KARTOTEK.RXR"]
+  IF(Not(RejOp["A:WezPierwszyRek",""])) goto modyfikuj
+powrot:
+    If(ROZWIAZ==RejWezP_S["A:rozwumowy"]) goto nomodyfikuj
+    IF(RejOp["A:WezNastepnyRek",""]) goto powrot
+    goto modyfikuj
+nomodyfikuj:
+  ExDialogOp["PozycjaNiewprowadzana","*"]
+  RejOp["A:ZamknijRej",""]
+  ExitAlg[0]
+modyfikuj:
+  ExDialogOp["PozycjaAktywna","10"]
+  ExDialogOp["IdzDoPozycji","10"]
+  RejOp["A:ZamknijRej",""]
+
+% ROZWIAZMENU-USUN.ALG
+  rozwiaz := RejWezP_S["rozwiaz"]
+  RejOp["A:OtworzRej1","kartotek.rxr"]
+  IF(Not(RejOp["A:WezPierwszyRek",""])) goto modyfikuj
+powrot:
+  If(ROZWIAZ==RejWezP_S["A:rozwumowy"]) goto nomodyfikuj
+  IF(RejOp["A:WezNastepnyRek",""]) goto powrot
+  goto modyfikuj
+nomodyfikuj:
+  RejOp["A:ZamknijRej",""]
+    OkAlert["Istnieje pracownik dla tego kodu ! $Nie mo|zna go usun|a|c !"]
+    ExitAlg[0]
+modyfikuj:
+  RejOp["A:ZamknijRej",""]
+  if (not YesNAlert["Usun|a|c kod "+ROZWIAZ+" z rejestru ?"]) ExitAlg[0]
+  RejOp["UsunRek",""]
+  ExDialogOp["UsunRekordzMenu","100"]    
+
+% ROZWIAZREKORD-DODAJLOOK.ALG
+  ExDialogOp["PozycjaNiewprowadzana","*"]
+
+% ROZWIAZ-MENU-1.DLG
+%< ROZWIAZ-MENU-X.XXX1
+PRZYCISK_CANCELID = 0
+
+ #0       #     #101                 # Symbol: #7                 #
+ 
+%< ROZWIAZ-MENU-X.XXX2
+//
+% ROZWIAZ-MENU-0.DLG
+%< ROZWIAZ-MENU-X.XXX1
+PRZYCISK_CANCELID = 3
+
+ #1      #  #3       # #101             # Symbol: #7              #
+ 
+%< ROZWIAZ-MENU-X.XXX2
+//
+% KODY_R_MENU
+P = 3,,ADS
+*5,@18
+*4,@19
+*20,@20
+% ROZWIAZ-MENU-X.XXX1
+##DEFWINDOW = ,,,,ADPSH,,,,,"Lista sposob|ow rozwi|azania umowy"
+##100,0,BCMP,,,,,,,,MENU_NA_REKORDY:ROZWIAZMENU,,KLUCZ,1
+##101,0,P,,,,,,,,MENU_ROZWIJANE:KODY_R_MENU
+##0,,ADP,,@5
+##1,,ADP,,@17
+##3,,ADP,,@4
+##7,0,ACP
+% ROZWIAZ-MENU-X.XXX2
+
+
+#100                                                              #100
+
+// --------
+// REKORD
+// --------
+% ROZWIAZ.XXX
+##DEFWINDOW = ,,,,ADPHS,,,,,"Spos|ob rozwi|azania umowy"
+##10,0,0,,,,&&black/lwhite,&&white/lblue,,,POLEUNIKALNE:ROZWIAZ
+##11,0,0,,,,&&black/lwhite,&&white/lblue,,,POLE:sposob
+##200,DZ,ADP
+
+ Symbol: #10                     #
+ Nazwa:  #11                                              #
+
+
+% ROZWIAZ-REKORD-1.DLG,ROZWIAZ-REKORD-0.DLG,ROZWIAZ-REKORD-3.DLG
+%<ROZWIAZ.XXX
+%<REKORD-AKCEPTUJESZ-BUTT.XXX
+//
+% ROZWIAZ-REKORD-2.DLG
+%<ROZWIAZ.XXX
+%<REKORD-OK-BUTT.XXX
+//
+% ROZWIAZMENU.MEN
+D=,"",A
+1,,,,25,"Symbol"
+2,,,,35,"Nazwa"
+
+// --------------------------------------
+// kody rodzaju zatrudnienia
+// --------------------------------------
+
+% KODZATR-DAJDANE.ALG
+  symbol_pole_rej := "kodzatrud"
+  symbol_tytul := "Wykaz kod|ow rodzaj zatrudnienia"
+  symbol_menu := "KODZATRMENU"
+  
+  symbol_jest_modif := "PRZEBIEG.RXR"
+  symbol_jest_modif1 := "PRZEBIEG.RXR"
+  symbol_modif_glowny_rej := "kodzatrud"
+  symbol_usun_glowny_rej := "Istnieje przebieg zatrudnienia oznaczony tym kodem ! $Nie mo|zna go usun|a|c !"
+
+% KODZATRALGO.XXX
+"AKCJA-BUTTON1-KODZATR-REKORD-?.DLG",KODZATRREKORD-AKCEPTUJESZ
+%< TABLICA-AKCJI-REJESTRSYMBOLE.XXX(SYMBOL_D=KODZATR)
+
+% KODZATR-MENU-0.DLG
+%< SYMBOLE-MENU-0.DLG
+% KODZATR-MENU-1.DLG
+%< SYMBOLE-MENU-1.DLG
+// --------
+% KODZATRREKORD-AKCEPTUJESZ.ALG   
+  if(not(RejwezP_S["kodzatrud"]="")) goto dalej1
+      OkAlert["Wprowad|x kod !"]
+      ExDialogOp["IdzDoPozycji","10"]
+      ExitAlg[0]
+      
+  dalej1:
+  if(not(RejwezP_S["nazwakodu"]="")) goto dalej2
+    OkAlert["Wprowad|x nazw|e kodu !"]
+    ExDialogOp["IdzDoPozycji","11"]
+    ExitAlg[0]
+     
+  dalej2:
+    if(RejWezP_L["dostazu"] or RejWezP_L["dojubil"]) goto dalej3
+    if(YesAlert["Przebieg zatrudnienia oznaczony tym kodem$nie b|edzie wliczany do sta|zu ani do jubileuszu$ czy tak ma by|c ??"]) goto dalej5
+       ExDialogOp["IdzDoPozycji","8"]
+       ExitAlg[0]
+       
+  dalej3:
+  if(RejWezP_L["dojubil"]) goto dalej4
+  if(YesAlert["Przebieg zatrudnienia oznaczony tym kodem$nie b|edzie wliczany do jubileuszu$czy tak ma by|c ??"]) goto dalej4
+      ExDialogOp["IdzDoPozycji","9"]
+      ExitAlg[0]
+      
+  dalej4:
+  if(RejWezP_L["dostazu"]) goto dalej5
+  if(YesAlert["Przebieg zatrudnienia oznaczony tym kodem$nie b|edzie wliczany do sta|zu$czy tak ma by|c ??"]) goto dalej5
+     ExDialogOp["IdzDoPozycji","8"]
+     ExitAlg[0]
+     
+  dalej5:
+  ExDialogOp["KoniecWykonywania",""]
+
+% KODZATR.XXX
+##10,0,0,,,,&&black/lwhite,&&white/lblue,,,POLEUNIKALNE:kodzatrud
+##11,F,0,,,,&&black/lwhite,&&white/lblue,,,POLE:nazwakodu
+##8,F,0,," ",,&&black/lwhite,&&white/lblue,,,POLE:dostazu,,0,8,T
+##14,F,0,," ",,&&black/lwhite,&&white/lblue,,,POLE:dostazu,,O,8,N
+##9,F,0,," ",,&&black/lwhite,&&white/lblue,,,POLE:dojubil,,0,9,T
+##15,F,0,," ",,&&black/lwhite,&&white/lblue,,,POLE:dojubil,,O,9,N
+
+ Kod: #10      #
+ Nazwa kodu: #11                                              #
+									   
+ Przebieg zatrudnienia oznaczony tym kodem:
+
+                                     #8# wlicza|c do sta|zu
+
+                                     #9# wlicza|c do jubileuszu
+% KODZATR-REKORD-1.DLG,KODZATR-REKORD-0.DLG,KODZATR-REKORD-3.DLG
+%<KODZATR.XXX
+%<REKORD-AKCEPTUJESZ-BUTT.XXX
+//
+% KODZATR-REKORD-2.DLG
+%<KODZATR.XXX
+%<REKORD-OK-BUTT.XXX
+//
+% KODZATRMENU.MEN
+D=,"",A
+1,,,,10,"Symbol"
+2,,,,39,"Nazwa"
+3,,,,5,"Jub"
+4,,,,7,"Sta|z"
+
+// ----------------------------------
+// rejestr zawodow
+// ----------------------------------
+
+% ZAWOD-DAJDANE.ALG
+  symbol_pole_rej := "zawod"
+  symbol_pole_brak := "Wprowad|x zaw|od !"
+  symbol_menu := "ZAWODMENU"
+  symbol_tytul := "Wykaz zawod|ow"  
+//  symbol_Key_field := 1  
+  
+  symbol_jest_modif := "KARTOTEK.RXR"
+  symbol_jest_modif1 := "KARTOTEK.RXR"
+  symbol_modif_glowny_rej := "zawod"
+  symbol_usun_glowny_rej := "Istnieje pracownik dla tego kodu ! $Nie mo|zna go usun|a|c !"
+   
+% ZAWOD-REKORD-1.DLG,ZAWOD-REKORD-0.DLG,ZAWOD-REKORD-3.DLG,ZAWOD-REKORD-5.DLG
+%<ZAWOD.XXX
+
+
+%<REKORD-AKCEPTUJESZ-BUTT.XXX
+//
+% ZAWOD-REKORD-2.DLG
+%<ZAWOD.XXX
+%<REKORD-OK-BUTT.XXX
+% ZAWODALGO.XXX
+%< TABLICA-AKCJI-REJESTRSYMBOLE.XXX(SYMBOL_D=ZAWOD)
+% ZAWOD-MENU-0.DLG
+%< SYMBOLE-MENU-0.DLG
+% ZAWOD-MENU-1.DLG
+%< SYMBOLE-MENU-1.DLG
+% ZAWODMENU.MEN
+D=,"",A
+1,,,,50,"Nazwa zawodu"
+2,,,,20,"Kod zawodu"
+% ZAWOD.XXX
+##DEFWINDOW = ,,,,ADPHS,,,,,"Zaw|od"
+##10,0,AC,,,,&&black/lwhite,&&white/lblue,,,POLEUNIKALNE:zawod
+##11,0,0,,,,&&black/lwhite,&&white/lblue,,,POLE:kod_zawod
+
+
+Symbol:  #10                                         #
+
+
+Kod :    #11      #
+// ----------------------------------------------------------
+// rejestr rodzajow wyksztalcenia
+// ----------------------------------------------------------
+
+
+% WYKSZT-DAJDANE.ALG
+  symbol_pole_rej := "wykszt"
+  symbol_pole_brak := "Wprowad|x wykszta|cenie !"
+  symbol_menu := "WYKSZTMENU"
+  symbol_tytul := "Wykaz rodzaj|ow wykszta|lcenia"  
+  
+  symbol_jest_modif := "KARTOTEK.RXR"
+  symbol_jest_modif1 := "KARTOTEK.RXR"
+  symbol_modif_glowny_rej := "wykszt"
+  symbol_usun_glowny_rej := "Istnieje pracownik dla tego kodu wykszta|lcenia ! $Nie mo|zna usun|a|c !"
+   
+% WYKSZT-REKORD-1.DLG,WYKSZT-REKORD-0.DLG,WYKSZT-REKORD-3.DLG,WYKSZT-REKORD-5.DLG
+%<WYKSZT.XXX
+
+
+%<REKORD-AKCEPTUJESZ-BUTT.XXX
+//
+% WYKSZT-REKORD-2.DLG
+%<WYKSZT.XXX
+%<REKORD-OK-BUTT.XXX
+//
+% WYKSZTALGO.XXX
+%< TABLICA-AKCJI-REJESTRSYMBOLE.XXX(SYMBOL_D=WYKSZT)
+% WYKSZT-MENU-0.DLG
+%< SYMBOLE-MENU-0.DLG
+% WYKSZT-MENU-1.DLG
+%< SYMBOLE-MENU-1.DLG
+//
+% WYKSZTMENU.MEN
+D=,"",A
+1,,,,50,"Nazwa wykszta|lcenia"
+2,,,,20,"Kod wykszta|lcenia"
+% WYKSZT.XXX
+##DEFWINDOW = ,,,,ADPHS,,,,,"Wykszta|lcenie"
+##10,0,AC,,,,&&black/lwhite,&&white/lblue,,,POLEUNIKALNE:wykszt
+##11,0,0,,,,&&black/lwhite,&&white/lblue,,,POLE:kod_wykszt
+
+Wykszta|lcenie #10                                #  Kod :#11#<
+// =================================================================
+//               DANE  DO  RAPORTOW  PROGRAMU  PLATNIKA
+// =================================================================
+% PPRAP1ALGO.XXX
+"AKCJA-PRZED-WYSWIETLENIEM-PPRAP1-REKORD-1.DLG",PPRAP1REKORD-DODAJSTART
+"AKCJA-PRZED-WYSWIETLENIEM-PPRAP1-REKORD-3.DLG",PPRAP1REKORD-DODAJSTART1
+"AKCJA-PRZED-WYSWIETLENIEM-PPRAP1-REKORD-0.DLG",PPRAP1REKORD-DODAJMODIF
+"AKCJA-PRZED-WYSWIETLENIEM-PPRAP1-REKORD-2.DLG",PPRAP1REKORD-DODAJLOOK
+"AKCJA-BUTTON1-PPRAP1-REKORD-?.DLG",PPRAP1REKORD-AKCEPTUJESZ
+"AKCJA-BUTTON20-PPRAP1-MENU-?.DLG",PPRAP1MENU-USUN
+//
+% PPRAP1MENU-USUN.ALG
+%< PPRAPORTMENU-USUN.ALG
+//
+% PPRAP1REKORD-AKCEPTUJESZ.ALG   
+%< PPRAPORTREKORD-AKCEPTUJESZ.ALG   
+//
+% PPRAP1REKORD-DODAJSTART1.ALG 
+%< PPRAP1REKORD-DODAJSTART.ALG
+//
+% PPRAP1REKORD-DODAJSTART.ALG 
+  ExDialogOp["PozycjaAktywna","*"]
+  ExDialogOp["IdzDoPozycji","10"]
+//
+% PPRAP1REKORD-DODAJMODIF.ALG 
+  ExDialogOp["PozycjaAktywna","*"]
+  ExDialogOp["IdzDoPozycji","10"]
+//
+% PPRAP1REKORD-DODAJLOOK.ALG
+  ExDialogOp["PozycjaNiewprowadzana","*"]
+//
+% PPRAP1-MENU-1.DLG
+%< PPRAPORT-MENU-1.DLG
+//
+% PPRAP1-MENU-0.DLG
+%< PPRAPORT-MENU-1.DLG
+// -----------------------
+% PPRAP11.XXX
+##10,0,P,,,,,,,,POLE:symrap
+##11,0,P,,,,,,,,POLE:identrap
+##12,0,P,,,,,,,,POLE:nazwisko
+##13,0,P,,,,,,,,POLE:imie1
+##14,0,P,,,,,,,,POLE:typid
+##15,0,P,,,,,,,,POLE:ident
+##200,DZ,ADP
+#200
+ Symbol raportu           #10     #
+ Identyfikator raportu    #11      #
+ Nazwisko ubezpieczonego  #12                          #
+ Imi|e ubezpieczonego      #13                  #
+ Typ identyfikatora       #14#<    
+ Identyfikator            #15       #
+                                                                       #200<	
+% PPRAP1-REKORD-1.DLG,PPRAP1-REKORD-0.DLG,PPRAP1-REKORD-3.DLG
+%<PPRAP11.XXX
+
+%<REKORD-AKCEPTUJESZ-BUTT.XXX
+//
+% PPRAP1-REKORD-2.DLG
+%<PPRAP11.XXX
+%<REKORD-OK-BUTT.XXX
+
+// ---------------------------------------------
+
+% LOOK-WYKSZT.ALG
+  CallSl["gl_zobacz_rejestr(""WYKSZT.RXR"")"]
+
+% LOOK-ROZWIAZ.ALG
+  CallSl["gl_zobacz_rejestr(""ROZWIAZ.RXR"")"]
+  
+% LOOK-KODZATR.ALG
+  CallSl["gl_zobacz_rejestr(""KODZATR.RXR"")"]
+  
+% LOOK-ZAWOD.ALG
+  CallSl["gl_zobacz_rejestr(""ZAWOD.RXR"")"]
+  
+% LOOK-PPRAP1.ALG
+  CallSl["gl_zobacz_rejestr(""PPRAP1.RXR"")"]
+    
+% LOOK-STANOW.ALG
+%< SCN-STANOWISKA.ALG
+
+% LOOK-WYDZIALY.ALG
+%< SCN-WYDZIALY.ALG
+
+% LOOK-KODPRAC.ALG
+%< SCN-KODY-PRACOWNIKOW.ALG
+
+% LOOK-RODZSKL.ALG
+%< SCN-RODZAJ-SKLADNIKA.ALG
+
+% PARAMETRY-JUBILEUSZU.ALG
+  CallSl["gl_zobacz_rejestr(""PLC_JUB.RJR"")"]
+  
+% LOOK-KALENDARZ.ALG
+  KL_D_ROK   := A_DATE[Poczrok_ksieg,"Y"]
+  KL_D_GRUPA := ""
+  CallAlg["KL-ZOBACZ-KALENDARZ"]  
+  
+% PRINT_JUBILEUSZ.ALG
+  CallPyt["import place_g | place_g.place_drukuj_jubileusz()"]
+  
+% LOOK-PARPP-KADRY.ALG
+  CallPyt["import place_g | place_g.place_parametry_platnik()"]
+
+% BO-KADRY.ALG
+rejop["A:otworzrejsprawdz","PARCHOR.RXR"]
+ if(not(pustepole["A:ch_ksieg"])) goto dalej
+ Okalert["Brak symbolu ksi|egi |xr|od|lowej!!$ $ Nale|zy poda|c ten symbol - funkcja: Parametry do wyliczania zasi|lk|ow."]
+ rejop["a:zamknijrej",""]
+ Exitalg[0]
+ dalej:
+ksiega_pocz := rejwezp_s["A:ch_ksieg"]
+rejop["A:zamknijrej",""]
+// Przepisanie danych pocz|atkowych dla urlop|ow
+rejop["U:Otworzrejtemp","Urlopy.rxr"]
+Ustawczekajinfo["start4","Tworzenie zbiorczego wykazu urlop|ow ...prosz|e czeka|c"]
+if(not(finnop["openmainx",ksiega_pocz]))  goto omin_ksiega_pocz
+rejop["C:otworzrej1","urlopy.rxr"]
+//rejop["c:zobaczdbf",""]
+rejop["C:zmienkluczrej","2"]
+rok_s := strcut[studatas[poczrok_ksieg],0,4]
+if(not(rejop["C:znajdzrek",rok_s])) goto koniec_urlop
+petla_c:
+rejop["U:dodajtemprek",""]
+rejop["c:przeniespola","U:"]
+rejop["U:zapiszrek",""]
+ustawczekajinfo["nastepny",""]
+if(rejop["c:weznastepnyrekn",""]) goto petla_c
+koniec_urlop:
+rejop["c:zamknijrej",""]
+// nieobecnosci
+
+// przepisywanie danych
+finnop["close",""]
+omin_ksiega_pocz:
+finnop["openmainx",""]
+rok_s := strcut[studatas[poczrok_ksieg],0,4]
+rok_k := stringnaliczbe[rok_s]
+finnop["close",""]
+rejop["P:otworzrej1","podatnik.rxr"]
+rejop["C:otworzrej","urlopy.rxr"]
+rejop["C:zmienkluczrej","3"]
+if(not(rejop["U:wezpierwszyrek",""])) goto xx
+petla_u:
+pra_id :=.
+if(rejop["P:znajdzrek",rejwezp_s["U:sym"]]) pra_id := rejwezp_k["P:dokid"]
+if(rejop["C:znajdzrek",rok_s+"*"+rejwezp_s["U:sym"]]) goto uzu_urlop
+rejop["c:dodajtemprek",""]
+xrejwstawp_s["c:sym",rejwezp_s["u:sym"]]
+xrejwstawp_k["c:rok",rok_k]
+xrejwstawp_s["c:kodurlopu",rejwezp_s["u:kodurlopu"]]
+xrejwstawp_s["c:nazwaurlopu",rejwezp_s["u:nazwaurlopu"]]
+xrejwstawp_k["c:dokidzap",pra_id]
+xrejwstawp_k["c:ldnizaleglybo",rejwezp_k["U:ldnipozost"]]
+if(rejwezp_k["U:ldnipozost"]<0) xrejwstawp_k["c:ldnizaleglybo",0]
+xrejwstawp_k["c:lgdzzaleglybo",rejwezp_k["U:lgdzpozost"]]
+if(rejwezp_k["U:lgdzpozost"]<0) xrejwstawp_k["c:lgdzzaleglybo",0]
+xrejwstawp_k["c:ldnibiezacybo",rejwezp_k["u:ldnibiezacybo"]]
+xrejwstawp_k["c:lgdzbiezacybo",rejwezp_k["u:lgdzbiezacybo"]]
+xrejwstawp_k["c:ldnizadbo",rejwezp_k["u:ldnizadbo"]]
+xrejwstawp_k["c:przelicznik",rejwezp_k["u:przelicznik"]]
+xrejwstawp_k["c:ldniwykorz",0]
+xrejwstawp_k["c:lgdzwykorz",0]
+xrejwstawp_k["c:ldnizadwykorz",0]
+xrejwstawp_k["c:ldnipozost",rejwezp_k["U:ldnipozost"]+ rejwezp_k["u:ldnibiezacybo"]]
+xrejwstawp_k["c:lgdzpozost",rejwezp_k["U:lgdzpozost"]+ rejwezp_k["u:lgdzbiezacybo"]]
+xrejwstawp_k["c:ldnizalegly",rejwezp_k["U:ldnipozost"]]
+xrejwstawp_k["c:lgdzzalegly",rejwezp_k["U:lgdzpozost"]]
+xrejwstawp_k["c:ldnibiezacy",rejwezp_k["u:ldnibiezacybo"]]
+xrejwstawp_k["c:lgdzbiezacy",rejwezp_k["u:lgdzbiezacybo"]]
+xrejwstawp_k["c:ldnizadpozost",rejwezp_k["u:ldnizadpozost"]]
+rejop["c:zapiszrek",""]
+uzu_urlop:
+ustawczekajinfo["nastepny",""]
+if(rejop["u:weznastepnyrek",""]) goto petla_u
+// po bo urlopy
+// dodanie danych z poprzedniego roku
+rejop["u:wezpierwszyrek",""]
+petla_uu:
+rejop["c:dodajrek",""]
+rejop["u:przeniespola","c:"]
+rejop["c:zapiszrek",""]
+if(rejop["u:weznastepnyrek",""]) goto petla_uu
+xx:
+ustawczekajinfo["stop",""]
+rejop["u:zamknijrej",""]
+rejop["c:zamknijrej",""]
+// --------------
+
+% KADRY-OP-MENU
+P = 3,,ADS
+//*90,"Operacje"
+*22,@18
+*21,@19
+*23,@20  
+
+// -------------
+% KADRY-OP-DIALOG.XXX
+##DEFWINDOW = 3,,,,ADPHS
+PRZYCISK_CANCELID = 0
+##100,0,ADPM,,,,,,,,MENU_NA_REKORDY
+##106,DF,P,,,,,,,,WYRAZENIE:TYTUL23
+##0,,ADP,,@5
+##200,DZ,ADPH,,"Osoba"
+
+ #0      #   #101                          #
+
+#200
+  #106                                                                    #
+                                                                           #200<
+
+
+ #100                                                                     #
+% KADRY-OP-USTAW-OSOBA.ALG
+D_STRING := ToStr["#RejWezP_S[""nazwisko""]#S #RejWezP_S[""imie1""]#S Nr akt:#RejWezP_S[""numerakt""]#S  Kom|orka:#RejWezP_S[""wydzial""]#S"]
+// ------------------------------------
+% KADRY-NAZWA-ZNAJDZ.ALG
+  RejOp["EA:OtworzRej1",rejestr]
+  if(Not(RejOp["EA:ZnajdzRek",xrodzskl])) goto zamknij
+    nazwarodz  := RejWezP_S["EA:"+zmienna]
+zamknij:
+  RejOp["EA:ZamknijRej",""]
+
+// -------------------------------------
+% POROWNAJ-PESEL-Z-DATA.ALG
+  znaczek  := ""
+  znaczek1 := ""
+  znaczek  := StrCut[tekst,0,6]
+  txtdatau := ToStr["#RejWezP_D[""datau""]#S"]
+  znaczek1 := StrCut[txtdatau,0,2]+StrCut[txtdatau,3,2]+StrCut[txtdatau,6,2]
+  if(Not(znaczek=znaczek1)) ok_data := .N.
+  
+// -------------------------------------
+
+// ---------------------------------------------
+% KOPIUJ-POLA-DO-KART_DRK.ALG
+    xRejWstawP_S["M:sym",RejwezP_S[rej+"sym"]]
+    xRejWstawP_S["M:nazwisko",RejwezP_S[rej+"nazwisko"]]
+    xRejWstawP_S["M:imie1",RejwezP_S[rej+"imie1"]]
+    xRejWstawP_S["M:imie2",RejwezP_S[rej+"imie2"]]
+    xRejWstawP_L["M:czyzatrud",RejwezP_L[rej+"czyzatrud"]]
+    xRejWstawP_S["M:wydzial",RejwezP_S[rej+"wydzial"]]
+    xRejWstawP_S["M:stanow",RejwezP_S[rej+"stanow"]]
+    xRejWstawP_L["M:podstawowe",RejwezP_L[rej+"podstawowe"]]
+    xRejWstawP_S["M:numerakt",RejwezP_S[rej+"numerakt"]]
+    xRejWstawP_S["M:plec",RejwezP_S[rej+"plec"]]
+    xRejWstawP_D["M:dzatrud",RejwezP_D[rej+"dzatrud"]]
+    xRejWstawP_D["M:dzwolnien",RejwezP_D[rej+"dzwolnien"]]
+    xRejWstawP_S["M:rozwumowy",RejwezP_S[rej+"rozwumowy"]]
+    xRejWstawP_D["M:dwygasumowy",RejwezP_D[rej+"dwygasumowy"]]
+    xRejWstawP_K["M:wynagrodz",RejwezP_K[rej+"wynagrodz"]]
+    xRejWstawP_S["M:miasto",RejwezP_S[rej+"miasto"]]
+    xRejWstawP_S["M:kod",RejwezP_S[rej+"kod"]]
+    xRejWstawP_S["M:wojew",RejwezP_S[rej+"wojew"]]
+    xRejWstawP_S["M:gmina",RejwezP_S[rej+"gmina"]]
+    xRejWstawP_S["M:poczta",RejwezP_S[rej+"poczta"]]
+    xRejWstawP_S["M:ulica",RejwezP_S[rej+"ulica"]]
+    xRejWstawP_S["M:dom",RejwezP_S[rej+"dom"]]
+    xRejWstawP_S["M:lokal",RejwezP_S[rej+"lokal"]]
+    xRejWstawP_D["M:datau",RejwezP_D[rej+"datau"]]
+    xRejWstawP_S["M:miejsce_u",RejwezP_S[rej+"miejsce_u"]]
+    xRejWstawP_S["M:dowod",RejwezP_S[rej+"dowod"]]
+    xRejWstawP_D["M:ddowod",RejwezP_D[rej+"ddowod"]]
+    xRejWstawP_S["M:ktowydal",RejwezP_S[rej+"ktowydal"]]
+    xRejWstawP_S["M:paszport",RejwezP_S[rej+"paszport"]]
+    xRejWstawP_S["M:pesel",RejwezP_S[rej+"pesel"]]
+    xRejWstawP_S["M:nip",RejwezP_S[rej+"nip"]]
+    xRejWstawP_S["M:im_oj",RejwezP_S[rej+"im_oj"]]
+    xRejWstawP_S["M:im_ma",RejwezP_S[rej+"im_ma"]]
+    xRejWstawP_S["M:telefon",RejwezP_S[rej+"telefon"]]
+    xRejWstawP_S["M:faks",RejwezP_S[rej+"faks"]]
+    xRejWstawP_S["M:urzad",RejwezP_S[rej+"urzad"]]
+    xRejWstawP_S["M:kodprac",RejwezP_S[rej+"kodprac"]]
+    xRejWstawP_S["M:charakter",RejwezP_S[rej+"charakter"]]
+    xRejWstawP_S["M:nazwa_bank",RejwezP_S[rej+"nazwa_bank"]]
+    xRejWstawP_K["M:os_rodz",RejwezP_K[rej+"os_rodz"]]
+    xRejWstawP_K["M:os_piel",RejwezP_K[rej+"os_piel"]]
+    xRejWstawP_S["M:wymiar1",RejwezP_S[rej+"wymiar1"]]
+    xRejWstawP_S["M:wymiar2",RejwezP_S[rej+"wymiar2"]]
+    xRejWstawP_S["M:nazwa_bank2",RejwezP_S[rej+"nazwa_bank2"]]
+    xRejWstawP_S["M:numer_bank2",RejwezP_S[rej+"numer_bank2"]]
+    xRejWstawP_L["M:rodzmalzonek",RejwezP_L[rej+"rodzmalzonek"]]
+    xRejWstawP_S["M:nazwisko_pan",RejwezP_S[rej+"nazwisko_pan"]]
+    xRejWstawP_S["M:zawod",RejwezP_S[rej+"zawod"]]
+    xRejWstawP_S["M:charpracy",RejwezP_S[rej+"charpracy"]]
+    xRejWstawP_S["M:wykszt",RejwezP_S[rej+"wykszt"]]
+    xRejWstawP_S["M:rodzwykszt",RejwezP_S[rej+"rodzwykszt"]]
+    xRejWstawP_S["M:jezyk1",RejwezP_S[rej+"jezyk1"]]
+    xRejWstawP_S["M:jezyk2",RejwezP_S[rej+"jezyk2"]]
+    xRejWstawP_S["M:jezyk3",RejwezP_S[rej+"jezyk3"]]
+    xRejWstawP_S["M:formnaboru",RejwezP_S[rej+"formnaboru"]]
+    xRejWstawP_D["M:dbadania",RejwezP_D[rej+"dbadania"]]
+    xRejWstawP_S["M:nrlegit",RejwezP_S[rej+"nrlegit"]]
+    xRejWstawP_S["M:miegodz",RejwezP_S[rej+"miegodz"]]
+
+% KOPIUJ-KLUCZ-DO-KART_DRK.ALG
+  if(porzadek_drk = 1) xRejWstawP_S["M:rejklucz",RejwezP_S[rej+"sym"]]
+  if(porzadek_drk = 2) xRejWstawP_S["M:rejklucz",RejwezP_S[rej+"nazwisko"]]
+  if(porzadek_drk = 3) xRejWstawP_S["M:rejklucz",RejwezP_S[rej+"wydzial"]]
+  if(porzadek_drk = 4) xRejWstawP_S["M:rejklucz",RejwezP_S[rej+"stanow"]]
+  if(porzadek_drk = 7) xRejWstawP_S["M:rejklucz",RejwezP_S[rej+"numerakt"]]
+  
+% KOL-DRUKUJ-DEFINICJE-KARTOTEKI.DLG
+%<9GL-STANDARDOWY-DIALOG-KOLUMNY.DLG  
+% TABLICA-AKCJI-KOL-DRUKUJ-DEFINICJE-KARTOTEKI
+%< TABLICA-AKCJI-KOL-DRUKUJ-START  
+
+// ------------------------------
+% DIALOG-DO-WYDRUKU-UMOWY-1.XXX
+##DEFWINDOW = ,,,,ADPSH
+##2,,ADP,,@3
+##1,,ADP,,@4
+PRZYCISK_CANCELID = 1
+% DIALOG-DO-WYDRUKU-UMOWY-2.XXX
+##102,DF,0,,,,yellow/blue&black/white,,,,ZMIENNA:TYTULWYDR2
+##16,0,P,,,,,,,,ZMIENNA:pracownik1,string:2
+##17,0,P,,,,,,,,ZMIENNA:pracownik2,string:2
+##18,0,P,,,,,,,,ZMIENNA:dzatrud1
+##19,0,P,,,,,,,,ZMIENNA:dzatrud2
+##31,0,ACP,,,,,,,,ZMIENNA:dzwolnienia1
+##32,0,ACP,,,,,,,,ZMIENNA:dzwolnienia2
+##20,0,P,,,,,,,,ZMIENNA:miejscowosc
+##21,0,P,,,,,,,,ZMIENNA:dwystawienia
+##22,0,P,,,,,,,,ZMIENNA:dzawarcia
+##23,0,P,,,,,,,,ZMIENNA:pracodawca
+##24,0,P,,,,,,,,ZMIENNA:miejscewyk
+##25,0,P,,,,,,,,ZMIENNA:nrprefix
+##26,0,P,,,,,,,,ZMIENNA:nrzaswiadcz
+##27,0,P,,,,,,,,ZMIENNA:nrsufix
+##28,0,P,,,,,,,,ZMIENNA:okreswylicz1
+##29,0,P,,,,,,,,ZMIENNA:okreswylicz2
+##30,0,P,,,,,,,,ZMIENNA:celzaswiadcz
+% DIALOG-DO-WYDRUKU-UMOWY-3.XXX
+##200,DZ,ADPH,,"Pracownicy"
+
+#200
+  
+   #16       #  -  #17       # 
+                                #200<
+% DIALOG-DO-WYDRUKU-UMOWY-4.XXX
+##201,DZ,ADPH,,"Zatrudnieni w okresie"
+
+#201
+
+       #18    # - #19    #
+                                #201<
+				   
+% DIALOG-DO-WYDRUKU-UMOWY-5.XXX
+##202,DZ,ACPH,,"Dane  uzupe|lniej|ace  do  umowy"
+
+#202
+ Miejscowo|s|c wystawienia umowy: #20        #
+ Data wystawienia umowy:....... #21    # 
+ Data zawarcia umowy:.......... #22    #
+ Imi|e i nazwisko pracodawcy:... #23                                       #
+                                                                            #202< 
+									       
+% DIALOG-DO-WYDRUKU-UMOWY-6.XXX
+##203,DZ,ACPH,,"Miejsce wykonywania pracy"
+#203
+
+  #24                          #
+                                 #203<				
+% DIALOG-DO-WYDRUKU-UMOWY-7.XXX
+
+
+  #2          #    #1          #
+% TABLICA-AKCJI-DIALOG-DO-WYDRUKU-UMOWY
+"AKCJA-PRZED-WYSWIETLENIEM",DIALOG-DO-WYDRUKU-UMOWY-PRZED
+"AKCJA-BUTTON1",PLACE-REZYGNUJESZ-DIALOG
+//"AKCJA-BUTTON2",DIALOG-DO-WYDRUKU-UMOWY-AKCEPTUJESZ
+"AKCJA-F2-POLE16",!SL.gl_f2_rejestr_ustaw("","KARTOTEK.RXR","sym",daj_zS("pracownik1"));
+"AKCJA-PO-POLU16",WYDRUK_UMOWY-PRACOWNIK1
+"AKCJA-F2-POLE17",!SL.gl_f2_rejestr_ustaw("","KARTOTEK.RXR","sym",daj_zS("pracownik2"));
+"AKCJA-PO-POLU17",WYDRUK_UMOWY-PRACOWNIK2
+"AKCJA-BUTTON0",PLCJUBIL-AKCEPTUJESZ
+
+% WYDRUK_UMOWY-PRACOWNIK1.ALG
+ if(pracownik1 = "") Exitalg[0]
+ if(rejop["znajdzrek",pracownik1]) Exitalg[0]
+   OkAlert["W rejestrze pracownik|ow brak pracownika o symbolu "+pracownik1+"!"]
+   ExDialogOp["IdzDoPozycji","16"]
+   ExitAlg[0]
+
+% WYDRUK_UMOWY-PRACOWNIK2.ALG
+ if(pracownik2 = "") Exitalg[0]
+ if(rejop["znajdzrek",pracownik2]) Exitalg[0]
+   OkAlert["W rejestrze pracownik|ow brak pracownika o symbolu "+pracownik2+"!"]
+   ExDialogOp["IdzDoPozycji","17"]
+   ExitAlg[0]
+
+% DIALOG-DO-WYDRUKU-UMOWY-PRZED.ALG
+  ExDialogOp["ZmienNaglowek",TYTULWYDR1]
+  ExDialogOp["IdzDoPozycji","16"]
+  
+// ------------------------------------------
+
+% FILTROWANIE-POCZATKOWE-WYDRUKU2.ALG
+  jest := .N.
+  if(Not(RejOp["WezPierwszyRek",""])) goto koniec
+  
+petla:
+  if((RejWezP_S["sym"]<pracownik1) and not(pracownik1="")) goto next
+  if((RejWezP_S["sym"]>pracownik2) and not(pracownik2="")) goto next
+  if((RejWezP_D["dzatrud"]>okrnieobec2) and not(okrnieobec2='')) goto next
+  if((RejWezP_D["dzwolnien"]<okrnieobec1) and not(okrnieobec1='')and Not(RejWezP_D["dzwolnien"]='')) goto next
+  CallAlg["ZAPISZ-DANE-DO-WYDRUKU1"]
+  jest := .T.
+next:
+  ustawczekajinfo["nastepny","."]
+  if(RejOp["WezNastepnyRek",""]) goto petla
+koniec:
+  ustawczekajinfo["stop","."]
+   if(jest)      ExitAlg[1]
+   if(Not(jest)) OkAlert["Brak danych do wydrukowania !"]
+   if(Not(jest)) ExitAlg[0]
+   
+% ZAPISZ-DANE-DO-WYDRUKU1.ALG
+  RejOp["AA:DodajRek",""]
+  xRejWstawP_S["AA:sym",RejwezP_S["sym"]]
+  xRejWstawP_S["AA:nazwisko",RejwezP_S["nazwisko"]]
+  xRejWstawP_S["AA:imie1",RejwezP_S["imie1"]]
+  xRejWstawP_S["AA:imie2",RejwezP_S["imie2"]]
+  xRejWstawP_S["AA:kalen",RejwezP_S["kalengrupa"]]
+  RejOp["AA:ZapiszRek",""]
+  
+% WYLICZ-LICZBE-GODZIN.ALG
+  CallAlg["KL-DAJ-DATE"]
+//if(kl_d_data='09.01.01')okalert["kl_d-data="+kl_d_data+"$sym="+sym+"$kl_d_swieto="+kl_d_swieto]
+petla:
+  if(kl_d_data='') OkAlert["U W A G A !!$Koniec kalendarza.$Nale|zy uaktywni|c kalendarz i doda|c nowy rok."]
+  if(kl_d_data='') ExitAlg[1]
+  if(kl_d_prac)  lminut  := lminut+kl_d_liczba*60
+  if(kl_d_prac)  lminut  := lminut+kl_d_liczbamin
+  if(kl_d_prac)  ldnirob := ldnirob+1
+  if(kl_d_prac and (kl_d_swieto or kl_d_dzien=6))  lminuts  := lminuts+kl_d_liczba*60
+  if(kl_d_prac and (kl_d_swieto or kl_d_dzien=6))  lminuts  := lminuts+kl_d_liczbamin
+  if(kl_d_prac and not(kl_d_swieto) and kl_d_dzien=5)  lminutw  := lminutw+kl_d_liczba*60
+  if(kl_d_prac and not(kl_d_swieto) and kl_d_dzien=5)  lminutw  := lminutw+kl_d_liczbamin
+  godz_txt := ToStr["#lminut/60#S:2"]
+  godz_txts := ToStr["#lminuts/60#S:2"]
+  godz_txtw := ToStr["#lminutw/60#S:2"]
+  godz     := StringNaLiczbe[StrCut[godz_txt,0,StrLen[godz_txt]-3]]
+// maria czy dzieliæ przez 60 czy przez 100, przerabianie minut na czêœæ godziny -ulamek
+  if(kl_d_prac)  lgodzin := godz + ((lminut-godz*60)/60)
+  lgodzins := Stringnaliczbe[godz_txts]
+  lgodzinw := Stringnaliczbe[godz_txtw]
+  if(kl_d_data+1>datado) ExitAlg[0]
+  CallAlg["KL-DAJ-NASTEPNA"]
+  goto petla
+  
+% PRZYGOTUJ-DANE-DLA-KALENDARZA.ALG
+  if(dataod='' or datado='') ExitAlg[0]
+  ldnikal  := (datado-dataod)+1
+  kl_d_liczba    := 0
+  kl_d_liczbamin := 0
+  kl_d_prac   := .T.
+  kl_d_swieto   := .N.
+  kl_d_dzien   := 0
+  kl_d_data   := dataod
+  dataodtxt   := ToStr["#dataod#S"]
+  KL_D_ROK    := A_DATE[Poczrok_ksieg,"Y"]
+  kl_d_litera := "K:"
+  KL_D_GRUPA  := kalengrupa
+  CallAlg["KL-OTWORZ-KALENDARZ"]
+  CallAlg["WYLICZ-LICZBE-GODZIN"]
+  CallAlg["KL-ZAMKNIJ-KALENDARZ"]
+
+% ZAPISZ-DANE-DO-WYDRUKU.ALG
+  RejOp["AA:DodajRek",""]
+  RejOp["PrzeniesPola","AA:"]
+  RejOp["AA:ZapiszRek",""]
+  
+% FILTROWANIE-POCZATKOWE-WYDRUKU1.ALG
+  jest := .N.
+  if(Not(RejOp["WezPierwszyRek",""])) goto koniec
+petla:
+  if((RejWezP_S["sym"]<pracownik1) and not(pracownik1="")) goto next
+  if((RejWezP_S["sym"]>pracownik2) and not(pracownik2="")) goto next
+  if((RejWezP_D["dzatrud"]<dzatrud1) and not(dzatrud1='')) goto next
+  if((RejWezP_D["dzatrud"]>dzatrud2) and not(dzatrud2='')) goto next
+  if((RejWezP_D["dzwolnien"]<dzwolnienia1) and not(dzwolnienia1='')) goto next
+  if((RejWezP_D["dzwolnien"]>dzwolnienia2) and not(dzwolnienia2='')) goto next
+  CallAlg["ZAPISZ-DANE-DO-WYDRUKU"]
+  jest := .T.
+next:
+  if(RejOp["WezNastepnyRek",""]) goto petla
+koniec:
+  if(jest)      ExitAlg[1]
+  if(Not(jest)) OkAlert["Brak danych do wydrukowania !"]
+  if(Not(jest)) ExitAlg[0]
+  
+// ----------------------------------
+% SPRAWDZ-CZY-BYLY-ZMIANY-IDENTYFIKACYJNE.ALG
+  klucz   := RejWezP_S["C:sym"]
+  zusziua := .N.
+  RejOp["I:ZmienKluczRej","1"]
+  RejOp["II:WyczyscRej",""]
+  CallAlg["PRZENIES-POLA2"]
+  RejOp["II:ZmienKluczRej","20"]
+  if(Not(RejOp["II:WezOstatniRek",""])) ExitAlg[0]
+petla:
+  if((RejWezP_D["II:dzmiany"] < d1)and not(d1=''))   goto next
+  if((RejWezP_D["II:dzmiany"] > d2)and not(d2=''))   goto next
+  zusziua      := .T.
+  CallAlg["DAJ-DANE-IDENTYFIKACYJNE"]
+  ExitAlg[0]
+next:
+  if(RejOp["II:WezPoprzedniRek",""]) goto petla
+  
+% PRZENIES-POLA2.ALG
+// przepisuje dane z rejestru "rej1"  do  "rej2"
+  if(not RejOp[rej1+"ZnajdzRek",klucz]) ExitAlg[0]
+petla:
+//  If(RejOp[rej1+"NowyKlucz",""]) ExitAlg[0]
+  RejOp[rej2+"DodajRek",""]
+  RejOp[rej1+"PrzeniesPola",rej2+""]
+  RejOp[rej2+"ZapiszRek",""]
+  if(RejOp[rej1+"WezNastepnyRekN",""]) goto petla
+Exitalg[0]  
+
+% DAJ-DANE-IDENTYFIKACYJNE.ALG
+        st_ident    := ""
+        st_typid    := "1"
+     if(st_ident="")  st_ident := RejWezP_S["II:dowod"]
+     if(st_ident="")  st_typid := "2"
+     if(st_ident="")  st_ident := RejWezP_S["II:paszport"]
+     if(st_ident="")  st_typid := ""
+        st_nip      := RejWezP_S["II:nip"]
+        st_pesel    := RejWezP_S["II:pesel"]
+        st_imie1    := RejWezP_S["II:imie1"]
+        st_datau    := RejWezP_D["II:datau"]
+        st_nazwisko := RejWezP_S["II:nazwisko"]
+        st_dzmiany  := RejWezP_D["II:dzmiany"]
+  
+// --------------------------------
+% LOOK-HISTORIA-OSOBOWA.ALG
+CallPyt["import kadry_g | kadry_g.pokaz_historia()"]
+
+% LOOK-PRZEBIEG-PRACY.ALG
+CallPyt["import kadry_g | kadry_g.pokaz_przebieg()"]
+
+% LOOK-NIEOBECNOSCI.ALG
+administrator := .N.
+CallPyt["import place_g | place_g.place_kadry_nieobecnosci_zobacz()"]
+
+% LOOK-NIEOBECNOSCI-ADM.ALG
+administrator := .T.
+CallPyt["import place_g | place_g.place_kadry_nieobecnosci_zobacz()"]
+
+% LOOK-URLOPY.ALG
+CallPyt["import kadry_g | kadry_g.kadry_urlopy()"]
+
+% LOOK-NADGODZINY.ALG
+CallPyt["import place_g | place_g.place_kadry_nadgodziny_zobacz()"]
+
+// -------------------------------------
+% MODYFIKUJ-ZAPISY-KADROWE.DLG
+##101,0,P,,,,,,,,MENU_ROZWIJANE:KADRY-OP-MENU
+%< KADRY-OP-DIALOG.XXX
+// --------------------------
+% TABLICA-AKCJI-MODYFIKUJ-ZAPISY-KADROWE
+"AKCJA-PRZED-WYSWIETLENIEM",MODYFIKUJ-ZAPISY-KADROWE-PRZED
+"AKCJA-BUTTON0",MODYFIKUJ-ZAPISY-KADROWE-KONIEC
+"AKCJA-BUTTON21",MODYFIKUJ-ZAPISY-KADROWE-MODYFIKUJ
+"AKCJA-BUTTON22",MODYFIKUJ-ZAPISY-KADROWE-DODAJ
+"AKCJA-BUTTON23",MODYFIKUJ-ZAPISY-KADROWE-USUN
+
+% ZAPISY-KADROWE-USTAW-DANE.XXX
+  T_KADROWE_MENU := ""
+  T_KADROWE_ZAPISY := ""
+  CallAlg[T_KADROWE_ALG_PARAM]
+
+% MODYFIKUJ-ZAPISY-KADROWE-PRZED.ALG
+%< ZAPISY-KADROWE-USTAW-DANE.XXX
+  ExDialogOp["UstawMenuParam","100:"+T_KADROWE_MENU + ",T,KLUCZ,2"]
+  RejOp["T:WezOstatniRek",""]
+  d_pos := 100
+  ExDialogOp["PozycjaNieWprowadzana","*"]
+  ExDialogOp["PozycjaNieAktywna","*"]
+  ExDialogOp["IdzDoPozycji","100"]
+
+% MODYFIKUJ-ZAPISY-KADROWE-MODYFIKUJ.ALG
+%< ZAPISY-KADROWE-USTAW-DANE.XXX
+  if (ExDialogOp["PusteOkno","100"]) ExitAlg[0]
+  rezygnujesz := .N.  
+  ExDialogOp["IdzDoDialogu",T_KADROWE_ZAPISY]
+  if (rezygnujesz) goto dalej1
+  ExDialogOp["WyswietlPozycje","100"]
+  ExitAlg[0]
+ dalej1:
+  RejOp["T:UsunZmiany",""]      
+
+% MODYFIKUJ-ZAPISY-KADROWE-DODAJ.ALG
+%< ZAPISY-KADROWE-USTAW-DANE.XXX
+  rezygnujesz := .N.
+  RejOp["T:ZapamPos",""]
+  RejOp["T:DodajRek",""]
+  ExDialogOp["IdzDoDialogu",T_KADROWE_ZAPISY]
+  if(not rezygnujesz) goto dalej1
+    RejOp["T:UsunRek",""]
+    RejOp["T:OdtworzPos",""]
+    ExitAlg[0]
+ dalej1:
+  RejOp["T:UsunZapamPos",""]
+  ExDialogOp["WyswietlPozycje","100"]
+  ExitAlg[0]
+
+% MODYFIKUJ-ZAPISY-KADROWE-USUN.ALG
+  if (ExDialogOp["PusteOkno","100"]) ExitAlg[0]
+  if(not( YesNAlert["Usun|a|c pozycj|e  ?"])) ExitAlg[0]
+  RejOp["T:UsunRek",""]
+  ExDialogOp["UsunRekordzMenu","100"]    
+
+% MODYFIKUJ-ZAPISY-KADROWE-KONIEC.ALG
+  rezygnujesz := .N.
+  ExDialogOp["KoniecWykonywania",""]
+
+% WSTAW-DNI-KALENDARZOWE.ALG
+  if(kd="1") RejWstawP_K["AA:ldnikal"+tekst,ldnikal+RejWezP_K["AA:ldnikal"+tekst]]
+  if(kd="1") RejWstawP_K["AA:lgodzkal"+tekst,lgodzin+RejWezP_K["AA:lgodzkal"+tekst]]
+  if(kd="1" or kd="2" or kd="3") RejWstawP_K["AA:lgodzkal17",lgodzin+RejWezP_K["AA:lgodzkal17"]]
+  if(kd="1" or kd="2" or kd="3") RejWstawP_K["AA:ldnikal17",ldnirob+RejWezP_K["AA:ldnikal17"]]
+  if(kd="311" or kd="121" or kd="122" or kd="313" or kd="314" or kd="331" or kd="332" or kd="333" or kd="334") RejWstawP_K["AA:ldnikal"+tekst,ldnikal+RejWezP_K["AA:ldnikal"+tekst]]
+if(kd="151" or kd="152") RejWstawP_K["AA:lgodzkal"+tekst,lgodzin+RejWezP_K["AA:lgodzkal"+tekst]]
+  if(not(kd = "1" or kd="311" or kd="121" or kd="122" or kd="313" or kd="314" or kd="331" or kd="332" or kd="333" or kd="334")) RejWstawP_K["AA:ldnikal"+tekst,ldnirob+RejWezP_K["AA:ldnikal"+tekst]]
+// import danych
+% PL_IMPORT-KADRY-INNE-IMPORTY.ALG
+  if(DyskOp["JestPlik",katalog+"\"+plik+".txt",""]) goto ok_plik
+    OkAlert["Brak pliku do zaimportowania ==>  "+plik+".txt  !"]
+  Exitalg[0]
+ok_plik:
+    If(Not(YesNAlert["Czy chcesz importowa|c dane do rejestru $         - "+rejestr+".RXR -"])) Exitalg[0]
+    if(zachowac) goto okzachowac
+    If(Not(YesNAlert["Czy napewno chcesz usun|a|c dane z rejestru $         - "+rejestr+".RXR -"])) Exitalg[0]
+    If(Not(YesNAlert[" UWAGA !! Dotychczasowe dane rejestru - "+rejestr+" - zostan|a usuni|ete !"])) Exitalg[0]
+okzachowac:
+  if(not(zachowac))  RejOp["UsunPlikRej",rejestr+".RXR"]
+  if(not RejOp["OtworzRejTemp",rejestr+".RXR"]) ExitAlg[0]
+  if(not RejOp["E:OtworzRej1",rejestr+".RXR"])  ExitAlg[0]
+  if(not RejOp["A:OtworzRej1",rejestr2+".RXR"]) ExitAlg[0]
+  okalert[""+katalog+"\"+plik+".txt"]
+  if(RejOp["ImportujRejestr",katalog+"\"+plik+".txt"]) goto okimport
+  OkAlert["B|l|ad podczas importu !"]
+okimport:
+// wczytanie danych do rejestru oryginalnego "rejestr" z utworzonego temp-a
+  RejOp["ZmienKluczRej","2"]
+  RejOp["E:ZmienKluczRej","2"]
+  RejOp["A:ZmienKluczRej","1"]
+  if(not(RejOp["WezPierwszyRek",""])) goto koniec
+        liczbarekordow := RejWezP_K["LiczbaRekordow"]
+        lp := 0
+        pr := 0
+        sm := 70 - StrLen[ToStr["#liczbarekordow#S:0 > "]]
+    ExDialogOp["OdczytajDialog","DIALOG-PASEK2"]
+    ExDialogOp["WyswietlDialog",""]
+  DispLine[ToStr["#liczbarekordow#S:0 > "]]
+petla:
+        lp := lp + 1
+  CallAlg["DISPLAY_PASEK"]
+        xpracownik := RejWezP_S["sym"]
+  IF(RejOp["A:ZnajdzRek",xpracownik]) goto next1
+  rejop["E:dodajrek",""]
+  rejop["przeniespola","e:"]
+  rejop["e:zapiszrek",""]
+next1:
+  if(RejOp["WezNastepnyRek",""]) goto petla
+koniec:
+RejOp["E:ZamknijRej",""]
+RejOp["A:ZamknijRej",""]
+RejOp["ZamknijRej",""]
+  Exitalg[0]
+
+% PY.place-kadry-modul-kadrowy$MODUL=kadry_g$
+
+import pers
+
+def kartoteka() :
+   pers.finnop("OpenMain")
+   pers.callalg("LOOK-KARTOTEK-XXX")
+   pers.finnop("Close")   
+
+def prac_zwalniam() :
+   pers.callalgfile("kadry\kadry_pracownik_zwalniam.py","!PYT.import kadry_zwalniam | kadry_zwalniam.zwalniam()")    
+   if pers.dajazmienna_L("rezygnujesz") : return
+   pers.exdialogop("WyswietlPozycje","76")
+   pers.exdialogop("WyswietlPozycje","77")
+   pers.exdialogop("WyswietlPozycje","70")
+   
+def prac_historia() :
+   if pers.exdialogop("PusteOkno","100") : return
+   pers.callalgfile("kadry\kadry_pracownik_historia.py","!PYT.import kadry_historia | kadry_historia.pokaz()")
+   pers.exdialogop("WyswietlPozycje","100")
+   pers.exdialogop("IdzDopozycji","100")
+   
+def prac_przebieg() :
+   if pers.exdialogop("PusteOkno","100") : return
+   pers.callalgfile("kadry\kadry_pracownik_przebieg.py","!PYT.import kadry_przebieg | kadry_przebieg.przebieg()")
+   pers.exdialogop("WyswietlPozycje","100")
+   pers.exdialogop("IdzDopozycji","100")
+
+def prac_nieobecnosci() :
+   if pers.exdialogop("PusteOkno","100") : return
+   pers.callalgfile("kadry/kadry_modyfikuj_nieobecnosci.py","!PYT.import kadry_modyfikuj_nieob | kadry_modyfikuj_nieob.pokaz_nieobecnosci()")
+   pers.exdialogop("WyswietlPozycje","100")
+   pers.exdialogop("IdzDopozycji","100")
+
+def prac_nadgodziny() :
+   if pers.exdialogop("PusteOkno","100") : return
+   pers.defzmiennas("skladnor1","")
+   pers.defzmiennas("skladnor2","")
+   pers.defzmiennas("skladdod1","")
+   pers.defzmiennas("skladdod2","")
+   pers.callalg("odczytaj_sklad_nadliczbowe")
+   pers.callalgfile("kadry/kadry_modyfikuj_nadgodziny.py","!PYT.import kadry_modyfikuj_nadgodz | kadry_modyfikuj_nadgodz.pokaz_nadgodziny()")
+   pers.exdialogop("WyswietlPozycje","100")
+   pers.exdialogop("IdzDopozycji","100")
+
+def prac_urlopy() :
+   #maria
+   if pers.exdialogop("PusteOkno","100") : return
+   pers.callalgfile("kadry/kadry_pracownik_urlopy.py","!PYT.import kadry_urlopy | kadry_urlopy.pokaz_urlopy()")
+   pers.exdialogop("IdzDopozycji","100")
+
+def prac_staz() :
+   if pers.exdialogop("PusteOkno","100") : return
+   pers.callalgfile("place/drukuj_place_jubileusz.py;kadry/kadry_pracownik_staz.py","!PYT.import kadry_staz | kadry_staz.dialog()")
+   
+def prac_wydruk() :
+   pers.callalgfile("kadry/kadry_kartotek_wydruk.py","!PYT.import kadry_ka_wydruk | kadry_ka_wydruk.druk()")    
+   
+def prac_wydruk_kolumnami() :
+   pers.callalgfile("kadry/kadry_kartotek_wydruk.py","!PYT.import kadry_ka_wydruk | kadry_ka_wydruk.druk_kolumnami()")    
+
+def pokaz_historia() :
+  pers.callalgfile("kadry\kadry_historia.py","!PYT.import kadry_k_historia | kadry_k_historia.pokaz()")
+
+def pokaz_przebieg() :
+  pers.callalgfile("kadry\kadry_przebieg.py","!PYT.import kadry_k_przebieg | kadry_k_przebieg.pokaz()")
+
+def kadry_dane_poczatkowe_kartotek() :  
+  pers.callalgfile("kadry\kadry_dane_poczatkowe.py","!PYT.import kadry_poczatkowe | kadry_poczatkowe.pobierz_k()")
+
+def kadry_urlopy() :
+  pers.callalgfile("kadry\kadry_urlopy.py","!PYT.import kadry_urlopy_l | kadry_urlopy_l.zobacz()")    
+  
+def kadry_drukuj_karte() :
+  pers.callalgfile("kadry\kadry_drukuj_karte.py","!PYT.import kadry_drukuj_karte | kadry_drukuj_karte.drukuj()")
+
+def kadry_drukuj_karte_mies() :
+  pers.callalgfile("kadry\kadry_drukuj_karte_mies.py","!PYT.import kadry_drukuj_karte | kadry_drukuj_karte.drukuj()")
+
+def kadry_drukuj_etaty() :
+  pers.callalgfile("kadry\kadry_drukuj_etaty.py","!PYT.import kadry_drukuj_etaty | kadry_drukuj_etaty.drukuj()")
+     
+def kadry_drukuj_zatrudnienie() :
+  pers.callalgfile("kadry\kadry_drukuj_etaty.py","!PYT.import kadry_drukuj_etaty | kadry_drukuj_etaty.drukuj_zatr()")
+
+def kadry_drukuj_umowa() :
+  pers.callalgfile("kadry\kadry_drukuj_umowe.py","!PYT.import kadry_drukuj_umowe | kadry_drukuj_umowe.drukuj()")
+
+def kadry_drukuj_swiadectwo() :
+  pers.callalgfile("kadry\kadry_drukuj_swiadectwo.py","!PYT.import kadry_drukuj_swiadectwo | kadry_drukuj_swiadectwo.drukuj()")    
+  
+def kadry_drukuj_zaswiadczenie() :
+  pers.callalgfile("kadry\kadry_drukuj_zaswiadczenie.py","!PYT.import kadry_drukuj_zaswiadczenie | kadry_drukuj_zaswiadczenie.drukuj()")    
+  
+def kadry_drukuj_przeszeregowanie() :  
+  pers.callalgfile("kadry\kadry_drukuj_przeszeregowanie.py","!PYT.import kadry_drukuj_przeszeregowanie | kadry_drukuj_przeszeregowanie.drukuj()")
+
+def kadry_dane_gus() :
+  pers.callalgfile("kadry\kadry_dane_gus.py","!PYT.import kadry_gus | kadry_gus.dialog()")    
+  
+def kadry_gus_03() :
+  pers.callalgfile("kadry\kadry_drukuj_z03.py","!PYT.import kadry_z03 | kadry_z03.drukuj()")
+
+def kadry_platnik() :
+  pers.callalgfile("place\place_eksport_platnik.py","!PYT.import place_eksport_platnik | place_eksport_platnik.eksport_kadry()")
+
+def kadry_poczatkowy() :
+  pers.callalgfile("kadry\kadry_kapital_poczatkowy.py","!PYT.import kadry_poczatkowy | kadry_poczatkowy.zobacz()")
+  
+def kadry_symbole_dokumentow() :
+  pers.callalgfile("kadry\kadry_kapital_poczatkowy.py","!PYT.import kadry_poczatkowy | kadry_poczatkowy.dokumenty_zobacz()")  
+
+def kadry_symbole_swiadczenia() :
+  pers.callalgfile("kadry\kadry_kapital_poczatkowy.py","!PYT.import kadry_poczatkowy | kadry_poczatkowy.swiadczenia_zobacz()")  
+  
+def kadry_symbole_nazw_skladnikow() :
+  pers.callalgfile("kadry\kadry_kapital_poczatkowy.py","!PYT.import kadry_poczatkowy | kadry_poczatkowy.nazwy_skladnikow_zobacz()")  
+
+def kadry_wydruk_kp1() :  
+  pers.callalgfile("kadry\kadry_kapital_poczatkowy.py","!PYT.import kadry_poczatkowy | kadry_poczatkowy.wydruk_kp1()")  
+
+def kadry_wydruk_rp6() :  
+  pers.callalgfile("kadry\kadry_kapital_poczatkowy.py","!PYT.import kadry_poczatkowy | kadry_poczatkowy.wydruk_rp6()")  
+
+def kadry_wydruk_rp7() :  
+  pers.callalgfile("kadry\kadry_kapital_poczatkowy.py","!PYT.import kadry_poczatkowy | kadry_poczatkowy.wydruk_rp7()")  
+  
+def kadry_wydruk_niesklad() :  
+  pers.callalgfile("kadry\kadry_kapital_poczatkowy.py","!PYT.import kadry_poczatkowy | kadry_poczatkowy.wydruk_niesklad()")  
+  
+def kadry_wydruk_przerw() :  
+  pers.callalgfile("kadry\kadry_kapital_poczatkowy.py","!PYT.import kadry_poczatkowy | kadry_poczatkowy.wydruk_przerw()")  
+  
+def kadry_import_eksport() :
+  pers.callalgfile("kadry\kadry_import_eksport.py","!PYT.import kadry_import_eksport | kadry_import_eksport.dialog()")
+  
+def kadry_aktualizacja() :
+  pers.callalgfile("kadry\kadry_aktualizacja.py","!PYT.import kadry_aktualizacja | kadry_aktualizacja.dialog()")
+    
+def kadry_dodaj_przebieg() :  
+  pers.callalgfile("kadry\kadry_pracownik_przebieg.py","!PYT.import kadry_przebieg | kadry_przebieg.dodaj_przebieg()")    
+def kadry_dodaj_przebieg1() :  
+  pers.callalgfile("kadry\kadry_pracownik_przebieg.py","!PYT.import kadry_przebieg | kadry_przebieg.dodaj_przebieg1()")    
+    

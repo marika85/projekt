@@ -1,0 +1,679 @@
+// PLIK TRANSMISJI z ARKUSZA KALKULACYJNEGO - format CVS
+// 2010.09
+// STRUKTURA REKORDU PLIKU
+// id_rek;d_ks_d_fak;tresc;typ_fak;fak;dot_fak;kont_vat;rej_vat;st_vat;gus;
+// kw_net;kw_vat;kw_brut;kont_net;klas_net;kont_brut;klas_brut;dat_usl;term_plat;
+// plat;klient;s_dew;kw_dew;nip;naz_kl;kod-mst;adres
+//
+%% kwx := .
+%% pnipx := ""
+%% kwpln := .
+%% kontdew := ""
+%% linia := ""
+%% blad := ""
+%% blad1 := ""
+%% komu := ""
+%% akcja := ""
+%% komu1 := ""
+%% akcja1 := ""
+//
+%% lpnr := ""
+%% ls := 1
+%% ls1 := ""
+%% il := .
+%% il1 := .
+%% idok := ""
+%% idok1 := ""
+//
+%% tra := ""
+%% dottra := ""
+//
+%% knt := ""
+%% kntnet := ""
+%% kntvat := ""
+%% kntbrut := ""
+%% plcechy := .
+%% plkont := ""
+%% rok := ""
+%% mies := ""
+//
+%% datx := ""
+%% dat := ''
+%% dattras := ""
+%% datusls := ""
+%% termtras := ""
+%% dattra := ''
+%% datusl := ''
+%% termtra := ''
+%% dtraspr := ""
+//
+%% kontvat := ""
+%% kontnet := ""
+%% kontbrut := ""
+%% kontospr := ""
+%% klkont := ""
+%% klasnet := ""
+%% klasbrut := ""
+%% klasspr := ""
+//
+%% kw := .
+%% kw1 := ""
+%% vat := .
+%% net := .
+%% brut := .
+%% vats := ""
+%% nets := ""
+%% bruts := ""
+%% svat := .
+%% snet := .
+%% sbrut := .
+%% kwdew := .
+//
+%% opis := ""
+%% opisdok := ""
+%% tresc := ""
+//
+%% rejvat := ""
+%% stvat := ""
+%% gus := ""
+//
+%% symdew := ""
+%% sdewspr := ""
+%% kwdew := .
+//
+## DIALOGPARAM
+//
+// *********KONWERSJA DANYCH ZRODLOWYCH*************
+%% RejOp["S:OtworzRej","INT_TXT1.RJR"]
+//
+%% liczbarekordow := RejWezP_K["S:LiczbaRekordow"]
+%% if (liczbarekordow = 0) goto esc
+%% RejOp["S:WezPierwszyRek",""]
+%% RejOp["UsunPlikRej",naz_baza]
+%% RejOp["B:OtworzRej",naz_baza]
+%% RejOp["UsunPlikRej",naz_firm]
+%% RejOp["C:OtworzRej",naz_firm]
+//
+// Otworzenie rejestrów: kontrahentów i kont
+%% RejOp["KL:OtworzRejCzytaj","REJESTRKL.RXR"]
+%% rejop["KL:ZmienKluczRej","1"]
+%% RejOp["PL:OtworzRejCzytaj","PLANRODZ.RJR"]
+%% rejop["PL:ZmienKluczRej","1"]
+%% RejOp["LL:OtworzRejCzytaj","PLANROZL.RJR"]
+%% rejop["LL:ZmienKluczRej","1"]
+//%% rejop["PL:Zobaczdbf",""]
+%% RejOp["RV:OtworzRej1","REJVATREJ.RXR"]
+%% RejOp["RK:OtworzRej1","REJKLASVAT.RXR"]
+%% RejOp["RK:ZmienKluczRej","1"]
+// Otworzenie s³owników dla kontrahentów; kont rodz i vatu
+%% RejOp["xx:OtworzRej1",naz_deww]
+%% rejop["xx:ZmienKluczRej","2"]
+%% RejOp["yy:OtworzRej1",naz_klas]
+%% rejop["yy:ZmienKluczRej","2"]
+%% RejOp["vv:OtworzRej1",naz_rejv]
+%% rejop["vv:ZmienKluczRej","2"]
+//
+%% lp := 0
+%% pr := 0
+%% lp1 := ""
+%% sm := 60 - StrLen[ToStr["#liczbarekordow#S:0 > "]]
+## DEFWINDOW = 11,10,11,70,ACHP,,,,,"Konwersja danych "
+%% DispLine[ToStr["#liczbarekordow#S:0 > "]]
+%% idok := RejWezP_S["S:P00"]
+%% if((idok = "DOK")or(idok="dok"))goto dalej
+%% if((idok = "id_rek")or(idok="ID_REK"))goto _wez_next
+%% dalej:
+%% _next:
+//
+%% idok := RejWezP_S["S:P00"]
+%% if((idok = "DOK")or(idok="dok"))goto nagl
+%% if((idok = "VAT")or(idok="vat"))goto linia_vat
+%% if((idok = "SPRZED")or(idok="sprzed"))goto linia_nv
+%% if((idok = "ZAKUP")or(idok="zakup"))goto linia_nv
+//
+%% OkAlert["idok="+idok+" Nieprawid|lowa skladnia idok"]
+%% komu := "Rek "+lp1+" Nieprawid|lowa skladnia idok "+idok
+%% akcja := "Popraw idok rekordu " 
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% goto _wez_next
+//
+%% nagl:
+%% datx := RejWezP_S["S:P01"]
+%% if(not(datx=""))goto dat_ok
+//%% OkAlert["data ksiegowania pusta "+datx]
+%% komu := "Rek "+lp1+" Data ksiegowania pusta "+datx
+%% akcja := "Uzupe|lnij dat|e ksi|egowania w rekordzie N " 
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% goto esc
+%% dat_ok: 
+%% opis := RejWezP_S["S:P02"]
+%% dat := C_DATE[StringNaLiczbe[StrCut[datx,2,2]],StringNaLiczbe[StrCut[datx,4,2]],StringNaLiczbe[StrCut[datx,6,2]]]
+%% mies := StrCut[datx,4,2]
+%% rok := StrCut[datx,2,2]
+%% if (lp=1) dat1 := dat
+%% if (lp=1) dat2 := dat
+%% if (dat > dat2) dat2 := dat
+%% if (dat < dat1) dat1 := dat
+%% goto _wez_next
+//
+%% linia_nv:
+%% linia := "nv"
+%% lp := lp + 1
+%% lp1 := ToStr["#lp#S"]
+%% if(lp<10)lp1 := "00"+lp1
+%% if((lp>9)and(ls<100))lp1 := "0"+lp1
+//
+%% dattras := RejWezP_S["S:P01"]
+%% tresc := RejWezP_S["S:P02"]
+%% typtra := RejWezP_S["S:P03"]
+%% tra := RejWezP_S["S:P04"]
+%% dottra := RejWezP_S["S:P05"]
+%% datusls := RejWezP_S["S:P17"]
+%% termtras := RejWezP_S["S:P18"]
+%% plat := RejWezP_S["S:P19"]
+%% klient := RejWezP_S["S:P20"]
+%% symdew := RejWezP_S["S:P21"]
+//
+%% kontvat := RejWezP_S["S:P06"]
+%% kontnet := RejWezP_S["S:P13"]
+%% klasnet := RejWezP_S["S:P14"]
+%% kontbrut := RejWezP_S["S:P15"]
+%% klasbrut := RejWezP_S["S:P16"]
+%% gus := RejWezP_S["S:P09"]
+//
+%% idok1 := idok
+%% kw_str := RejWezP_S["S:P10"]
+//%% OKAlert[kw_str]
+%% CallAlg["LICZBAX"]
+%% snet := kwx
+//%% OKAlert[kw_str+"  "+kw]
+%% kw_str := RejWezP_S["S:P11"]
+%% CallAlg["LICZBAX"]
+%% svat := kwx
+%% kw_str := RejWezP_S["S:P12"]
+%% CallAlg["LICZBAX"]
+%% sbrut := kwx
+%% kw_str := RejWezP_S["S:P22"]
+%% CallAlg["LICZBAX"]
+%% kwdew := kwx
+// sprawdzenie kont i klas
+//%% kdruk := "kontvat"
+%% kontospr := kontvat
+%% CallAlg["SPRAWDZ_KONT"]
+%% if(blad = "T")kntvat := ""
+%% if(blad = "T")goto druk_blad
+%% kntvat := knt
+%% goto spr_brut
+%% spr_brut:
+//%% kdruk := "kontbrut"
+%% kontospr := kontbrut
+%% CallAlg["SPRAWDZ_KONT"]
+%% if(blad = "T")kntbrut := ""
+%% if(blad = "T")goto druk_blad
+%% kntbrut := knt
+%% goto klasbrut 
+//%% kntnet := knt
+%% druk_blad:
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% if(kontospr=kontvat)goto spr_brut
+%% if((kontospr=kontbrut)and(kntbrut=""))goto firma
+%% klasbrut:
+//%% OkAlert["kontbrut="+kontospr+" kntbrut="+kntbrut]  
+%% il1 := StrIn["L",kntbrut]
+%% if(il1=-1)goto firma
+%% if(not(klasbrut=""))goto klasbrut1
+%% komu := "3 Rek "+lp1+" Brak klasyfikacji w pliku "+ kontospr
+%% akcja := "Wpisz klasyfikacj|e "+ kontospr
+@T@P#komu#L50@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+//%% goto klasnet
+%% goto firma
+%% klasbrut1:
+%% klasspr := klasbrut
+%% CallAlg["SPRAWDZ_KLAS"]
+%% if(blad = "T")goto druk_klas
+%% if(blad1 = "T")goto druk_klas1
+%% goto firma
+%% druk_klas:
+@T@P#komu#L50@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% if(blad1="T")goto druk_klas1
+//%% if(klasspr=klasbrut)goto klasnet
+%% goto firma
+%% druk_klas1:
+@T@P#komu1#L50@@ @P#akcja1#L40@@ @P @@ @P @@ @L @@ @v @@@@
+//
+%% firma:
+%% if(not(klient=""))goto spr_kl
+%% pnz1 := RejWezP_S["S:P24"]
+%% if(pnz1="")goto bez_kl
+%% pnip := RejWezP_S["S:P23"]
+%% pmst := RejWezP_S["S:P25"]
+%% padr := RejWezP_S["S:P26"]
+%% pnipx := pnip
+%% CallAlg["WRITE_NULL_TO_FIRM"]
+//symb kontr zrodlowy 
+%% txtkln := tra
+%% prokln := ""
+%% prordz := ""
+%% pronip := pnip
+%% pronz1 := pnz1
+%% proadr := padr
+%% promst := pmst
+%% CallAlg["WRITE_DANE_TO_FIRM"]
+%% goto ok_klient
+%% bez_kl:
+%% komu := "Rek "+lp1+" Brak  klienta i nazwy w pliku "
+%% akcja := "Uzupelnij symb klienta lub jego dane w pliku " 
+@T@P#komu#L50@@ @P#akcja#L50@@ @P @@ @P @@ @L @@ @v @@@@
+%% blad := blad+"_klbrak"
+%% goto ok_firm
+%% spr_kl:
+%% if (RejOp["KL:ZnajdzRek",klient]) goto ok_klient
+%% komu := "Rek "+lp1+" Brak w rej. klienta "+klient
+%% akcja := "Za|l|o|z klienta " 
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% blad := blad+"_kl"
+%% goto ok_firm
+%% ok_klient:
+%% pnz1 := RejWezP_S["KL:kl_nazwa1"]
+%% pnz2 := RejWezP_S["KL:kl_nazwa2"]
+%% padr := RejWezP_S["KL:kl_adres"]
+%% pmst := RejWezP_S["KL:kl_kodmiasto"]
+%% pnip := RejWezP_S["KL:kl_nip"]
+%% pnipx := pnip
+%% goto zap_firm
+//Zapisz dane klienta do INT_FIRM
+%% zap_firm:
+%% if (RejOp["C:ZnajdzRek",klient]) goto ok_firm
+%% CallAlg["WRITE_NULL_TO_FIRM"]
+//symb kontr zrodlowy 
+%% txtkln := klient
+%% prokln := klient
+%% prordz := kontbrut
+%% pronip := pnip
+%% pronz1 := pnz1
+%% pronz2 := pnz2
+%% proadr := padr
+%% promst := pmst
+%% CallAlg["WRITE_DANE_TO_FIRM"]
+%% ok_firm:
+//%% OkAlert[kntbrut]
+%% il1 := StrIn["R",kntbrut]
+%% if(il1=-1)goto ok_firmx
+%% klkont := RejWezP_S["PL:plan_klsym"]
+%% if(klkont=klient)goto ok_firmx
+%% goto niezg
+%% komu := "Rek "+lp1+" Niezgodnoœæ klienta w koncie i pliku "
+%% akcja := kontbrut+" klient "+klkont+" plik klient "+klient 
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% blad := blad+"_kl"
+%% niezg:
+%% if (RejOp["KL:ZnajdzRek",klkont]) goto ok_klientx
+%% komu := "Rek "+lp1+" Brak w rej. klienta "+klient
+%% akcja := "Za|l|o|z klienta " 
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% blad := blad+"_kl"
+%% goto ok_firmx
+%% ok_klientx:
+%% pnz1 := RejWezP_S["KL:kl_nazwa1"]
+%% pnz2 := RejWezP_S["KL:kl_nazwa2"]
+%% padr := RejWezP_S["KL:kl_adres"]
+%% pmst := RejWezP_S["KL:kl_kodmiasto"]
+%% pnip := RejWezP_S["KL:kl_nip"]
+%% pnipx := pnip
+%% if (RejOp["C:ZnajdzRek",klkont]) goto ok_firmx
+%% CallAlg["WRITE_NULL_TO_FIRM"]
+//symb kontr zrodlowy 
+%% txtkln := klkont
+%% prokln := klkont
+%% prordz := kontbrut
+%% pronip := pnip
+%% pronz1 := pnz1
+%% pronz2 := pnz2
+%% proadr := padr
+%% promst := pmst
+%% CallAlg["WRITE_DANE_TO_FIRM"]
+%% ok_firmx:
+%% datx := dattras
+%% dattra := C_DATE[StringNaLiczbe[StrCut[datx,2,2]],StringNaLiczbe[StrCut[datx,4,2]],StringNaLiczbe[StrCut[datx,6,2]]]
+%% if(termtras="")termtras := dattras
+//%% if(termwn="")goto spr_rzr
+%% datx := termtras
+%% termtra := C_DATE[StringNaLiczbe[StrCut[datx,2,2]],StringNaLiczbe[StrCut[datx,4,2]],StringNaLiczbe[StrCut[datx,6,2]]]
+%% datx := datusls
+%% datusl := C_DATE[StringNaLiczbe[StrCut[datx,2,2]],StringNaLiczbe[StrCut[datx,4,2]],StringNaLiczbe[StrCut[datx,6,2]]]
+%% il1 := StrIn[kntbrut,"R"]
+%% if(il1=-1)goto dew1
+%% sprawdz_rzr:
+%% if(not(tra = ""))goto tra_ok
+//%% OkAlert["transakcja  pusta"]
+%% komu := "Rek "+lp1+" transakcja pusta"
+%% akcja := "Uzupe|lnij w pliku transakcj|e"
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% blad := blad+"_tra"
+%% tra_ok:
+%% if(not(dattra=''))goto dew1
+//%% OkAlert["data transakcji pusta"]
+%% komu := "Rek "+lp1+" data trans. pusta"
+%% akcja := "Uzupe|lnij w pliku dat|e trans." 
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% blad := blad+"_dtra"
+//
+%% dew1:
+%% kontdew := kontbrut
+%% kwpln := sbrut
+//%% OkAlert["dew1 dewizy "+kntbrut+" "+kontbrut]
+%% il1 := StrIn["D",kntbrut]
+//%% OkAlert[kntbrut+" il1 "+il1+" kontbrut="+kontbrut]
+%% if(il1= (-1))goto sbrut
+%% dewizy:
+%% if(not(symdew=""))goto sdew_ok
+//%% OkAlert["Brak symbolu dew"]
+%% komu := "1 Rek "+lp1+" Brak symbolu dew "
+%% akcja := "Uzupe|lnij symbol dewiz w pliku " 
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% blad := blad+" sdew"
+%% sdew_ok:
+%% if(not(kwdew=.))goto kwdew_ok
+//%% OkAlert["Brak kwoty dew"]
+%% komu := "Rek "+lp1+" Brak kwoty dew "+kontdew
+%% akcja := "Uzupe|lnij kwot|e dewiz w pliku " 
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% blad := blad+" kwdew"
+%% goto kwdew_okx
+%% kwdew_ok:
+%% if((kwpln>0)and(kwdew>0))goto kwdew_okx
+%% if((kwpln<0)and(kwdew<0))goto kwdew_okx
+%% if((kwpln>0)and(kwdew=0))goto kwdew_okx
+%% if((kwpln<0)and(kwdew=0))goto kwdew_okx
+%% komu := "Rek "+lp1+" Znak kwoty PLN inny ni|z kwoty DEW "
+%% akcja := "Popraw w pliku transmisji " 
+@T@P#komu#L50@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% blad := blad+" zndew"
+%% kwdew_okx:
+//%% rejop["xx:Zobaczdbf",""]
+%% if (RejOp["xx:ZnajdzRek",symdew]) goto sbrut
+%% RejOp["xx:DodajRek",""]
+%% xRejWstawP_S["xx:SUFF_kod",symdew]
+%% xRejWstawP_S["xx:SUFF_sfx",symdew]
+%% xRejWstawP_S["xx:SUFF_naz",symdew]
+%% RejOp["xx:ZapiszRek",""]
+%% sbrut:
+//%% rejop["xx:Zobaczdbf",""]
+//%% if(linia="vat")goto sprawdz_vat
+%% if(not(typtra="FVK"))goto dot_niep
+%% if(not(dottra = ""))goto dot_niep
+%% dottra := "do_"+tra
+%% komu := " Rek. "+lp1+"  "+tra+" brak dotyczy"
+%% akcja := "Przyjeto do_"+tra  
+@T@P#komu#L40@@ @P#akcja#L40@@ @P#""#S@@ @P#""#S@@ @L#tra#S@@ @v#""#S@@@@
+%% dot_niep:
+%% tresc := tra+" "+tresc
+%% if(typtra="FVK")tresc := tra+" do "+dottra+" "+tresc
+%% CallAlg["WRITE_NULL_TO_BAZA"]
+%% opis_dok_nagl := opis
+%% rdzsfx := kontbrut
+%% rzlsfx := klasbrut
+%% rzlnaz := klasbrut
+%% klsfx := klkont
+%% oprkwt := sbrut
+%% oprnaz := "brutto MA dekret: 3BM"+kntbrut
+%% if(idok1="SPRZED")oprnaz := "brutto WN dekret: 3BW"+kntbrut
+%% oprdat := dattra
+%% rdznaz := kontbrut
+%% oprtrs := tresc
+%% oprpfx := lp1
+%% oprkod := "3BM_"+kntbrut
+%% if(idok1="SPRZED")oprkod := "3BW_"+kntbrut
+%% rzrrdz :=  "T"
+%% rzrtyp :=  "D"
+%% if(idok1="SPRZED")rzrtyp := "O"
+%% rzrfak := tra
+%% rzrdat := dattra
+%% rzrtrm := termtra
+%% dewsfx := symdew
+%% dewkwt := kwdew
+%% CallAlg["WRITE_REKORD_TO_BAZA"]
+//
+%% if(not(typtra="FVK"))goto _wez_next
+%% kz := 0
+%% kz:
+%% CallAlg["WRITE_NULL_TO_BAZA"]
+%% opis_dok_nagl := opis
+%% oprtrs := tresc
+%% oprdat := dattra
+%% klsfx := plkont
+%% oprkod := "3BM_"+kntbrut
+%% if(idok1="SPRZED")oprkod := "3BW_"+kntbrut
+%% oprnaz := "brutto MA dekret: 3BM"+kntbrut
+%% if(idok1="SPRZED")oprnaz := "brutto WN dekret: 3BW"+kntbrut
+%% oprpfx := lp1
+%% oprkwt := sbrut
+%% rdzsfx := kontbrut
+%% rzrrdz :=  "K"
+%% if(kz=1)oprkwt :=  sbrut*(-1)
+%% rzrtyp :=  "D"
+%% if(idok1="SPRZED")rzrtyp := "O"
+%% rzrfak := tra
+%% If(kz=0)rzrfak := dottra
+%% rzrdat := dattra
+%% rzrtrm := termtra
+%% dewsfx := symdew
+%% dewkwt := kwdew
+%% CallAlg["WRITE_REKORD_TO_BAZA"]
+%% kz := kz+1
+%% if(kz=1)goto kz
+//
+%% goto _wez_next
+//
+%% linia_vat:
+%% linia := "vat"
+%% rejvat := RejWezP_S["S:P07"]
+%% stvat := RejWezP_S["S:P08"]
+%% gus := RejWezP_S["S:P09"]
+%% symdew := RejWezP_S["S:P21"]
+%% kw_str := RejWezP_S["S:P10"]
+%% CallAlg["LICZBAX"]
+%% net := kwx
+%% kw_str := RejWezP_S["S:P11"]
+%% CallAlg["LICZBAX"]
+%% vat := kwx
+%% kw_str := RejWezP_S["S:P12"]
+%% CallAlg["LICZBAX"]
+%% brut := kwx
+%% kw_str := RejWezP_S["S:P22"]
+%% CallAlg["LICZBAX"]
+%% kwdew := kwx
+%% if(not((net=0)or(net=.)))goto ktnet
+%% komu := "Rek "+lp1+" Kwota netto w pliku pusta "
+%% akcja := "Uzupe|lnij kwot|e w pliku "
+@T@P#komu1#L40@@ @P#akcja1#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% goto _wez_next
+%% ktnet:
+%% kontnet := RejWezP_S["S:P13"]
+%% klasnet := RejWezP_S["S:P14"]
+%% kontospr := kontnet
+%% CallAlg["SPRAWDZ_KONT"]
+%% if(blad = "T")goto druk2_blad
+%% kntnet := knt
+%% goto klnet
+%% druk2_blad:
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% klnet:
+%% il1 := StrIn["L",kntnet]
+%% if(il1=-1)goto dewvat
+%% klasspr := klasnet
+%% CallAlg["SPRAWDZ_KLAS"]
+%% if(blad = "T")goto druk2_klas
+%% if(blad1 = "T")goto druk2_klas1
+%% goto dewvat
+%% druk2_klas:
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% if(blad1="T")goto druk_klas1
+%% goto dewvat
+%% druk2_klas1:
+@T@P#komu1#L40@@ @P#akcja1#L40@@ @P @@ @P @@ @L @@ @v @@@@
+//
+%% dewvat:
+%% kontdew := kontnet
+%% kwpln := net
+//%% OkAlert["dew1x dewizy "+kntnet+" "+kontnet]
+%% il1 := StrIn["D",kntnet]
+//%% OkAlert[kntnet+" il1 "+il1+" kontnet="+kontnet]
+%% if(il1= (-1))goto sprawdz_vat
+%% dewizyx:
+%% if(not(symdew=""))goto sdew_oka
+//%% OkAlert["Brak symbolu dew"]
+%% komu := "1 Rek "+lp1+" Brak symbolu dew "
+%% akcja := "Uzupe|lnij symbol dewiz w pliku " 
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% blad := blad+" sdew"
+%% sdew_oka:
+%% if(not(kwdew=.))goto kwdew_oka
+//%% OkAlert["Brak kwoty dew"]
+%% komu := "Rek "+lp1+" Brak kwoty dew "+kontdew
+%% akcja := "Uzupe|lnij kwot|e dewiz w pliku " 
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% blad := blad+" kwdew"
+%% goto kwdew_okx
+%% kwdew_oka:
+%% if((kwpln>0)and(kwdew>0))goto kwdew_okxa
+%% if((kwpln<0)and(kwdew<0))goto kwdew_okxa
+%% if((kwpln>0)and(kwdew=0))goto kwdew_okxa
+%% if((kwpln<0)and(kwdew=0))goto kwdew_okxa
+%% komu := "Rek "+lp1+" Znak kwoty PLN inny ni|z kwoty DEW "
+%% akcja := "Popraw w pliku transmisji " 
+@T@P#komu#L50@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% blad := blad+" zndew"
+%% kwdew_okxa:
+//%% rejop["xx:Zobaczdbf",""]
+%% if (RejOp["xx:ZnajdzRek",symdew]) goto sbruta
+%% RejOp["xx:DodajRek",""]
+%% xRejWstawP_S["xx:SUFF_kod",symdew]
+%% xRejWstawP_S["xx:SUFF_sfx",symdew]
+%% xRejWstawP_S["xx:SUFF_naz",symdew]
+%% RejOp["xx:ZapiszRek",""]
+%% sbruta:
+//%% rejop["xx:Zobaczdbf",""]
+//
+%% sprawdz_vat:
+// Slownik zamienników - rejestr vat
+%% if (RejOp["RV:ZnajdzRek",rejvat]) goto slowv
+%% komu := "Rek"+lp1+" Brak rej.VAT "+rejvat
+%% akcja := "Za|l|o|z rej. VAT "+rejvat
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% slowv:
+%% rvkont := RejWezP_S["RV:rejkonto"]
+%% rvopis := RejWezP_S["RV:rejopis"]
+%% rvtyp := RejWezP_S["RV:rejtyp"]
+%% if(rvkont=kontvat)goto rvkont
+%% komu := "Rek"+lp1+" "+rejvat+" nie jest rejestrem "+kontvat
+%% akcja := " sprawd|x "
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% rvkont:
+%% if (RejOp["vv:ZnajdzRek",rejvat]) goto klas_vat
+//dodaj rejestr vat
+%% RejOp["vv:DodajRek",""]
+%% xRejWstawP_S["vv:SUFF_kod",rejvat]
+%% xRejWstawP_S["vv:SUFF_sfx",rejvat]
+%% xRejWstawP_S["vv:SUFF_naz",rejvat]
+%% RejOp["vv:ZapiszRek",""]
+//
+%% klas_vat:
+%% if (RejOp["RK:ZnajdzRek",stvat]) goto stawka
+%% komu := "Rek"+lp1+" "+stvat+" brak w Perseusie"
+%% akcja := " Dodaj w rej.klas.VAT "
+@T@P#komu#L40@@ @P#akcja#L40@@ @P @@ @P @@ @L @@ @v @@@@
+%% blad := blad+"_stV"
+//%% goto st_vat
+%% stawka:
+%% if (RejOp["yy:ZnajdzRek",stvat]) goto vat
+//dodaj rejestr vat
+%% RejOp["yy:DodajRek",""]
+%% xRejWstawP_S["yy:SUFF_kod",stvat]
+%% xRejWstawP_S["yy:SUFF_sfx",stvat]
+%% xRejWstawP_S["yy:SUFF_naz",stvat]
+%% RejOp["yy:ZapiszRek",""]
+//
+%% vat:
+%% vfpl := "I"
+%% il := StrIn["G",plat]
+%% if (il=(-1))goto plat_in
+%% vfpl := "G"
+%% goto plat_in1
+%% plat_in:
+%% il := StrIn["g",plat]
+%% if (il=(-1))goto plat_in1
+%% vfpl := "G"
+%% plat_in1:
+%% vrej := rejvat
+%% vtyp := "FV"
+//%% RejOp["KL:ZnajdzRek",klient]
+//%% pnipx := RejWezP_S["KL:kl_nip"]
+%% if(pnipx = "")vtyp := "DV"
+%% if(typtra = "FVK")vtyp := "FVK"
+%% if((typtra = "FVK")and(pnipx=""))vtyp := "DVK"
+%% vgus := gus
+%% CallAlg["WRITE_NULL_TO_BAZA"]
+%% opis_dok_nagl := opis
+%% oprpfx := lp1
+%% rdzsfx := kontvat
+%% oprkod := "1VW_"+kntvat
+%% if(idok1="SPRZED")oprkod := "1VM_"+kntvat
+%% oprnaz := "vat WN dekret:1VWN"
+%% if(idok1="NvMA")oprnaz := "vat MA  dekret:1VMA"
+%% oprtrs := tresc
+%% oprdat := dattra
+%% oprkwt := vat
+%% vatsfx := stvat
+%% vatnet := net
+%% vatbrt := brut
+%% vatgus := vgus
+%% vatdok := tra
+%% vatold := dottra
+%% vatdat := dattra
+%% vatspr := datusl
+%% vatobw := dattra
+%% klnsfx := klient
+%% if(klient="")klnsfx := tra
+%% vatrej := rejvat
+%% vattyp := vtyp
+%% vatplt := termtra
+%% vatfpl := vfpl
+%% vatuwagi := ""
+%% vatkontoplat := kontbrut
+%% vatkontonetto := ""
+%% CallAlg["WRITE_REKORD_TO_BAZA"]
+// konto netto
+%% CallAlg["WRITE_NULL_TO_BAZA"]
+%% opis_dok_nagl := opis
+%% oprpfx := lp1
+%% rdzsfx := kontnet
+%% oprkod := "2NW_"+kntnet
+%% if(idok1="SPRZED")oprkod := "2NM_"+kntnet
+%% oprnaz := "netto WN dekret:2NW"+kntnet
+%% if(idok1="SPRZED")oprnaz := "netto MA dekret:2NM"+kntnet
+%% oprtrs := tresc
+%% rzlsfx := klasnet
+%% rzlnaz := klasnet
+%% oprdat := dat
+%% oprkwt := net
+%% dewsfx := symdew
+%% dewkwt := kwdew
+%% CallAlg["WRITE_REKORD_TO_BAZA"]
+//
+%% _wez_next:
+%% CallAlg["DISPLAY_PASEK"]
+%% if (RejOp["S:WezNastepnyRek",""]) goto _next
+## DELWINDOW
+%% CallAlg["ZAPISZ_DATY"]
+%% goto esc
+//
+%% esc:
+%% RejOp["S:ZamknijRej",""]
+%% RejOp["B:ZamknijRej",""]
+%% RejOp["KL:ZamknijRej",""]
+%% RejOp["PL:ZamknijRej",""]
+%% RejOp["LL:ZamknijRej",""]
+%% RejOp["RK:ZamknijRej",""]
+%% break := .N.
+%% ExitFrm[0]

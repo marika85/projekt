@@ -1,0 +1,1029 @@
+///////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// Perseus Spolka z o.o 
+// Wszystkie prawa zastrzezone
+// 
+// Data utworzenia: 2001.09.01
+// interfejs optibelt
+// Historia zmian
+//data 2017.04.12
+//klient: kampgroup: ma NIP PL, kod kraju NL i wystawia faktry w PLN (wtedy ma to byc sprzedaz krajwa w PLN) oraz
+//faktury w EUR - wtedy ma byc brutto na 201/ z rozrachunkiem dewizowym, A VAT i netto w pln na 700/2 i 221/2. 
+//po napotkaniu tego rpzypadku zadaje pytanie czy ksiegowac na rzr dewizowy : oznaczenie klienta: unia_w_eur := .T.
+//data 2016.03.22
+//pojawil sie klient, który ma kod kraju NL, ale polski NIP, a faktury sa wystawiane 
+//w pln (kod waluty "004")i vat jak dla sprzedazy krajowej:
+//klient: Kramp nip PL5263142987
+//postanowilam, ze jesli jest kraj inny niz "PL", a nip ma przedrostek "PL" lub kod waluty jest "004", to 
+//wtedy pytaj czy traktowac jak sprzedaz krajowa z VAT w PLN. (podtawia sie zmienna unia_w_pln = .T.)
+//uwaga: wtedy klienta dodaje jako klienta polskiego (polski NIP)
+//data 2015.12.10
+//roziwazanie dla kontrahnetow polskich, ktorzy wystawiaja faktury w EUR:
+//oststaecznie zdecydowlam sie na roziwaznie: nowy dekret WN_PLEUR dla kontrahnetow polskich, faktury w EUR
+// rozpoznanie rekordu: pole P08 kod "PL"(kraj: Polska), pole P16 "998" (waluta EUR)
+//dekret WN_EUR: konto 201/+suffix ; rozrachunek w pln i w dewizach, konto netto 700/2
+// pojawili sie nowi kontrahnet PL, ktoy ma niektore faktury wystawione w EUR:
+//- kontrahnet 776602 Konngshilde NIP 7750001970
+//- kontrahnet 764610 Husqvarna NIP 5242560627
+//data 2015.11.16
+// pojawil sie nowy kontrahnet PL, ktoy ma niektore faktury wystawione w EUR - kontrahnet 620501 CHN INDUSTRIAL  - nip 7740004895
+//data 2012.02.24
+//1. dodalam dla faktur, w krotych vat+netto jest rozne od brutto - amieniam kwote vat, ¿eby sie zgadzalo (wychodzi zazwyczaj dla Samsunga - przleicznanie kwoty brutto z eur za pomoca kursu
+//2. do tej pory uwazalam za faktury korygujace te które zaczynaly sie od cyfr "113" i "114" - teraz przestwilam, ¿e za korejkty uwaza
+//takie dokumenty, ktore maja na na pierwszych dwoch cyfrach numer roku ("11" dla 2011, "12" dla 2012), a potem maja cyfre "3" lub "4"
+//3. pojawil sie nowy kontrahnet PL, ktoy ma niektore faktury wystawione w EUR - kontrahnet 622100 SPED S.J. MALGA - nip 8992221380
+//dodoalam nowy dekret WN_SPED
+//??uwaga: faktury wystawioen w pln sa ksiegowane "normalnie"
+//dta 2011.05.19 - zaokrgalenia dla paragonow : dla paragonow liczy netto od brutto i ewentualnie dodoaje zaokraglenia;
+//dla pozostalych dokumentow liczy brutto i vat od wartosci netto
+// Data:2002.07.02
+//   Zmieniono .....
+// 2002.09.09
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+// ===== - konwersja danych
+// po zmianie linii  "V" ze stawkami vat
+// ostatnia wersja 2002.09.15
+// ---  czy wczytywac 2 podziale na punkty sprzedazy 
+%% MAG_PS := .T.
+%% if (parametry) goto _parametry
+// ===== wczytanie parametrow interface'u
+%% RejOp["G:OtworzRej",naz_glob]
+%% indexpar := "!INT_MAG_PS"
+%% paramtxt := "T"
+%% CallAlg["READ_PARAM"]
+%% MAG_PS := paramlog
+%% RejOp["G:ZamknijRej",""]
+//%% goto _zacz
+//
+%% MAG_illinii := 0
+%% paramkwt := 0
+%% if (parametry) goto _parametry
+// ===== wczytanie parametrow interface'u
+//%% RejOp["G:OtworzRej","GLOBUSER.RJR"]
+%% RejOp["G:OtworzRej",naz_glob]
+// --- liczba linii
+%% indexpar := "!INT_MAG_LINIA"
+%% paramtxt := ""
+%% CallAlg["READ_PARAM"]
+%% MAG_illinii := paramkwt
+// ---  WZ z faktura czy z dokumentem magazynowym 
+%% indexpar := "!INT_MAG_KOSZTY"
+%% paramtxt := "T"
+%% CallAlg["READ_PARAM"]
+%% MAG_koszt := paramlog
+// ---  dekretacja zbiorcza czy poszczegolnymi dokumentami 
+%% indexpar := "!INT_MAG_DEKRETY"
+%% paramtxt := "T"
+%% CallAlg["READ_PARAM"]
+%% MAG_dekr := paramlog
+// ---  ceny ew. zakupu czy brutto 
+%% indexpar := "!INT_MAG_CENY"
+%% paramtxt := "T"
+%% CallAlg["READ_PARAM"]
+%% MAG_cena := paramlog
+// ---  DF fak. zakupu  
+%% indexpar := "!INT_MAG_ZAK"
+%% paramtxt := "T"
+%% CallAlg["READ_PARAM"]
+%% MAG_zak := paramlog
+// ---  ksieg. wartosc dokum. lub linie z dokumentu -podzial na grupy
+%% indexpar := "!INT_MAG_WAR"
+%% paramtxt := "T"
+%% CallAlg["READ_PARAM"]
+%% MAG_war := paramlog
+// ---  ksieg. wg stawek vat czy grup
+%% indexpar := "!INT_MAG_RODZ"
+%% paramtxt := "T"
+%% CallAlg["READ_PARAM"]
+%% MAG_rodz := paramlog
+// ---  DF ksieg. wg stawek vat czy grup
+%% indexpar := "!INT_MAG_RODZD"
+%% paramtxt := "T"
+%% CallAlg["READ_PARAM"]
+%% MAG_rodzd := paramlog
+// ---  ksieg. wg wydzialow
+%% indexpar := "!INT_MAG_WYDZ"
+%% paramtxt := "T"
+%% CallAlg["READ_PARAM"]
+%% MAG_wydz := paramlog
+// ---  nr.dokum.,nr.wlas.dok.
+%% indexpar := "!INT_MAG_NR"
+%% paramtxt := "T"
+%% CallAlg["READ_PARAM"]
+%% MAG_nr := paramlog
+%% RejOp["G:ZamknijRej",""]
+//----------------------
+%% _zacz:
+//%% okalert["jjjjj"]
+%% RejOp["NJ:OtworzRejSprawdz","INT_N_JPK.REX"]
+%% RejOp["ZJ:OtworzRejSprawdz","INT_Z_JPK.RJR"]
+%% RejOp["ZJ:zmienkluczrej","1"]
+//w rejestrach NJ: i ZJ: jest wczytany plik xml z danymi
+%% rejop["nj:zobaczdbf",""]
+%% rejop["zj:zobaczdbf",""]
+//ustal rok do korekt
+%% Finnop["@OPENMAINx",""]
+%% str_rok := "m"+poczrok_ksieg
+%% str_rok := strcut[str_rok,1,2]
+//%% okalert["strrok "+str_rok]
+//to ponizej skasowac !!!
+//%% str_rok := "20"
+%% Finnop["close",""]
+//id - polaczenie nj: z zj:
+//id z naglowka pole vatid nr 99 indeks 2
+%% n_vatid := 0
+%% n_vatid_str := ""
+//z zapisu pole vatdofaktury nr 100 indeks 1 (dowiazanie do naglowka)
+%% z_vatid := 0
+//vatsposob = "O" - nie laczay zapisow VAT, mozna wpisywac faktury pozycjami (dla JPK)
+%% vatsposob := "O"
+%% z_vatsposob := "O"
+//pozycje faktury zmienne
+%% vatopis := ""
+%% vatmiara := ""
+%% vatilosc := 0
+%% vatcena := 0
+//suma kwot netto,vat wyliczona z danych zdrodlowych dla paragonow
+%% net_dok := 0
+%% vat_dok := 0
+//suma netto, vat wyliczona pobrana wprost z danych zrodlowych
+%% netto_vat := 0
+%% vat_vat := 0
+%% dat_ks := ''
+%% m_ks := .
+%% typ_d := ""
+%% blk := ""
+%% blkb := ""
+%% rdz := ""
+%% dotyczy := ""
+%% kurs := 0
+%% nr_kl_niem := ""
+%% brt_dok :=0
+%% net_dok := 0
+%% vat_dok := 0
+%% prt_dok := 0
+%% net_tow := 0
+%% brt_dew :=0
+%% nip := ""
+%% nip_wsp := ""
+%% nipue := ""
+%% kodue := ""
+%% unia := .N.
+%% unia_w_pln := .N.
+%% unia_w_eur := .N.
+%% kl_sym := ""
+//rodzaj sprzedazy - H - hurt, S - detal
+%% rdz_sprz := "S"
+%% nr_fak := ""
+%% ps := ""
+%% pun := ""
+%% nr_mag := ""
+%% kw_brutto := 0
+%% kod_kln1 := ""
+%% nip_kln := 0
+%% kod_kln2 := ""
+%% stvat := ""
+%% propr := ""
+%% nazwak := ""
+%% numer_fak_pfx := ""
+%% str_numer_fak := ""
+%% str_data_fak := ""
+%% sumfak := 0
+%% sumdok := 0
+%% sumnet := 0
+%% sumvat := 0
+%% sumbrt := 0
+%% sumdokb := 0
+%% sumdokvs := 0
+%% brt_dok :=0
+%% dotyczy := ""
+//nr rekordu w b:
+%% nrrek_b := 0
+//%% sbrutto := 0
+//%% snetto := 0
+//%% sbrutto22 := 0
+//%% snetto22 := 0
+//%% svat22 := 0
+%% kwbr := 0
+%% kwtz := 0
+%% kwtvz := 0
+%% sfx := ""
+%% grx := ""
+%% ll := 0
+%% RejOp["R:OtworzRej1","INT_DEKR.RXR"]
+%% RejOp["R:ZnajdzRek",naz_int]
+%% nr := 1
+%% licz := 0
+%% _numer:
+%%  naz_txtp := RejWezP_S["R:DEKR_txt" + ToStr["#nr#S:0"]]
+%%  if (naz_txtp = "") goto _loop
+%% txtnr := "INT_TXT" + ToStr["#nr#S:0"] + ".RXR"
+%% goto LLL
+%% _loop:
+%%  nr := nr + 1
+%%  if (nr < 10) goto _numer
+%% if (nr = 10) goto kom
+%% LLL:
+%% licz := licz + 1
+//%% RejOp["R:ZamknijRej",""]
+//%% RejOp["Z:OtworzRej",txtnr]
+//%% RejOp["Z:WezPierwszyRek",""]
+//dane w rej nj: i zj:
+%% if (licz = 1 ) RejOp["UsunPlikRej",naz_baza]
+%% RejOp["B:OtworzRej",naz_baza]
+%% if (licz = 1) RejOp["UsunPlikRej",naz_firm]
+%% RejOp["C:OtworzRej",naz_firm]
+%% liczbarekordow := RejWezP_K["Nj:LiczbaRekordow"]
+%% RejOp["XX:OtworzRej","REJESTRKL.RXR"]
+%% RejOp["XX:zmienkluczrej","6"]
+%% RejOp["KNTR:OtworzRej",naz_kntr]
+%% RejOp["KNTR:zmienkluczrej","1"]
+%% wspolne:
+%% if (liczbarekordow = 0) goto _end
+%% lp := 0
+%% pr := 0
+%% sm := 60 - StrLen[ToStr["#liczbarekordow#S:0 > "]]
+## DEFWINDOW = 11,10,11,70,ACHP,,,,,"Konwersja danych "
+%% DispLine[ToStr["#liczbarekordow#S:0 > "]]
+//madzia optibelt poczatek
+//
+%% rdzb := ""
+%% blkb := ""
+%% if (not(rejop["nj:wezpierwszyrek",""]))
+%% _next_imp_rek:
+%% lp := lp + 1
+%% rek := ToStr["#lp#S:0"]
+%% propr :=FillString[6-strlen[rek],"0"]+rek 
+//petla dla wszystkich faktur
+//jeden rekord = jedna faktura
+//zapisz dane dotyczace kontrhenta
+//pobierz id naglowka
+%% n_vatid := RejWezP_K["nj:vatid"]
+%% n_vatid_str := tostr["#RejWezP_K[""nj:vatid""]#S:0"]
+%% nip := ""
+%% nip_wsp := ""
+%% kod_ue := ""
+%% unia := .N.
+%% unia_w_pln := .N.
+%% unia_w_eur := .N.
+%% kraj := RejWezP_S["nj:nrwyst"]
+%% if (not(kraj = "PL")) kod_ue := kraj
+%% waluta := RejWezP_S["nj:vatwaluta"]
+//na razie poniewaz vatwaluta jest zle wypelniania, podstawiam walute na podstawie kursu
+//poprawka 20210521 - juz dovbrze jest wypelnane, rozpoznanie pokodzie waluty
+//kurs w psotaci stringu na polu :nazwawyst
+//jest wypoelnione pole kurs  waluta === "EUR", jesli pole nie jest wypelnioen, waluta = PLN
+//%% waluta := "PLN"
+//%% if (not(pustepole["nj:nazwawyst"])) waluta := "EUR"
+%% nip := RejWezP_S["nj:vatnip"]
+%% nip_ue := RejWezP_S["nj:nip_ue"]
+//%% okalert["kraj "+kraj]
+//%% okalert["waluta "+waluta]
+//sprawdz czy jest PL - nipotrzebne, nipy powinny byc bez znakow!
+//%% if (strcut[nip,0,2]="PL") nip := strcut[nip,2,strlen[nip]-2]
+//usun spacje jesli byla
+//%% if (strcut[nip,0,1]=" ") nip := strcut[nip,1,strlen[nip]-1]
+//sprawdz czy  kontrahnet zagraniczny wystawia w PLN
+//warunek do sprawdzenia: kraj jest inny niz PL, a waluta = PLN  lub nip poprzedzony przedrostkiem "PL"
+%% if (not(kraj = "PL") and ((waluta = "PLN")  )) goto _pytaj_krajowa
+%% if (not(kraj = "PL")) goto _export
+%% kont_nip:
+%% goto _firma
+%% _kont_firma:
+%% goto _write_fak
+//
+//przypadek: kraj inny niz PL, a faktura wystawiona w PLN - spytaj czy traktowac jak kontr krajowego
+%% _pytaj_krajowa:
+%% waluta_slownie := ""
+%% if (waluta = "PLN") waluta_slownie := "PLN"
+%% if (waluta = "EUR") waluta_slownie := "EUR"
+%% if (waluta = "EUR") goto _kramp_eur
+//kraj inny niz PL, waluta PLN
+%% if (not(yesalert["Kontrahent: "+rejwezp_s["nj:vatnazwa"]+", nip: "+rejwezp_s["nj:nip_ue"]+"$kod kraju "+kraj+", waluta: "+waluta_slownie+"$Czy wczyta|c jako sprzeda|z krajow|a z VAT w PLN ? "]))  goto _export
+%% unia_w_pln := .T.
+%% goto kont_nip
+//kraj inny niz PLN, waluta EUR
+%% _kramp_eur:
+%% if (not(yesalert["Kontrahent: "+rejwezp_s["nj:vatnazwa"]+", nip: "+rejwezp_s["nj:nip_ue"]+"$kod kraju "+kraj+", waluta: "+waluta_slownie+"$Czy wczyta|c jako sprzeda|z z rozrachunkiem dewizowym i z VAT w PLN ? "]))  goto _export
+%% unia_w_eur := .T.
+%% goto kont_nip
+//
+%% BEEP[0]
+%% OkAlert["UWAGA - rekord "+rek+"$ $w polu nr 0 niedopuszczalne znaki"]
+%% exit := .T.
+%% goto _end
+//
+%% _blad_nj:
+%% OkAlert["Rejestr NJ: pusty - brak wczytanych danych !"]
+%% exit := .T.
+%% goto _end
+%% 
+//
+// --- wczytywanie danych o kontrahencie do rejestru INT_FIRM
+%% _write_firm:
+%% _firma:
+//kod kontr = nr nip
+//zamiennik - numer klienta niemiecki
+//na razie ni emam numeru klineta z niemiec
+%% nr_kl_niem := RejWezP_S["nj:adreswyst"]
+%% kontr := nr_kl_niem
+%% nip_kln1 := nip
+%% naz_kln1 := nr_kl_niem+" "+RejWezP_S["nj:vatnazwa"]
+//%% naz_kln2 := RejWezP_S["Z:P03"]
+%% naz_kln2 := ""
+//szukaj w INT_KNTR (slownik zamiennikow kontrhnetow) wg NIP
+%% if (RejOp["KNTR:ZnajdzRek",kontr]) goto _dd
+//szukaj w rejestrkl wg NIP
+%% kl_sym := ""
+%% RejOp["XX:zmienkluczrej","6"]
+%% if (not(RejOp["XX:ZnajdzRek",nip_kln1])) goto _dd1 
+%% kont_kntr:
+%% kl_sym := rejwezp_s["xx:kl_sym"]
+//%% okalert["kl_sym = "+kl_sym]
+//dodoaj do slownika zmainnikow
+%% RejOp["KNTR:DodajRek",""]
+//%% xRejWstawP_S["KNTR:SUFF_kod",nip_kln1]
+%% xRejWstawP_S["KNTR:SUFF_kod",kontr]
+%% xRejWstawP_S["KNTR:SUFF_sfx",kl_sym]
+%% xRejWstawP_S["KNTR:SUFF_naz",naz_kln1]
+%% xRejWstawP_S["KNTR:SUFF_adr",Rejwezp_s["nj:vatadres"]]
+%% xRejWstawP_S["KNTR:SUFF_nip",nip_kln1]
+%% RejOp["KNTR:ZapiszRek",""]
+%% _dd:
+%% if (RejOp["C:ZnajdzRek",kontr]) goto _kont_firma
+//uwaga: nowi kontrahneci dodoaja sie na podstawie danych pobieranych z rejestru INT_FIRM (procedura WRITE_KLN.ALG w int.alg)
+%% RejOp["C:DodajRek",""]
+%% xRejWstawP_S["C:FIRM_txtkln",kontr]
+%% xRejWstawP_S["C:FIRM_txtfak",kontr]
+%% xRejWstawP_S["C:FIRM_prordz",""]
+%% xRejWstawP_S["C:FIRM_prokln",kl_sym]
+%% xRejWstawP_S["C:FIRM_pronz1",naz_kln1]
+%% xRejWstawP_S["C:FIRM_pronz2",naz_kln2]
+//jesli PL - wpisz tylko nip zwykly, nip ue pusty,
+//jesli unia - wpisz kod kraju + nip wspolnotypwy, nip zwykly pusty
+//jesli spoza unii - wpisz nip na drugi czlon nazwy, nip zykly i nip ue - pusty
+//jesli waluta PLN i karj inny niz PL (unia_w_pln = .T.) - traktuj jak krajowy PL: - wpisz tylko nip zwykly, nip ue pusty,
+%% xRejWstawP_S["C:FIRM_pronip",""]
+%% xRejWstawP_S["C:FIRM_pronipue",""]
+%% xRejWstawP_S["C:FIRM_prokodue",""]
+%% if (kraj = "PL") xRejWstawP_S["C:FIRM_pronip",nip_kln1]
+%% if (unia_w_pln = .T.) xRejWstawP_S["C:FIRM_pronip",nip_kln1]
+%% if (not(unia)) xRejWstawP_S["C:FIRM_pronz2",nip_kln1]
+%% if (unia and (not(kraj = "PL"))) xRejWstawP_S["C:FIRM_pronipue",nip_wsp]
+%% if (unia and (not(kraj = "PL"))) xRejWstawP_S["C:FIRM_prokodue",kod_ue]
+%% xRejWstawP_S["C:FIRM_proreg",""]
+%% xRejWstawP_S["C:FIRM_propes",""]
+%% xRejWstawP_S["C:FIRM_promst",Rejwezp_s["nj:vatadres"]]
+%% xRejWstawP_S["C:FIRM_proadr",RejWezP_S["nj:vatadres"]]
+%% xRejWstawP_S["C:FIRM_probnk",""]
+%% xRejWstawP_S["C:FIRM_proknt",""]
+%% xRejWstawP_S["C:FIRM_protl1",""]
+%% xRejWstawP_S["C:FIRM_protl2",""]
+%% xRejWstawP_S["C:FIRM_profax",""]
+%% xRejWstawP_S["C:FIRM_protlx",""]
+%% RejOp["C:ZapiszRek",""]
+%% goto _kont_firma
+//======================================================================
+//wczytanie danych do dokumentu w PLN
+%% write_pln:
+%% okalert["dokument w PLN"]
+%% goto _write_fak
+%% goto _disp_tlo
+//======================================================================
+// --- wczytywanie danych o fakturze magazynowej do rejestru INT_BAZA
+%% _write_fak:
+//%% okalert["write_fak"]
+//%% propr := ""
+%% nr_fak := RejWezP_S["nj:vatsymdok"]
+%% nr_kl_niem := RejWezP_S["nj:adreswyst"]
+%% dotyczy := RejWezP_S["nj:vatdokdotyczy"]
+%% kurs := 0
+%% kw := 0
+%% kw_str := ""
+%% if (not(pustepole["nj:nazwawyst"])) kw_str := rejwezp_s["nj:nazwawyst"]
+//4 miejsca po przecinku, kropka jako kropka dziesietna
+%% CallAlg["liczba6"]
+//%% CallAlg["liczba4"]
+%% kurs := kw
+//%% okalert["kurs = "+kw]
+%% brt_dok :=0
+%% net_dok := 0
+%% vat_dok := 0
+%% prt_dok := 0
+%% net_tow := 0
+%% brt_dew :=0
+//zmienne do sumowania pozycji faktury
+%% net_dok_sp := 0
+%% vat_dok_sp := 0
+%% brt_dok_sp := 0
+//procedury VAT nalezny
+//zmienne do JPKV7M, V7K
+%% z_vatmpp := .N.
+%% z_vattp := .N.
+%% z_vati42 := .N.
+%% z_vati63 := .N.
+%% z_vatgtu := ""
+%% trojstr := .N.
+//pobierz wartosci dla procedur
+%% z_vatmpp := rejwezp_l["nj:vat_mpp"]
+%% z_vattp := rejwezp_l["nj:vat_powiazany"]
+%% z_vati42 := rejwezp_l["nj:vat_i_42"]
+%% z_vati63 := rejwezp_l["nj:vat_i_63"]
+%% z_vatgtu := ""
+%% z_trojstr := rejwezp_l["nj:trojstr"]
+%% z_vatsposob := "O"
+//bez laczenia zapisow VA
+//suma kwot netto,vat wyliczona z danych zdrodlowych dla paragonow
+%% net_dok := 0
+//symbol dokumentu; FV, FVK
+%% if (kraj = "PL") kod := "FV"
+//%% if (StrCut[nr_fak,0,3] = "113" or StrCut[nr_fak,0,3] = "114") kod := kod +"K"
+//zmiana na rok kalendarzowy
+%% if (StrCut[nr_fak,0,3] = str_rok+"3" or StrCut[nr_fak,0,3] = str_rok+"4") kod := kod +"K"
+//%% okalert["kod dok "+kod]
+//prefix operacji - na razie nie ma
+//%% propr := kod+propr
+%% if (kod == "MO" or kod == "RPV")okalert["Nieznany symbol dokumentu "+kod+"$przyjmuj|e ""DV"""]
+//kod kontrahneta
+%% klnsfx :=  kontr
+//kwota brutto
+//%% kw := 0
+//%% kw_str := RejWezP_S["Z:P23"]
+//%% CallAlg["liczba3"]
+//%% CallAlg["liczba4"]
+%% brt_dok := rejwezp_k["nj:vatkwotazapl"]
+%% brt_dok1 := rejwezp_k["nj:vatsumabrutto"]
+//%% okalert["kwota_str="+kw_str+" kwota  brutto= "+kw]
+%% if (waluta = "EUR") brt_dew := brt_dok
+//dla EUR - oblicz kwote w pln
+//%% if (waluta = "998") brt_dok := roundn[brt_dok*kurs/100.00,2]
+%% if (waluta = "EUR") brt_dok := rejwezp_k["nj:vatsumabrutto"]
+//%% okalert["kurs = "+kurs]
+//porto
+%% prt_dok := 0
+%% if (pustepole["nj:porto"]) goto _kont_net
+//%% kw := 0
+//%% kw_str := RejWezP_S["Z:P13"]
+//%% CallAlg["liczba3"]
+//%% CallAlg["liczba4"]
+//uwaga: zmiana: porto dodoajemy do kwoty brutto
+%% prt_dok := rejwezp_k["nj:porto"]
+//%% okalert["porto dla dok "+nr_fak +" = "+prt_dok]
+%% _kont_net:
+//netto 
+//%% kw := 0
+//%% kw_str := RejWezP_S["Z:P11"]
+//%% CallAlg["liczba3"]
+//%% CallAlg["liczba4"]
+//%% okalert["str "+kw_str]
+//%% okalert["licz "+kw]
+%% net_dok := rejwezp_k["nj:vatsumanetto"]
+%% net_tow := net_dok - prt_dok
+//dla EUR netto w pln = brutto w pln
+%% if (waluta = "EUR"  and not(kraj = "PL") and not(unia_w_eur)) brt_dok := net_dok
+//%% if (waluta = "998"  and not(nip = "7872082188" or nip = "8992221380" or nip = "7740004895" or nip = "7750001970" or nip = "5242560627")) brt_dok := net_dok
+//%% if (waluta = "998"  and not(nip = "7872082188") and (StrCut[nr_fak,0,3] = "113" or StrCut[nr_fak,0,3] = "114")) brt_dok := brt_dok*(-1)
+%% if (waluta = "EUR"  and not(kraj = "PL") and (StrCut[nr_fak,0,3] = str_rok+"3" or StrCut[nr_fak,0,3] = str_rok+"4")) brt_dok := brt_dok*(-1)
+//%% if (waluta = "998"  and not(nip = "7872082188" or nip = "8992221380" or nip = "7740004895" or nip = "7750001970" or nip = "5242560627") and (StrCut[nr_fak,0,3] = str_rok+"3" or StrCut[nr_fak,0,3] = str_rok+"4")) brt_dok := brt_dok*(-1)
+//vat
+//%% kw := 0
+//%% kw_str := RejWezP_S["Z:P12"]
+//%% okalert["kw_str = "+kw_str]
+//%% CallAlg["liczba3"]
+//%% CallAlg["liczba4"]
+%% vat_dok := rejwezp_k["nj:vatsumavat"]
+//%% okalert["vvvv = "+vat_dok]
+//%% okalert["brt "+brt_dok]
+//%% okalert["net "+net_dok]
+//%% okalert["vat "+vat_dok]
+//jesli korekta - zamien wszytskie kwoty (z wyjatkiem brutto ) na ujemne
+//%% if (StrCut[nr_fak,0,3] = "113" or StrCut[nr_fak,0,3] = "114") vat_dok := vat_dok*(-1)
+%% if (StrCut[nr_fak,0,3] = str_rok+"3" or StrCut[nr_fak,0,3] = str_rok+"4") vat_dok := vat_dok*(-1)
+%% if (StrCut[nr_fak,0,3] = str_rok+"3" or StrCut[nr_fak,0,3] = str_rok+"4") net_dok := net_dok*(-1)
+%% if (StrCut[nr_fak,0,3] = str_rok+"3" or StrCut[nr_fak,0,3] = str_rok+"4") net_tow := net_tow*(-1)
+//termin platnosci
+//%% term := RejWezP_S["Z:P35"]
+//%% okalert["term = "+term]
+//%% termf := C_DATE[StringNaLiczbe[StrCut[term,2,2]],StringNaLiczbe[StrCut[term,4,2]],StringNaLiczbe[StrCut[term,6,2]]]
+%% termf := rejwezp_d["nj:vatterminplat"]
+//%% datff := RejWezP_S["Z:P21"]
+//%% datf := C_DATE[StringNaLiczbe[StrCut[datff,2,2]],StringNaLiczbe[StrCut[datff,4,2]],StringNaLiczbe[StrCut[datff,6,2]]]
+%% datf := rejwezp_d["nj:vatdatadok"]
+//%% str_data_fak := StrCut[datff,2,2]+"."+StrCut[datff,4,2]+"."+StrCut[datff,6,2]
+//%% sdat := RejWezP_S["Z:P07"]
+//%% sdatf := C_DATE[StringNaLiczbe[StrCut[sdat,0,2]],StringNaLiczbe[StrCut[sdat,3,2]],StringNaLiczbe[StrCut[sdat,6,2]]]
+//%% sdatf := C_DATE[StringNaLiczbe[StrCut[sdat,2,2]],StringNaLiczbe[StrCut[sdat,5,2]],StringNaLiczbe[StrCut[sdat,8,2]]]
+%% sdatf := datf
+%% datspr := rejwezp_d["nj:vatdataspr"]
+//2011.03.28 data dokumentu: najmlodsza data z wczytanych dokumentow - bierzez z P07, mozna zmienic
+//%% if (sdatf > data_dok) data_dok := sdatf
+%% dat := datf
+%% if (dat > dat2) dat2 := dat
+%% if (dat < dat1) dat1 := dat
+//symbol faktury o transkacji
+//????????
+%% mies := a_date[datf,"M"]
+%% mies_str := tostr["#mies#S:0"]
+%% if (mies <10) mies_str := "0"+tostr["#mies#S:0"]
+//%% str_numer_fak := "S"+StrCut[datff,4,2]+"/"+nr_fak
+%% str_numer_fak := "S"+mies_str+"/"+nr_fak
+%% typvatdok := kod
+//zapisz rekord - dla polskich kontrahnetow dla faktury w EUR
+%% if (kraj = "PL"  and waluta = "EUR") goto write_pleur
+//zapisz rekord - dla niepolskich kontrahnetow  z polskim nipem dla faktury w EUR(kramp group)
+%% if (unia_w_eur) goto write_pleur
+//zapisz rekord - dla samsung - ten przypadek zalatwiony przez write_pleur
+//%% if (nip = "7872082188") goto write_samsung
+//zapisz rekord - dla SPED w EUR - ten przypadaek zalatwiony przez write_pleur
+//%% if (nip = "8992221380" and waluta = "998") goto write_sped
+//zapisz rekord - dla CNHINDU w EUR - ten przypadaek zalatwiony przez write_pleur
+//%% if (nip = "7740004895" and waluta = "998") goto write_cnhindu
+//zapisz rekord - dla Kongshilde w EUR - ten przypadaek zalatwiony przez write_pleur
+//%% if (nip = "7750001970" and waluta = "998") goto write_pleur
+//zapisz rekord - dla Husqvrana w EUR - ten przypadaek zalatwiony przez write_pleur
+//%% if (nip = "5242560627" and waluta = "998") goto write_pleur
+//zapisz rekord - dla EUR
+%% if (waluta = "EUR") goto write_eur
+//zapisz rekord - dla PLN
+//WN_PLN strona WN brutto w pln
+%% CallAlg["WRITE_NULL_TO_BAZA"]
+//prefix
+%% oprpfx := propr
+%% oprkwt := brt_dok
+%% oprkod := "WN_PLN"
+%% oprnaz := "Brutto dokument w pln"
+%% oprtrs := str_numer_fak+" "+str_data_fak+" "+naz_kln1
+%% oprdat := sdatf
+%% if (dat > dat2) dat2 := dat
+%% if (dat < dat1) dat1 := dat
+//%% dat1 := sdatf
+//%% dat2 := sdatf
+%% klnsfx := kontr
+%% rdzsfx := kontr
+%% rdznaz := naz_kln1
+//rozrachunek
+%% rzrfak := str_numer_fak
+//
+%% rzrdat := datf
+%% rzrtrm := termf
+%% rzrtyp := "O"
+%% rzrrdz := "T"
+%% CallAlg["WRITE_REKORD_TO_BAZA"]
+%% kont_netto:
+// netto sprzedaz towarow
+//dekret MA_NETTO
+//spraedaz towarow
+%% CallAlg["WRITE_NULL_TO_BAZA"]
+%% oprpfx := propr
+%% oprkod := "NET_PLN"
+%% rdzsfx := "700/2"
+//inny numer konta dla zagranicznych
+//%% if (waluta = "998" and not(nip = "7872082188")) rdzsfx := "701/2"
+//%% if (waluta = "998" and not(nip = "7872082188" or nip = "8992221380" or nip = "7740004895" or nip = "7750001970" or nip = "5242560627")) rdzsfx := "701/2"
+%% if (waluta = "EUR" and not(kraj = "PL")) rdzsfx := "701/2"
+//dla krampgroup w EUR
+%% if (unia_w_eur) rdzsfx := "700/2"
+%% oprkwt := net_tow
+%% oprnaz := "Netto pln"
+%% oprtrs := str_numer_fak
+%% oprdat := sdatf
+%% CallAlg["WRITE_REKORD_TO_BAZA"]
+// porto 
+%% CallAlg["WRITE_NULL_TO_BAZA"]
+%% oprpfx := propr
+%% oprkod := "NET_PLN"
+%% rdzsfx := "760/22"
+%% oprkwt := prt_dok
+%% oprnaz := "Netto pln"
+%% oprtrs := str_numer_fak
+%% oprdat := sdatf
+%% CallAlg["WRITE_REKORD_TO_BAZA"]
+// vat MA: VAT_PLN
+//tutaj modyfikacja : zapisywac wszytskie pozycje faktury. Kazda pozycja faktury osobny zapis VAT_PLN
+//%% stvat := RejWezP_S["Z:P14"]
+//szukaj zapisow
+%% if (not(RejOp["ZJ:ZnajdzRek",n_vatid_str])) goto _bl_brak_zap 
+%%_next_zj:
+%% CallAlg["WRITE_NULL_TO_BAZA"]
+%% oprpfx := propr
+%% oprkod := "VAT_PLN"
+%% oprnaz := "Kwota vat z zapisu "
+//%% okalert["vat_dok = "+vat_dok+" nrfak "+str_numer_fak]
+//sprawdz czy vat_dok + net_dok == brt_dok
+//%% roznica := round[vat_dok+net_dok-brt_dok,2]
+//%% if (not(roznica = 0.00)) okalert["nierowne "+str_numer_fak+"$"+tostr["#roznica#S:4"] ]
+//%% if (not(roznica = 0.00)) vat_dok := vat_dok-roznica
+//%% oprkwt := vat_dok
+%% vatnet := rejwezp_k["zj:vatkwotanetto"]
+%% vatbrt := rejwezp_k["zj:vatkwotabrutto"]
+%% oprkwt := 0+vatbrt-vatnet
+//sumuj 
+%% net_dok_sp := net_dok_sp+vatnet
+%% vat_dok_sp := vat_dok_sp+oprkwt
+%% brt_dok_sp := brt_dok_sp+vatbrt
+%% roznica_net := round[net_dok-net_dok_sp,2]
+%% roznica_brt := round[brt_dok-brt_dok_sp,2]
+%% roznica_vat := round[vat_dok-vat_dok_sp,2]
+%% oprtrs := str_numer_fak
+%% vatrej := "SPRZEDA|Z"
+%% vatdok := str_numer_fak
+%% vattyp := typvatdok
+%% vatold := dotyczy
+%% vatdat := datf
+%% vatspr := datspr
+%% vatobw := datf
+%% vatplt := termf
+%% if (unia) vatnipue := nip_wsp
+%% if (unia) vatkodue := kraj
+//kod kraju+info o transkacji trojstronnej (P08+p10)
+//%% vatsfx := RejWezP_S["Z:P08"]+"_" +RejWezP_S["Z:P10"]
+%% vatsfx := kraj+"_"
+//inny sufix dla klienta z kodem kraju UE i faktura w PLN
+%% if (unia_w_pln) vatsfx := "PL_"
+%% if (unia_w_eur) vatsfx := "PL_"
+%% vatgus := ""
+%% klnsfx := kontr
+//procedury vat
+%% vatmpp := z_vatmpp
+%% vattp := z_vattp
+%% vati42 := z_vati42
+%% vati63 := z_vati63
+%% vatgtu := z_vatgtu
+%% trojstr := z_trojstr
+//nie laczyc zapisow VAT vatsposob = "O"
+%% vatsposob := z_vatsposob
+//dodoatkowe dane do opisu pozycji
+%% if (vatsposob = "O") xRejWstawP_S["B:BAZA_vatopis",vatopis]
+%% if (vatsposob = "O") xRejWstawP_S["B:BAZA_vatmiara",vatmiara]
+%% if (vatsposob = "O") xRejWstawP_K["B:BAZA_vatilosc",vatilosc]
+%% if (vatsposob = "O") xRejWstawP_K["B:BAZA_vatcenaj",vatcenaj]
+%% vatopis := rejwezp_s["zj:vattowar"]
+%% vatmiara := rejwezp_s["zj:vatmiara"]
+%% vatilosc := rejwezp_k["zj:vatilosc"]
+%% vatcenaj := rejwezp_k["zj:vatcenaj"]
+%% CallAlg["WRITE_REKORD_TO_BAZA"]
+%% nrrek_b := rejwezp_k["b:rejestrrekpos"]
+//%% okalert["nrrek petl"+rejwezp_k["b:rejestrrekpos"]+" vat "+oprkwt]
+//koniec 1 zapis do faktury
+%% if (RejOp["zj:WezNastepnyRekn",""]) goto _next_zj
+//teraz ewentualnie dopisz rekord dla porto
+//zapis VAT dla pozycji "PORTO"
+//jesli nie ma porto - to sprawdzic czy sa roznice wynikajace z sumowania pozycji.
+//%% if (prt_dok = 0) goto _disp_tlo
+//%% okalert["nrrek koniec"+rejwezp_k["b:rejestrrekpos"]]
+%% if (prt_dok = 0) goto _zaokr
+//kwota netto = prt_dok, brutto i vat wyliczyc!
+%% CallAlg["WRITE_NULL_TO_BAZA"]
+%% oprpfx := propr
+%% oprkod := "VAT_PLN"
+%% oprnaz := "Kwota vat z zapisu "
+//%% okalert["vat_dok = "+vat_dok+" nrfak "+str_numer_fak]
+//sprawdz czy vat_dok + net_dok == brt_dok
+//%% roznica := round[vat_dok+net_dok-brt_dok,2]
+//%% if (not(roznica = 0.00)) okalert["nierowne "+str_numer_fak+"$"+tostr["#roznica#S:4"] ]
+//%% if (not(roznica = 0.00)) vat_dok := vat_dok-roznica
+//%% oprkwt := vat_dok
+%% oprtrs := str_numer_fak
+%% vatrej := "SPRZEDA|Z"
+%% vatdok := str_numer_fak
+%% vattyp := typvatdok
+%% vatold := dotyczy
+%% vatdat := datf
+%% vatspr := datspr
+%% vatobw := datf
+%% vatplt := termf
+%% if (unia) vatnipue := nip_wsp
+%% if (unia) vatkodue := kraj
+//kod kraju+info o transkacji trojstronnej (P08+p10)
+//%% vatsfx := RejWezP_S["Z:P08"]+"_" +RejWezP_S["Z:P10"]
+%% vatsfx := kraj+"_"
+//inny sufix dla klienta z kodem kraju UE i faktura w PLN
+%% if (unia_w_pln) vatsfx := "PL_"
+%% if (unia_w_eur) vatsfx := "PL_"
+//oblicz vat,netto,brt w zalznosci od sufixu
+%% vatnet := prt_dok
+%% vatbrt := vatnet
+%% if (vatsfx = "PL_") vatbrt := roundn[vatnet*1.23,2]
+%% oprkwt := 0+vatbrt-vatnet
+//sumowanie pozycji - sprawdzanie !!!!
+%% net_dok_sp := net_dok_sp+vatnet
+%% vat_dok_sp := vat_dok_sp+oprkwt
+%% brt_dok_sp := brt_dok_sp+vatbrt
+%% roznica_net := round[net_dok-net_dok_sp,2]
+%% roznica_brt := round[brt_dok-brt_dok_sp,2]
+%% roznica_vat := round[vat_dok-vat_dok_sp,2]
+//%% okalert["porto"]
+//%% if (not(roznica_net = 0.00)) okalert["nierowne net"+str_numer_fak+"$"+tostr["#roznica_net#S:4"] ]
+//%% if (not(roznica_brt = 0.00)) okalert["nierowne brt"+str_numer_fak+"$"+tostr["#roznica_brt#S:4"] ]
+//%% if (not(roznica_vat = 0.00)) okalert["nierowne vat "+str_numer_fak+"$"+tostr["#roznica_vat#S:4"] ]
+//popraw kwote brutto jesli nierowne
+%% if (not(roznica_brt = 0.00)) vatbrt := vatbrt+roznica_brt
+%% oprkwt := 0+vatbrt-vatnet
+//koniec sumowanie - sprawdzanie
+%% vatgus := ""
+%% klnsfx := kontr
+//procedury vat
+%% vatmpp := z_vatmpp
+%% vattp := z_vattp
+%% vati42 := z_vati42
+%% vati63 := z_vati63
+%% vatgtu := z_vatgtu
+%% trojstr := z_trojstr
+//nie laczyc zapisow VAT vatsposob = "O"
+%% vatsposob := z_vatsposob
+//dodoatkowe dane do opisu pozycji
+%% if (vatsposob = "O") xRejWstawP_S["B:BAZA_vatopis","PORTO"]
+%% if (vatsposob = "O") xRejWstawP_S["B:BAZA_vatmiara","szt."]
+%% if (vatsposob = "O") xRejWstawP_K["B:BAZA_vatilosc",1]
+%% if (vatsposob = "O") xRejWstawP_K["B:BAZA_vatcenaj",prt_dok]
+%% vatopis := "PORTO"
+%% vatmiara := "szt."
+%% vatilosc := 1
+%% vatcenaj := prt_dok
+%% CallAlg["WRITE_REKORD_TO_BAZA"]
+%% goto _disp_tlo
+//
+// uwzglednienie zaokraglen wynikjaacych z sumowania pozycji faktury
+%% _zaokr:
+//sprawdz czy jest zaokr
+//%% if (not(roznica_net = 0.00)) okalert["nierowne net"+str_numer_fak+"$"+tostr["#roznica_net#S:4"] ]
+//%% if (not(roznica_brt = 0.00)) okalert["nierowne brt"+str_numer_fak+"$"+tostr["#roznica_brt#S:4"] ]
+%% if (not(roznica_vat = 0.00)) okalert["nierowne vat "+str_numer_fak+"$"+tostr["#roznica_vat#S:4"] ]
+//popraw kwote brutto jesli nierowne
+%% if ((roznica_brt = 0.00)) goto _disp_tlo
+%% rejop["b:zobaczdbf",""]
+%% if (not(roznica_brt = 0.00)) vatbrt := vatbrt+roznica_brt
+%% oprkwt := 0+vatbrt-vatnet
+//odszukaj oststni rekord dokumentu, popraw kwote vat izapisz jeszcze raz rekord
+%% rejop["b:ustawrekpos",tostr["#nrrek_b#S:0"]]
+%% okalert["vat przed "+rejwezp_k["b:baza_oprkwt"]]
+%% RejWstawP_K["B:BAZA_oprkwt",Round[oprkwt,2]]
+%% RejWstawP_K["B:BAZA_vatbrt",Round[vatbrt,2]]
+//%% rejop["b:zapiszrek",""]
+%% okalert["vat po "+rejwezp_k["b:baza_oprkwt"]]
+%% rejop["b:zobaczdbf",""]
+%% goto _disp_tlo
+//==========================================================
+%% _disp_tlo:
+%% CallAlg["DISPLAY_PASEK"]
+%% _wez_next_imp_rek:
+%% if (RejOp["nj:WezNastepnyRek",""]) goto _next_imp_rek
+%% kon_wcz:
+//
+## DELWINDOW
+//%% vv1 := "dat "+dat
+//%% vv2 := " dat1 "+dat1
+//%% vv3 := " dat2 "+dat2
+//%% okalert["daty "+vv1+vv2+vv3]
+//%% rok_fak :=  StrCut[datff,2,2]
+//%% rok_fak :=  StrCut[datff,2,2]
+//%% rok_fak := a_date[datf,"Y"]
+//%% okalert["rok_fak "+rok_fak]
+//%% if ((rok_fak == str_rok)) goto kont_zap 
+//%% if (yesnalert["Rok z ksi|egi: "+"20"+str_rok+"$nie zgadza si|e z rokiem z faktury: "+"20"+rok_fak+"$Czy kontynuowa|c ?"]) goto kont_zap
+//%% break := .T.
+//%% ExitFrm[0]
+%% kont_zap:
+%% CallAlg["ZAPISZ_DATY"]
+//
+%% totbrt := sumnet + sumvat
+//%% okalert["DOKUMENTY"+sumdok+"$FAKTURY  "+sumfak+"$Suma NET "+sumnet+"$Suma VAT "+sumvat+"$Suma BRT "+sumbrt+"$Total BRT"+totbrt]
+//%% if (Round[Round[sumnet,2] + Round[sumvat,2],2] = Round[sumbrt,2]) goto _end
+//%% OkAlert["Niepoprawne dane !!!$ $netto "+sumnet+"$vat   "+sumvat+"$brutto"+sumbrt+"$razem "+total]
+//%% if (not MAG_akcept) exit := .T.
+//
+%% _end:
+%% nr := nr + 1
+%% if (nr < 10) goto _numer
+%% kom:
+%% RejOp["R:ZamknijRej",""]
+//%% RejOp["Z:ZamknijRej",""]
+%% RejOp["NJ:ZamknijRej",""]
+%% RejOp["ZJ:ZamknijRej",""]
+%% RejOp["B:ZamknijRej",""]
+%% RejOp["C:ZamknijRej",""]
+%% RejOp["XX:ZamknijRej",""]
+%% RejOp["KNTR:ZamknijRej",""]
+%% break := .N.
+%% ExitFrm[0]
+//
+//WN_CHN strona WN brutto w eur dla CNH INDUSTRIAL 
+%% write_cnhindu:
+%% CallAlg["WRITE_NULL_TO_BAZA"]
+//prefix
+%% oprpfx := propr
+%% oprkwt := brt_dok
+%% oprkod := "WN_CNH"
+%% oprnaz := "Brutto CNH INDUSTRAIL Polska sp. z o.o. "
+%% oprtrs := str_numer_fak+" "+str_data_fak+" "+naz_kln1
+%% oprdat := sdatf
+%% if (dat > dat2) dat2 := dat
+%% if (dat < dat1) dat1 := dat
+//%% dat1 := sdatf
+//%% dat2 := sdatf
+%% klnsfx := kontr
+//%% rdzsfx := "SAMSUNG1"
+%% rdznaz := naz_kln1
+//%% okalert["klnsfx "+klnsfx]
+//rozrachunek
+%% rzrfak := str_numer_fak
+%% rzrdat := datf
+%% rzrtrm := termf
+%% rzrtyp := "O"
+%% rzrrdz := "T"
+//dewizy
+%% dewsfx := "EUR"
+%% dewkwt := brt_dew
+%% CallAlg["WRITE_REKORD_TO_BAZA"]
+%% goto kont_netto
+//
+//WN_SAM strona WN brutto w eur dla SAMSUNG
+//WN_SPED strona WN brutto w eur dla SPED Malaga
+%% write_sped:
+%% CallAlg["WRITE_NULL_TO_BAZA"]
+//prefix
+%% oprpfx := propr
+%% oprkwt := brt_dok
+%% oprkod := "WN_SPED"
+%% oprnaz := "Brutto Sped s.j. Malaga "
+%% oprtrs := str_numer_fak+" "+str_data_fak+" "+naz_kln1
+%% oprdat := sdatf
+%% if (dat > dat2) dat2 := dat
+%% if (dat < dat1) dat1 := dat
+//%% dat1 := sdatf
+//%% dat2 := sdatf
+%% klnsfx := kontr
+//%% rdzsfx := "SAMSUNG1"
+%% rdznaz := naz_kln1
+//rozrachunek
+%% rzrfak := str_numer_fak
+%% rzrdat := datf
+%% rzrtrm := termf
+%% rzrtyp := "O"
+%% rzrrdz := "T"
+//dewizy
+%% dewsfx := "EUR"
+%% dewkwt := brt_dew
+%% CallAlg["WRITE_REKORD_TO_BAZA"]
+%% goto kont_netto
+//
+//WN_SAM strona WN brutto w eur dla SAMSUNG
+%% write_samsung:
+%% CallAlg["WRITE_NULL_TO_BAZA"]
+//prefix
+%% oprpfx := propr
+%% oprkwt := brt_dok
+%% oprkod := "WN_SAM"
+%% oprnaz := "Brutto Samsung "
+%% oprtrs := str_numer_fak+" "+str_data_fak+" "+naz_kln1
+%% oprdat := sdatf
+%% if (dat > dat2) dat2 := dat
+%% if (dat < dat1) dat1 := dat
+//%% dat1 := sdatf
+//%% dat2 := sdatf
+%% klnsfx := kontr
+//%% rdzsfx := "SAMSUNG1"
+%% rdznaz := naz_kln1
+//rozrachunek
+%% rzrfak := str_numer_fak
+%% rzrdat := datf
+%% rzrtrm := termf
+%% rzrtyp := "O"
+%% rzrrdz := "T"
+//dewizy
+%% dewsfx := "EUR"
+%% dewkwt := brt_dew
+%% CallAlg["WRITE_REKORD_TO_BAZA"]
+%% goto kont_netto
+//
+//WN_PLEUR strona WN brutto w eur dla polskiego kontrahenta
+%% write_pleur:
+%% CallAlg["WRITE_NULL_TO_BAZA"]
+//prefix
+%% oprpfx := propr
+%% oprkwt := brt_dok
+%% oprkod := "WN_PLEUR"
+%% oprnaz := "Brutto polski kontrahent w EUR "
+%% oprtrs := str_numer_fak+" "+str_data_fak+" "+naz_kln1
+%% oprdat := sdatf
+%% if (dat > dat2) dat2 := dat
+%% if (dat < dat1) dat1 := dat
+//%% dat1 := sdatf
+//%% dat2 := sdatf
+%% klnsfx := kontr
+%% rdzsfx := kontr
+%% rdznaz := naz_kln1
+//%% okalert["klnsfx "+klnsfx]
+//rozrachunek
+%% rzrfak := str_numer_fak
+%% rzrdat := datf
+%% rzrtrm := termf
+%% rzrtyp := "O"
+%% rzrrdz := "T"
+//dewizy
+%% dewsfx := "EUR"
+%% dewkwt := brt_dew
+%% CallAlg["WRITE_REKORD_TO_BAZA"]
+%% goto kont_netto
+//
+//WN_EUR strona WN brutto w eur 
+%% write_eur:
+%% CallAlg["WRITE_NULL_TO_BAZA"]
+//prefix
+%% oprpfx := propr
+%% oprkwt := brt_dok
+%% oprkod := "WN_EUR"
+%% oprnaz := "Brutto EURO "
+%% oprtrs := str_numer_fak+" "+str_data_fak+" "+naz_kln1
+%% oprdat := sdatf
+%% if (dat > dat2) dat2 := dat
+%% if (dat < dat1) dat1 := dat
+//%% dat1 := sdatf
+//%% dat2 := sdatf
+%% klnsfx := kontr
+%% rdzsfx := kontr
+%% rdznaz := naz_kln1
+//rozrachunek
+%% rzrfak := str_numer_fak
+%% rzrdat := datf
+%% rzrtrm := termf
+%% rzrtyp := "O"
+%% rzrrdz := "T"
+//dewizy
+%% dewsfx := "EUR"
+%% dewkwt := brt_dew
+%% CallAlg["WRITE_REKORD_TO_BAZA"]
+%% goto kont_netto
+//
+//export - kraj inny niz polska
+%% _export:
+//sprawdz czy kraj z unii
+%% nip_wsp := ""
+%% if (kraj = "AT"  or kraj = "BE" or kraj = "BG" or kraj = "CY" or kraj = "DK" or kraj = "EE" or kraj = "FI" or kraj = "FR" or kraj = "GR" or kraj = "EL" or kraj = "ES" or kraj = "IE" or kraj = "LT" or kraj = "LU" or kraj = "LV" or kraj = "MT" or kraj = "NL" or kraj = "DE" or kraj = "PT" or kraj = "CZ" or kraj = "RO" or kraj = "SK" or kraj = "SI" or kraj = "SE" or kraj = "HU" or kraj = "GB" or kraj = "IT") unia := .T.
+%% if (not(unia)) kod := "F"
+%% if (not(unia)) goto kont_nip
+%% nip_wsp := nip_ue
+%% kod := "WD"
+//%% if (StrCut[nr_fak,0,3] = "113" or StrCut[nr_fak,0,3] = "114") kod := kod +"K"
+%% if (StrCut[nr_fak,0,3] = str_rok+"3" or StrCut[nr_fak,0,3] = str_rok+"4") kod := kod +"K"
+//%% okalert["nip_wsp = "+nip_wsp]
+%% goto kont_nip
+//szukaj w rej kontrahnetow po nipie wspolnootwym
+%% _dd1:
+%% if (nip_wsp = "" ) goto _dd
+%% RejOp["XX:zmienkluczrej","5"]
+%% if (not(RejOp["XX:ZnajdzRek",nip_wsp])) goto _dd 
+%% goto kont_kntr
+//blad - brak zapisow dla faktury!
+%% _bl_brak_zap:
+%% OkAlert["Brak zapis|ow dla faktury "+nr_fak+" !"]
+%% exit := .T.
+%% goto _end
+
+//
+// ===== parametry polecenia
+%% _parametry:
+//%% RejOp["G:OtworzRej","GLOBUSER.RJR"]
+%% RejOp["G:OtworzRej",naz_glob]
+//czy w podziale na punkty sprzedazy
+%% indexpar := "!INT_MAG_PS"
+%% paramtxt := "T"
+%% CallAlg["READ_PARAM"]
+%% MAG_PS := paramlog
+//
+## DRAWDIALOG = GLOBAL
+%% D_POS := 42
+%% _wczytaj_dane:
+## DODIALOG = GLOBAL
+%% if (D_POS=92) goto _esc
+## DELDIALOG = GLOBAL
+//
+%% indexpar := "!INT_MAG_PS"
+%% paramtxt := "" + MAG_PS
+%% CallAlg["WRITE_PARAM"]
+//
+%% _esc:
+%% RejOp["G:ZamknijRej",""]
+//
+// ****** definicja dialogu 
+## DEFDIALOG = GLOBAL
+##DEFWINDOW =,,,,ADPSH,lwhite/black&white,lwhite/red&black/white,magenta/black&white,,"AGRICOLA: wczytywanie dokument|ow magazynowych "
+## 20,0,D,,"TAK",,,,,,MAG_PS:log:1
+## 21,0,D,,"NIE",,,,,,MAG_PS:log:2
+##42,DTL,0,,"Wczytywa|c z podzia|lem na punkty sprzeda|zy ?",,&&lblue/white,&&lblue/lwhite  
+## 91,,ADP,,@3
+## 92,,ADP,,@4
+                                          
+
+   #42                                           #
+   #20  #    
+   #21  #                                           
+ 
+
+
+
+   #91             #             #92             #
+##
+//---------------------------------

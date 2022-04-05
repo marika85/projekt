@@ -1,0 +1,4723 @@
+//////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+//Perseus Spolka z o.o 
+// Wszystkie prawa zastrzezone
+// 
+// Data utworzenia: 2001.09.01
+// Historia zmian
+// Data:2001.09.12
+//   Zmieniono .....
+//02.01.14 - drukowanie - pole na koniec (data) sprawdzane w momencie akceptacji
+//03.05.05 - dodatkowy sposob pobierania kwot z kont - per saldo (PWn i PMa); MS
+//03.05.21 - w wyniku poprawiono zapisywanie i odczytywanie danych uzupeˆniajacych
+//              zapisywaly sie w nieprawidlowych miesiacach
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+// Wydruki standardowe - MSz
+// rejestry
+%  REJDEFTABLE # tablica z rejestami
+%<<REJDEFTABLE
+,,0,"REJ.RJR",std\rej,1        # wykaz rejestrow z definicjami std
+,,0,"DEF.RJR",std,1                # rejestry z definicjami sprawozdan std
+,,0,"WPR.RJR",std,1                # rejestry z danymi poczatkowymi do sprawozdan std
+,,0,"D_TMP.RJR",std,4  # rejestr tymczasowy z naliczeniami
+,,0,"POMOC.RJR",pomoc,4
+,,0,"STALE.RJR",std,1
+,,0,"ERROR.RJR",std\std_err,2
+,,0,"D_VAT.RJR",d_vat,4  # rejestr tymczasowy z naliczeniami
+,,0,"D_ZROD.RJR",d_zrod,4  # rejestr tymczasowy z naliczeniami
+17,,0,"ODDZIALY.RJR",std\oddzialy,1   #rejestr z oddzialami
+,,0,"SZCZEGOLY_STD.RJR",std,4  # rejestr tymczasowy z naliczeniami
+,,0,"KONTA_POMINIETE.RJR",std,4  # rejestr tymczasowy z naliczeniami
+,,0,"naglpit.RJR",naglpit,4
+,,0,"ZRODLA.RJR",zrodla,4   #rejestr z zrodlami przychodu
+
+% PATTTABLE.DIC
+%<<PATTTABLE.DIC
+"9999.99",30      # wzorzec daty rok, miesiac
+"X_XXXXXXXX",1      # wzorzec SYMBOLU pozycji
+"9999",2              # wzorzec roku
+//
+% 9.DIC # slownik - (std) sposob pobierania danych
+"F",1,,"konta "
+"L",2,,"Klasyfikacje"
+"D",3,,"Dialog - kwota nie przeliczana"
+"P",4,,"Dialog - kwota przeliczana"
+"R",5,,"Rejestr"
+"K",6,,"Komentarz"
+"V",7,,"VAT"
+"C",8,,"P|lace"
+"X",9,,"Ropisanie"
+"S",10,,"Sta|la"
+"I",11,,"indywidualny opis"
+"A",12,,"dodatkowe przychody"
+//
+% 10.DIC # slownik - (std) typ pola
+"K",1,,"Kwota"
+"C",3,,"Cz|e|s|c ca|lkowita kwoty"
+"%",4,,"Procent"
+"L",5,,"Liczby zamro|zone"
+"D",2,,"Zaokr|aglona do ca|lo|sci"
+"U",6,,"Zaokr|aglona do 0,1"
+//
+% 11.DIC # slownik - (std) sposob drukowania
+"D", 1,,"Linia do druku"
+"X", 2,,"Linia nie do druku"
+"H", 3,,"Nazwa Nag|l|owka"
+"T", 4,,"Nazwa Tytu|lu"
+"S", 5,,"Wymuszenie zmiany strony"
+"0",10,,"Drukowanie pustej linii"
+"1",11,,"Drukowanie ramki podw|ojnej - linia go|rna"
+"2",12,,"Drukowanie ramki podw|ojnej - linia pojedy|ncza"
+"3",13,,"Drukowanie ramki podw|ojnej - linia pusta"
+"4",14,,"Drukowanie ramki podw|ojnej - linia podw|ojna"
+"5",15,,"Drukowanie ramki podw|ojnej - linia dolna"
+"6",16,,"Drukowanie pojedy|nczego podkre|slenia"
+"7",17,,"Drukowanie podw|ojnego podkre|slenia"
+"8",18,,"Linia ograniczaj|aca tytu|l z g|ory"
+"9",19,,"Linia ograniczaj|aca tytu|l z do|lu"
+"*",30,,"Linia nie do druku (specjalna)"
+//
+% 12.DIC # slownik - (std) atrybut drukowania
+"N",1,,"Normal"
+"B",2,,"Bold"
+"I",3,,"Italic"
+//
+//
+% 100.DIC # slownik - (std) typ pozycji (jedna cela lub 12 cel ( kwoty miesieczne))
+"Z",1,,"Kwota za okres"
+"M",2,,"Kwota w podziale na miesi|ace"
+% 91.DIC # sposob pobierania danych
+"konta",1,,""
+"narastaj|aco-sta|le",3,,""
+"za miesi|ac-sta|le",4,,""
+"pozycje sprawozdania",5,,""
+"opis",6,,""
+"VAT",7,,""
+"sta|la",10,,""
+% SPOSOB.DIC
+"dane z p|lac",8,,""
+"sta|la",10,,""
+"pozycje sprawozdania",5,,""
+"opis",6,,""
+"indywidualny opis",11,,""
+"rozpisanie",9,,""
+% SPOSOB2.DIC # sposob pobierania danych
+"dane z p|lac",8,,""
+"pozycje sprawozdania",5,,""
+"opis",6,,""
+"konta",1,,""
+"narastaj|aco-sta|le",3,,""
+"za miesi|ac-sta|le",4,,""
+"wykaz przychod|ow",12,,""
+//
+% SPOSOB3.DIC # sposob pobierania danych
+"konta",1,,""
+"narastaj|aco-sta|le",3,,""
+"za miesi|ac-sta|le",4,,""
+"pozycje sprawozdania",5,,""
+"opis",6,,""
+"sta|la",10,,""
+//
+% SPOSOB4.DIC # sposob pobierania danych
+"wykaz przychod|ow",12,,""
+"pozycje sprawozdania",5,,""
+"opis",6,,""
+//
+% 16.DIC # zaokraglenia
+"w tysi|acach z|lotych",1,,""
+"w z|lotych",0,,""
+% 17.DIC # rodzaje wydruku
+//"wdrukowanie w formularz",0,,""
+"formularz z danymi",1,,""
+"plik .xml",2,,""
+"wydruk roboczy",3,,""
+//
+% PIT118B.DIC # rodzaje kwot do PIT-ow
+"B",1,,"Przych|od opodatkowany"
+"BB",17,,"Przych|od"
+"U",2,,"Sk|ladki na ubezpieczenie spo|leczne"
+"R",3,,"Doch|od = przych|od - koszt uzyskania przychodu"
+"D",4,,"Doch|od - sk|ladki na ubezpieczenia spo|leczne"
+"Z",5,,"Sk|ladka pobrana 8.25 % na ubezpieczenia zdrowotne"
+"ZO",14,,"Sk|ladka odliczana 7.75 % na ubezpieczenie zdrowotne"
+"K",6,,"Koszt uzyskania przychodu"
+"O",7,,"Doch|od do opodatkowania"
+"P",8,,"Zaliczka podatku"
+"N",9,,"Doch|od netto"
+"S",10,,"Zasi|lki (rodzinny,piel|egnacyjny)"
+"L",11,,"Liczba os|ob"
+"NA",12,,"Nadp|lata podatku za poprzedni rok z PIT-40"
+"NI",13,,"Niedop|lata podatku za poprzedni rok z PIT-40"
+"Z1",16,,"Kwota wolna od podatku (art.21 ust.1 pkt 16 lit.b)"
+"Z2",15,,"Kwota wolna od podatku (art.21 ust.1 pkt 17)"
+"Z3",18,,"Kwota wolna od podatku (unikanie podwójnego opodatkowania)"
+//"ST",19,,"Stawka podatku"
+% NAZWASPROBROTOW.DIC
+"WN",1,," Obroty WN"
+"SWN",2,," Saldo WN (dla kont rozrach. wynika z sald transakcji)"
+"KWN",3,," Saldo WN (wynika z sald kont analitycznych)"
+"PWN",4,," Per saldo WN "
+"XWN",5,," R|o|znica obrot|ow WN i MA"
+"MA",6,," Obroty MA"
+"SMA",7,," Saldo MA (dla kont rozrach. wynika z sald transakcji)"
+"KMA",8,," Saldo MA (wynika z sald kont analitycznych)"
+"PMA",9,," Per saldo MA "
+"XMA",10,," R|o|znica obrot|ow MA i WN"
+% NAZWAOPER.dic
+"+",1,," Dodawanie"
+"-",2,," Odejmowanie"
+"*",3,," Mno|zenie"
+"/",4,," Dzielenie"
+">",5,," Kwota<0 => kwota=0, na wydruku '-'"
+">>",6,," Kwota<0 => kwota=0, na wydruku 0"
+"<",7,," Kwota>0 => kwota=0,na wydr. '-';kwota<0 => kwota=-1*kwota"
+"<<",8,," Kwota>0 => kwota=0,na wydr. 0;kwota<0 => kwota=-1*kwota"
+">=",9,," Kwota>=0 => kwota=1; kwota<0 => kwota=0"
+"<=",10,," Kwota<=0 => kwota=1; kwota>0 => kwota=0"
+//====================================================
+% ZRODLA.RJR # inicjalizacja rejestru
+100
+1
+"ZRODLA"
+"ZRODLA"
+
+"Powt|orzony symbol !"
+"Zmieniasz definicj|e?"
+"Czy doda|c ?"
+"Czy usun|a|c?"
+"Czy doda|c nast|epny?"
+"W tabeli brak podanego symbolu! $ Czy doda|c go?"
+"Nie zdefiniowano |zadnych danych"
+"Tabela jest pusta !$Wprowadzasz pierwszy?"
+"Nie ma takiego symbolu.$Znale|x|c nast|epny ?"
+// --------------------------------------------
+% ZRODLA.DBF # struktura rekordu
+0,log,,,,,D              # usuwanie "w miejscu"
+100,string,10,,1,,N        # oddzial  
+101,string,100        # nazwa
+// --------------------------------------------
+% ZRODLA.DIC # slownik pol rekordu
+"z_dzial",100,Estring    # oddzial
+"z_naz",101,Estring    # nazwa
+//
+% ZRODLA.MEN # menu z rubrykami
+D = 50,"Wykaz oddzia|l|ow"
+100   # symbol oddzia|lu
+101  # nazwa oddzia|lu
+% ZRODLA.BOX # okienko do wprowadzania i modyfikacji danych
+D = "Definicja oddzia|lu"
+"Symbol:",100,AU
+"Nazwa :",101,A
+// --------------------------------------------
+% ZRODLA.CHK # sprawdzanie poprawnosci wybranych pol
+OK := .T.
+ERRMESS := "Niedozwolony symbol  oddzia|lu !"
+ID := 100
+if (ODD_dzial = "") goto error
+goto __OK
+error:
+BEEP[0]
+OK := .N.
+__OK:
+// ================================
+% ZRODLA.BUT # "buttony" do rejestru 
+// Wybor rejestru DEF (z modyfikacja)
+"%W%ybierz",1,0
+"%D%odaj",5,0
+"%U%su|n",6,0
+"%O%pis rejestru DEF",2,0   # przegladanie
+"%Z%mie|n",4,0   # modyfikacja
+@4,3,0               # Rezygnujesz
+// Ogladanie rejestru DEF (z modyfikacja)
+"%D%odaj",5,1
+"%U%su|n",6,1
+"%Z%mie|n",4,1   # modyfikacja
+@5,0,1               # Koniec
+// Wybor rejestru DEF (bez modyfikacji)
+"%W%ybierz",1,2
+"%O%bejrzyj",2,2   # przegladanie
+@4,3,2               # Rezygnujesz
+// Ogladanie rejestru DEF(bez modyfikacji)
+"%O%bejrzyj",2,3   # przegladanie
+@2,0,3               # Koniec
+// Wybor rejestru DEF (z modyfikacja)
+"%W%ybierz",1,4
+"%D%odaj",5,4
+"%Z%mie|n",4,4   # modyfikacja
+"%U%su|n",6,4
+@4,3,4               # Rezygnujesz
+// --------------------------------------------
+% naglpit.RJR # rejestr pomocniczy do edycji definicji pozycji
+100
+1
+"naglpit"
+
+
+
+
+
+
+
+
+
+
+
+% naglpit.DBF
+//0,log,,,,,D           # usuwanie "w miejscu"
+100,string,10,,1    # numer pozycji
+108,string,10,2,2            # pozycja deklaracji
+109,string,40              # tekst
+% naglpit.DIC
+"pom_id",100,Estring            # numer pozycji
+"pom_vat",108,Estring           # pozycja deklaracji
+"pom_tekst",109,Estring         # tekst z pozycji opisowej
+//
+
+
+
+% rej.RJR # inicjalizacja rejestru
+100
+1
+"rej"
+"rej"
+
+"Powt|orzona nazwa sprawozdania!"
+"Zmieniasz opis sprawozdania?"
+"Czy doda|c to sprawozdanie ?"
+"Czy usun|a|c to sprawozdanie ?"
+"Czy doda|c nast|epne sprawozdanie ?"
+"Sprawozdanie o podanej nazwie nie istnieje !$Czy doda|c je?"
+"Nie ma |zadnych sprawozda|n!"
+"Wykaz sprawozda|n jest pusty !$Wprowadzasz pierwsze?"
+"Nie ma sprawozdania o podanej nazwie.$Znale|x|c nast|epne ?"
+
+
+
+
+rap_std_sql
+// --------------------------------------------
+// --------------------------------------------
+% rej.DBF # struktura rekordu
+0,log,,,,,D              # usuwanie "w miejscu"
+100,string,6,2,1,,N      # nazwa rejestru DEF (klucz unikalny)
+101,string,30            # zawartosc rejestru DEF
+102,string,12,2          # nazwa ksiegi
+190,ydate,,,,,A          # data zalozenia rejestru DEF
+191,string,8,,,,AT       # godzina zalozenia rejestru DEF
+192,string,10,,,,A       # uzytkownik
+193,string,20            # wersja sprawozdania (do konwersji)
+197,ydate,,,,,C          # data ostatniej modyfikacji rejestru DEF
+198,string,8,,,,CT       # godzina ostatniej modyfikacji rejestru DEF
+199,string,10,,,,C       # uzytkownik
+10,string,6              # nazwa rejestru DEF (wewnetrzna)
+// --------------------------------------------
+% rej.DIC # slownik pol rekordu
+"REJ_def",100,Estring    # nazwa rejestru DEF
+"REJ_ndf",101,Estring    # zawartosc rejestru DEF
+"REJ_ksg",102,Estring    # nazwa ksiegi
+"REJ_dzn",190,Edata      # data zalozenia rejestru DEF
+"REJ_god",191,Estring    # godzina zalozenia rejestru DEF
+"REJ_osb",192,Estring    # uzytkownik
+"REJ_wer",193,Estring    # wersja sprawozdania ( do konwersji)
+"REJ_mdz",197,Edata      # data ostatniej modyfikacji rejestru DEF
+"REJ_mgd",198,Estring    # godzina ostatniej modyfikacji rejestru DEF
+"REJ_mos",199,Estring    # uzytkownik
+"REJ_dbf",10,Estring     # nazwa rejestru DEF (wewnetrzna)
+// --------------------------------------------
+//====================================================
+% DEF.RJR # inicjalizacja rejestru
+100
+1
+"DEF"
+"DEF"
+
+"Powt|orzony symbol pozycji !"
+"Zmieniasz definicj|e pozycji ?"
+"Czy doda|c t|e pozycj|e ?"
+"Czy usun|a|c t|e pozycj|e ?"
+"Czy doda|c nast|epn|a pozycj|e ?"
+""
+"Nie zdefiniowano |zadnych pozycji !"
+"Tabela pozycji jest pusta !$Wprowadzasz pierwsz|a pozycj|e ?"
+"Nie ma pozycji o podanym symbolu.$Znale|x|c nast|epn|a ?"
+"DEF-WAR"
+// --------------------------------------------
+% DEF.DBF # struktura rekordu
+0,log,,,,,D              # usuwanie "w miejscu"	
+100,string,,1024,1,,N    # symbol rubryki (klucz nr 1 - unikalny; wzorzec - 1)
+101,string,48            # nazwa rubryki
+102,string,1              # sposob pobierania danych
+103,dic,,10              # typ pola
+104,string,10              # sposob drukowania
+105,string,20              # atrybut drukowania
+108,string,1             # zaznaczanie liczenia (pole wewnetrzne)
+109,string,6,2           # nazwa rejestru DEF
+110,string,40,1          # definicja rubryki 0
+111,string,40,1          # definicja rubryki 1
+112,string,40,1          # definicja rubryki 2
+113,string,40,1          # definicja rubryki 3
+114,string,40,1          # definicja rubryki 4
+115,string,40,1          # definicja rubryki 5
+116,string,40,1          # definicja rubryki 6
+117,string,40,1          # definicja rubryki 7
+118,string,40,1          # definicja rubryki 8
+119,string,40,1          # definicja rubryki 9
+197,ydate,,,,,C          # data ostatniej modyfikacji rekordu DEF
+198,string,8,,,,CT       # godzina ostatniej modyfikacji rekordu DEF
+199,string,10,,,,C       # uzytkownik
+200,string,4	       # dzial
+201,string,8		 # pozycja
+202,log			 # czy do druku
+203,string,50              # pobieranie danych
+204,string,40,2          # IDENTYFIKAtor wzoru CIT
+120,string,40,1          # definicja rubryki 10
+121,string,40,1          # definicja rubryki 11
+122,string,40,1          # definicja rubryki 12
+123,string,40,1          # definicja rubryki 13
+124,dic,,100		# typ pozycji - sposob prezentacji kwoty na wydruku( w podziale na miesiace lub nie)
+// --- klucze
+104,0,,,2     # klucz nr 2: sposob drukowania
+100,0,,,2     # klucz nr 2: symbol rubryki
+// --------------------------------------------
+% DEF.DIC # slownik pol rekordu
+%<DEFIMP.DIC
+"F_trb",102,Estring    # sposob pobierania danych
+"F_drk",104,Estring    # sposob drukowania
+"F_atr",105,Estring    # atrybut drukowania
+"F_rej",108,Estring    # zaznaczanie liczenia (pole wewnetrzne)
+"F_def",109,Estring    # nazwa rejestru DEF
+"F_mdz",197,Edata      # data ostatniej modyfikacji rekordu DEF
+"F_mgd",198,Estring    # godzina ostatniej modyfikacji rekordu DEF
+"F_mos",199,Estring    # uzytkownik
+"F_znak",204,Estring   # identyfikator wzoru CIT
+% DEFIMP.DIC
+"F_rub",100,Estring,"Identyfikator"    # symbol rubryki
+"F_dz",200,Estring,"Dzia|l"    # dzial
+"F_poz",201,Estring,"Pozycja"    # pozycja
+"F_naz",101,Estring,"Opis"    # nazwa rubryki
+"F_dr",202,Elog,"Czy druk"               # czy do druku
+"F_pob",203,Estring,"Spos|b pobierania danych"   # pobieranie danych
+"F_typ",103,Estring,"Typ"    # typ pola
+"F_D0",110,Estring,"Definicja1"     # definicja 0
+"F_D1",111,Estring,"Definicja2"     # definicja 1
+"F_D2",112,Estring,"Definicja3"     # definicja 2
+"F_D3",113,Estring,"Definicja4"     # definicja 3
+"F_D4",114,Estring,"Definicja5"     # definicja 4
+"F_D5",115,Estring,"Definicja6"     # definicja 5
+"F_D6",116,Estring,"Definicja7"     # definicja 6
+"F_D7",117,Estring,"Definicja8"     # definicja 7
+"F_D8",118,Estring,"Definicja9"     # definicja 8
+"F_D9",119,Estring,"Definicja10"     # definicja 9
+"F_D10",120,Estring,"Definicja11"     # definicja 10
+"F_D11",121,Estring,"Definicja12"     # definicja 11
+"F_D12",122,Estring,"Definicja13"     # definicja 12
+"F_D13",123,Estring,"Definicja14"     # definicja 13
+"F_typoz",124,Estring,"Typ pozycji"   # typ pozycji
+// --------------------------------------------
+% STALE.RJR
+100
+1
+"STALE"
+
+"Powt|orzony symbol pozycji !"
+"Zmieniasz definicj|e pozycji ?"
+"Czy doda|c t|e pozycj|e ?"
+"Czy usun|a|c t|e pozycj|e ?"
+"Czy doda|c nast|epn|a pozycj|e ?"
+""
+"Nie zdefiniowano |zadnych pozycji !"
+"Tabela pozycji jest pusta !$Wprowadzasz pierwsz|a pozycj|e ?"
+"Nie ma pozycji o podanym symbolu.$Znale|x|c nast|epn|a ?"
+"STALE-WAR"
+// --------------------------------------------
+% STALE.DBF # struktura rekordu
+0,log,,,,,D              # usuwanie "w miejscu"
+100,string,11,2,1        # oddzial  
+101,string,20,2,1        # Symbol rubryki (klucz nr 1)
+102,string,48            # nazwa rubryki
+109,string,6,2           # nazwa rejestru DEF
+120,kwota                # BO
+121,kwota                # miesiac 1
+122,kwota                # miesiac 2
+123,kwota                # miesiac 3
+124,kwota                # miesiac 4
+125,kwota                # miesiac 5
+126,kwota                # miesiac 6
+127,kwota                # miesiac 7
+128,kwota                # miesiac 8
+129,kwota                # miesiac 9
+130,kwota                # miesiac 10
+131,kwota                # miesiac 11
+132,kwota                # miesiac 12
+133,kwota                # miesiac 13
+134,kwota                # miesiac 14
+135,kwota                # miesiac 15
+136,kwota                # miesiac 16
+137,kwota                # miesiac 17
+138,kwota                # miesiac 18
+139,kwota                # miesiac 19
+140,kwota                # miesiac 20
+141,kwota                # miesiac 21
+142,kwota                # miesiac 22
+143,kwota                # miesiac 23
+144,kwota                # miesiac 24
+145,kwota                # BZ
+100,0,,,2
+101,0,,,3
+// --------------------------------------------
+% STALE.DIC # slownik pol rekordu
+%< STALEIMP.DIC
+"D_def",109,Estring    # nazwa rejestru DEF
+% STALEIMP.DIC
+"D_dzial",100,Estring,"Dzia|l"    # dzialalnosc
+"D_rub",101,Estring,"Pozycja"    # symbol rubryki
+"D_naz",102,Estring,"Nazwa pozycji"    # nazwa rubryki
+"D_M0",120,Ekwota,"Kwota BO"     # BO
+"D_M1",121,Ekwota,"Miesi|ac 1"     # miesiac 1
+"D_M2",122,Ekwota,"Miesi|ac 2"     # miesiac 2
+"D_M3",123,Ekwota,"Miesi|ac 3"     # miesiac 3
+"D_M4",124,Ekwota,"Miesi|ac 4"     # miesiac 4
+"D_M5",125,Ekwota,"Miesi|ac 5"     # miesiac 5
+"D_M6",126,Ekwota,"Miesi|ac 6"     # miesiac 6
+"D_M7",127,Ekwota,"Miesi|ac 7"     # miesiac 7
+"D_M8",128,Ekwota,"Miesi|ac 8"     # miesiac 8
+"D_M9",129,Ekwota,"Miesi|ac 9"     # miesiac 9
+"D_M10",130,Ekwota,"Miesi|ac 10"     # miesiac 10
+"D_M11",131,Ekwota,"Miesi|ac 11"     # miesiac 11
+"D_M12",132,Ekwota,"Miesi|ac 12"     # miesiac 12
+"D_M13",133,Ekwota,"Miesi|ac 13"     # Miesi|ac 13
+"D_M14",134,Ekwota,"Miesi|ac 14"     # miesiac 14
+"D_M15",135,Ekwota,"Miesi|ac 15"     # miesiac 15
+"D_M16",136,Ekwota,"Miesi|ac 16"     # miesiac 16
+"D_M17",137,Ekwota,"Miesi|ac 17"     # miesiac 17
+"D_M18",138,Ekwota,"Miesi|ac 18"     # miesiac 18
+"D_M19",139,Ekwota,"Miesi|ac 19"     # miesiac 19
+"D_M20",140,Ekwota,"Miesi|ac 20"     # miesiac 20
+"D_M21",141,Ekwota,"Miesi|ac 21"     # miesiac 21
+"D_M22",142,Ekwota,"Miesi|ac 22"     # miesiac 22
+"D_M23",143,Ekwota,"Miesi|ac 23"     # Miesi|ac 23
+"D_M24",144,Ekwota,"Miesi|ac 24"     # Miesi|ac 24
+"D_M25",145,Ekwota,"BZ"     # BZ
+% STALE-WAR.BOX
+"Oddzia|l:",100
+"Symbol pozycji sprawozdania:",101
+"Nazwa pozycji:",102
+// ========================================================
+% POMOC.RJR # rejestr pomocniczy do edycji definicji pozycji
+100
+1
+"POMOC"
+
+
+
+
+
+
+
+
+
+
+
+% POMOC.DBF
+//0,log,,,,,D           # usuwanie "w miejscu"
+100,string,2,,1,,N    # numer pozycji
+101,string,7            # numer linii lub miesiac
+102,string,2            # operator
+103,2000,,3           # konto 1
+104,2000,,3           # konto2
+105,string,6            # rodzaj obrotow
+106,xkwota,,x            # kwota
+107,string,,1024           # pozycja
+108,string,10,2            # pozycja deklaracji
+109,string,40              # tekst
+% POMOC.DIC
+"pom_id",100,Estring            # numer pozycji
+"pom_poz",101,Estring           # numer linii lub miesiac
+"pom_oper",102,Estring          # operator
+"pom_konto1",103,Estring        # pierwsze konto zakresu
+"pom_konto2",104,Estring        # drugie konto zakresu
+"pom_obr",105,Estring           # rodzaj obrotow
+"pom_kwota",106,Ekwota          # kwota
+"pom_pozycja",107,Estring       # pozycja sprawozdania
+"pom_vat",108,Estring           # pozycja deklaracji
+"pom_tekst",109,Estring         # tekst z pozycji opisowej
+//
+% ERROR.RJR # inicjalizacja rejestru z bledami definicji
+100
+1
+"ERROR"
+"ERROR"
+
+""
+""
+""
+""
+""
+""
+""
+""
+""
+// --------------------------------------------
+% ERROR.DBF # struktura rekordu
+0,log,,,,,D              # usuwanie "w miejscu"
+100,string,10,,1,    # nazwa sprawozdania
+101,string,100       # opis bledu
+102,string,100       # opis bledu
+// --------------------------------------------
+% ERROR.DIC # slownik pol rekordu
+"F_rub",100,Estring    # nazwa sprawozdania
+"F_err1",101,Estring    # opis bledu
+"F_err2",102,Estring    # opis bledu
+// --------------------------------------------
+% D_VAT.RJR # inicjalizacja rejestru- zapisywanie danych z rejestru vat
+100
+1
+"D_VAT"
+
+
+
+
+
+
+
+
+
+
+% D_VAT.DBF
+0,log,,,,,D              # usuwanie "w miejscu"
+100,string,3,2,1,,N     # Symbol pozycji deklaracji (klucz nr 1)
+120,kwota                # netto
+121,kwota                # vat
+//
+% D_VAT.DIC
+"V_sym",100,Estring    # symbol pozycji
+"V_netto", 120,Ekwota     # netto
+"V_vat", 121,Ekwota     # vat
+//
+//
+% D_ZROD.RJR # inicjalizacja rejestru- zapisywanie danych z rejestru dodatkowych przychodow
+100
+1
+"D_ZROD"
+
+
+
+
+
+
+
+
+
+
+% D_ZROD.DBF
+0,log,,,,,D              # usuwanie "w miejscu"
+100,string,3,2,1,,N     # Symbol pozycji deklaracji (klucz nr 1)
+120,kwota                # przychod
+121,kwota                # KUP
+122,xkwota,,0            # podatek
+123,string,100           # opis pozycji
+//
+% D_ZROD.DIC
+"zp_sym",100,Estring    # symbol pozycji
+"zp_przychod",120,Ekwota     # przychod
+"zp_kup",121,Ekwota     # kup
+"zp_podatek",122,Ekwota # podatek
+"zp_opis",123,Estring
+//
+% D_TMP.RJR # inicjalizacja rejestru
+100
+1
+"D_TMP"
+
+
+
+
+
+
+
+
+
+
+% D_TMP.DBF
+0,log,,,,,D              # usuwanie "w miejscu"
+100,string,20,2,1,,N     # Symbol rubryki (klucz nr 1)
+101,string,48            # nazwa rubryki
+103,string,1,2           # typ pola
+109,string,6,2           # nazwa rejestru DEF
+120,kwota                # BO
+121,kwota                # miesiac 1
+122,kwota                # miesiac 2
+123,kwota                # miesiac 3
+124,kwota                # miesiac 4
+125,kwota                # miesiac 1
+126,kwota                # miesiac 2
+127,kwota                # miesiac 3
+128,kwota                # miesiac 4
+129,kwota                # miesiac 5
+130,kwota                # miesiac 6
+131,kwota                # miesiac 7
+132,kwota                # miesiac 8
+133,kwota                # miesiac 9
+134,kwota                # miesiac 10
+135,kwota                # miesiac 11
+136,kwota                # miesiac 12
+137,string,1,2           # typ pozycji 
+138,kwota                # miesiac 13
+139,kwota                # miesiac 14
+140,kwota                # miesiac 15
+141,kwota                # miesiac 16
+142,kwota                # miesiac 17
+143,kwota                # miesiac 18
+144,kwota                # miesiac 19
+145,kwota                # miesiac 20
+146,kwota                # miesiac 21
+147,kwota                # miesiac 22
+148,kwota                # miesiac 23
+149,kwota                # miesiac 24
+//
+% D_TMP.DIC
+"D_rub",100,Estring    # symbol rubryki
+"D_naz",101,Estring    # nazwa rubryki
+"D_typ",103,Estring    # typ pola
+"D_def",109,Estring    # nazwa rejestru DEF
+"D_M0", 120,Ekwota     # BO
+"D_M1", 121,Ekwota     # miesiac 1
+"D_M2", 122,Ekwota     # miesiac 2
+"D_M3", 123,Ekwota     # miesiac 3
+"D_M4", 124,Ekwota     # miesiac 4
+"D_M01", 125,Ekwota     # miesiac 1
+"D_M02", 126,Ekwota     # miesiac 2
+"D_M03", 127,Ekwota     # miesiac 3
+"D_M04", 128,Ekwota     # miesiac 4
+"D_M05", 129,Ekwota     # miesiac 5
+"D_M06", 130,Ekwota     # miesiac 6
+"D_M07", 131,Ekwota     # miesiac 7
+"D_M08", 132,Ekwota     # miesiac 8
+"D_M09", 133,Ekwota     # miesiac 9
+"D_M10", 134,Ekwota     # miesiac 10
+"D_M11", 135,Ekwota     # miesiac 11
+"D_M12", 136,Ekwota     # miesiac 12
+"D_typoz",137,Estring   # typ pozycji
+"D_M13", 138,Ekwota     # miesiac 13
+"D_M14", 139,Ekwota     # miesiac 14
+"D_M15", 140,Ekwota     # miesiac 15
+"D_M16", 141,Ekwota     # miesiac 16
+"D_M17", 142,Ekwota     # miesiac 17
+"D_M18", 143,Ekwota     # miesiac 18
+"D_M19", 144,Ekwota     # miesiac 19
+"D_M20", 145,Ekwota     # miesiac 20
+"D_M21", 146,Ekwota     # miesiac 21
+"D_M22", 147,Ekwota     # miesiac 22
+"D_M23", 148,Ekwota     # miesiac 23
+"D_M24", 149,Ekwota     # miesiac 24
+//
+% SZCZEGOLY_STD.RJR # inicjalizacja rejestru
+100
+1
+"SZCZEGOLY_STD"
+
+
+
+
+
+
+
+
+
+
+% SZCZEGOLY_STD.DBF
+
+
+0,log,,,,,D              # usuwanie "w miejscu"
+100,string,20,2,1     # Symbol rubryki (klucz nr 1)
+101,string,48            # nazwa rubryki
+103,string,1,2           # typ pola
+109,string,6,2           # nazwa rejestru DEF
+120,kwota                # BO
+121,kwota                # miesiac 1
+122,kwota                # miesiac 2
+123,kwota                # miesiac 3
+124,kwota                # miesiac 4
+125,kwota                # miesiac 1
+126,kwota                # miesiac 2
+127,kwota                # miesiac 3
+128,kwota                # miesiac 4
+129,kwota                # miesiac 5
+130,kwota                # miesiac 6
+131,kwota                # miesiac 7
+132,kwota                # miesiac 8
+133,kwota                # miesiac 9
+134,kwota                # miesiac 10
+135,kwota                # miesiac 11
+136,kwota                # miesiac 12
+137,string,1,2           # typ pozycji 
+160,string,100  # definicja czastkowa
+138,kwota                # miesiac 13
+139,kwota                # miesiac 14
+140,kwota                # miesiac 15
+141,kwota                # miesiac 16
+142,kwota                # miesiac 17
+143,kwota                # miesiac 18
+144,kwota                # miesiac 19
+145,kwota                # miesiac 20
+146,kwota                # miesiac 21
+147,kwota                # miesiac 22
+148,kwota                # miesiac 23
+149,kwota                # miesiac 24
+161,string,100           # definicja 2
+162,string,100           # definicja 3  
+% SZCZEGOLY_STD.DIC
+"D_rub",100,Estring    # symbol rubryki
+"D_naz",101,Estring    # nazwa rubryki
+"D_typ",103,Estring    # typ pola
+"D_def",109,Estring    # nazwa rejestru DEF
+"D_M0", 120,Ekwota     # BO
+"D_M1", 121,Ekwota     # miesiac 1
+"D_M2", 122,Ekwota     # miesiac 2
+"D_M3", 123,Ekwota     # miesiac 3
+"D_M4", 124,Ekwota     # miesiac 4
+"D_M01", 125,Ekwota     # miesiac 1
+"D_M02", 126,Ekwota     # miesiac 2
+"D_M03", 127,Ekwota     # miesiac 3
+"D_M04", 128,Ekwota     # miesiac 4
+"D_M05", 129,Ekwota     # miesiac 5
+"D_M06", 130,Ekwota     # miesiac 6
+"D_M07", 131,Ekwota     # miesiac 7
+"D_M08", 132,Ekwota     # miesiac 8
+"D_M09", 133,Ekwota     # miesiac 9
+"D_M10", 134,Ekwota     # miesiac 10
+"D_M11", 135,Ekwota     # miesiac 11
+"D_M12", 136,Ekwota     # miesiac 12
+"D_typoz",137,Estring   # typ pozycji
+"D_defli",160,Estring	# definicja czastkowa
+"D_M13", 138,Ekwota     # miesiac 13
+"D_M14", 139,Ekwota     # miesiac 14
+"D_M15", 140,Ekwota     # miesiac 15
+"D_M16", 141,Ekwota     # miesiac 16
+"D_M17", 142,Ekwota     # miesiac 17
+"D_M18", 143,Ekwota     # miesiac 18
+"D_M19", 144,Ekwota     # miesiac 19
+"D_M20", 145,Ekwota     # miesiac 20
+"D_M21", 146,Ekwota     # miesiac 21
+"D_M22", 147,Ekwota     # miesiac 22
+"D_M23", 148,Ekwota     # miesiac 23
+"D_M24", 149,Ekwota     # miesiac 24
+"D_defli2",161,Estring	# definicja czastkowa2
+"D_defli3",162,Estring	# definicja czastkowa3
+//
+% KONTA_POMINIETE.RJR # inicjalizacja rejestru
+100
+1
+"KONTA_POMINIETE"
+
+
+
+
+
+
+
+
+
+
+% KONTA_POMINIETE.DBF
+100,string,20,2,1     # Symbol konta (klucz nr 1)
+101,string,48            # nazwa konta
+103,string,20,2           # syntetyka
+104,log,	          # czy uzyte
+105,string,50		# nazwa syntetyki	
+106,byte			# wn
+107,byte			# ma
+108,byte			# swn
+109,byte			# sma
+110,byte			# kwn
+111,byte			# kma
+103,0,,,2		# konto syntetyczne* zaznaczone
+104,0,,,2
+104,0,,,3		# zaznaczone * konto syntetyczne
+103,0,,,3
+
+% KONTA_POMINIETE.DIC
+"k_sym",100,Estring    # symbol rubryki
+"k_naz",101,Estring    # nazwa rubryki
+"k_syn",103,Estring    # typ pola
+"k_tak",104,Elog       # czy uzyte
+"k_synnaz",105,Estring    # typ pola
+"k_wn",106,Ekwota # uzyte wn
+"k_ma",107,Ekwota # uzyte ma
+"k_swn",108,Ekwota # uzyte swn
+"k_sma",109,Ekwota # uzyte sma
+"k_kwn",110,Ekwota # uzyte kwn
+"k_kma",111,Ekwota # uzyte kma
+
+//
+% WPR.RJR # inicjalizacja rejestru
+100
+1
+"WPR"
+"WPR"
+
+"Powt|orzony symbol pozycji !"
+"Zmieniasz definicj|e pozycji ?"
+"Czy doda|c t|e pozycj|e ?"
+"Czy usun|a|c t|e pozycj|e ?"
+"Czy doda|c nast|epn|a pozycj|e ?"
+""
+"Nie zdefiniowano |zadnych pozycji !"
+"Tabela pozycji jest pusta !$Wprowadzasz pierwsz|a pozycj|e ?"
+"Nie ma pozycji o podanym symbolu.$Znale|x|c nast|epn|a ?"
+// --------------------------------------------
+% WPR.DBF # struktura rekordu
+0,log,,,,,D              # usuwanie "w miejscu"
+100,string,11,2,1        # oddzial  
+101,string,20,2,1        # Symbol rubryki (klucz nr 1)
+102,string,48            # nazwa rubryki
+109,string,6,2           # nazwa rejestru DEF
+120,xkwota,,2                # BO
+121,xkwota,,2                # Mies1 (kwota na koniec okresu)
+122,xkwota,,2                # Mies2
+123,xkwota,,2                # Mies3
+124,xkwota,,2                # Mies4
+125,xkwota,,2                # Mies5
+126,xkwota,,2                # Mies6
+127,xkwota,,2                # Mies7
+128,xkwota,,2                # Mies8
+129,xkwota,,2                # Mies9
+130,xkwota,,2                # Mies10
+131,xkwota,,2                # Mies11
+132,xkwota,,2                # Mies12
+133,xkwota,,2                # BZ
+140,string,50	# opis1
+141,string,50	# opis2
+142,string,50	# opis3
+143,string,50	# opis4
+144,string,50	# symbol pracownika
+145,string,50	# nazwisko i imiê
+146,xkwota,,2                # Mies13 (kwota na koniec okresu)
+147,xkwota,,2                # Mies14
+148,xkwota,,2                # Mies15
+149,xkwota,,2                # Mies16
+150,xkwota,,2                # Mies17
+151,xkwota,,2                # Mies18
+152,xkwota,,2                # Mies19
+153,xkwota,,2                # Mies20
+154,xkwota,,2                # Mies21
+155,xkwota,,2                # Mies22
+156,xkwota,,2                # Mies23
+157,xkwota,,2                # Mies24
+100,0,,,2
+101,0,,,3
+144,0,,,4
+100,0,,,4
+101,0,,,4
+//
+//
+% WPR.DIC # slownik pol rekordu
+"WPR_dzial",100,Estring    # symbol oddzialu
+"WPR_rub",101,Estring    # symbol pozycji
+"WPR_naz",102,Estring    # nazwa rubryki
+"WPR_def",109,Estring    # nazwa rejestru DEF
+"WPR_M0",120,Ekwota     # BO
+"WPR_M1",121,Ekwota     # kwota mies 1 (na koniec okresu)
+"WPR_M2",122,Ekwota     # kwota mies 2
+"WPR_M3",123,Ekwota     # kwota mies 3
+"WPR_M4",124,Ekwota     # kwota mies 4
+"WPR_M5",125,Ekwota     # kwota mies 5
+"WPR_M6",126,Ekwota     # kwota mies 6
+"WPR_M7",127,Ekwota     # kwota mies 7
+"WPR_M8",128,Ekwota     # kwota mies 8
+"WPR_M9",129,Ekwota     # kwota mies 9
+"WPR_M10",130,Ekwota     # kwota mies 10
+"WPR_M11",131,Ekwota     # kwota mies 11
+"WPR_M12",132,Ekwota     # kwota mies 12
+"WPR_M25",133,Ekwota     # kwota BZ
+"WPR_S1",140,Estring     # opis1
+"WPR_S2",141,Estring     # opis2
+"WPR_S3",142,Estring     # opis3
+"WPR_S4",143,Estring     # opis4
+"WPR_P1",144,Estring     # symbol pracownika
+"WPR_P2",145,Estring	# nazwisko i imie
+"WPR_M13",146,Ekwota     # kwota mies 13(na koniec okresu)
+"WPR_M14",147,Ekwota     # kwota mies 14
+"WPR_M15",148,Ekwota     # kwota mies 15
+"WPR_M16",149,Ekwota     # kwota mies 16
+"WPR_M17",150,Ekwota     # kwota mies 17
+"WPR_M18",151,Ekwota     # kwota mies 18
+"WPR_M19",152,Ekwota     # kwota mies 19
+"WPR_M20",153,Ekwota     # kwota mies 20
+"WPR_M21",154,Ekwota     # kwota mies 21
+"WPR_M22",155,Ekwota     # kwota mies 22
+"WPR_M23",156,Ekwota     # kwota mies 23
+"WPR_M24",157,Ekwota     # kwota mies 24
+//
+% WPR1.DIC
+"WPR_P1",144,Estring,"Symbol"
+"WPR_P2",145,Estring,"Nazwisko i imi|e"
+"WPR_rub",101,Estring,"Pozycja"
+"WPR_naz",102,Estring,"Opis pozycji"
+% ODDZIALY.RJR # inicjalizacja rejestru
+100
+1
+"ODDZIALY"
+"ODDZIALY"
+
+"Powt|orzony symbol oddzia|lu !"
+"Zmieniasz definicj|e oddzia|lu ?"
+"Czy doda|c ten oddzia|l ?"
+"Czy usun|a|c ten oddzia|l ?"
+"Czy doda|c nast|epny oddzia|l ?"
+"W tabeli oddzia|l|ow brak oddzia|lu o podanym symbolu! $ Czy doda|c go?"
+"Nie zdefiniowano |zadnych oddzia|l|ow !"
+"Tabela oddzia|l|ow jest pusta !$Wprowadzasz pierwszy oddzia|l ?"
+"Nie ma oddzia|lu.$Znale|x|c nast|epny ?"
+// --------------------------------------------
+% ODDZIALY.DBF # struktura rekordu
+0,log,,,,,D              # usuwanie "w miejscu"
+100,2002,,3,1,,N        # oddzial  
+101,string,30        # nazwa
+// --------------------------------------------
+% ODDZIALY.DIC # slownik pol rekordu
+"ODD_dzial",100,Estring    # oddzial
+"ODD_naz",101,Estring    # nazwa
+//
+% ODDZIALY.MEN # menu z rubrykami
+D = 50,"Wykaz oddzia|l|ow"
+100   # symbol oddzia|lu
+101  # nazwa oddzia|lu
+% ODDZIALY.BOX # okienko do wprowadzania i modyfikacji danych
+D = "Definicja oddzia|lu"
+"Symbol oddzia|lu:",100,AU
+"Nazwa oddzia|lu:",101,A
+// --------------------------------------------
+% ODDZIALY.CHK # sprawdzanie poprawnosci wybranych pol
+OK := .T.
+ERRMESS := "Niedozwolony symbol  oddzia|lu !"
+ID := 100
+if (ODD_dzial = "") goto error
+goto __OK
+error:
+BEEP[0]
+OK := .N.
+__OK:
+// ================================
+% ODDZIALY.BUT # "buttony" do rejestru 
+// Wybor rejestru DEF (z modyfikacja)
+"%W%ybierz",1,0
+"%D%odaj",5,0
+"%U%su|n",6,0
+//"%O%pis rejestru DEF",2,0   # przegladanie
+"%Z%mie|n",4,0   # modyfikacja
+@4,3,0               # Rezygnujesz
+// Ogladanie rejestru DEF (z modyfikacja)
+"%D%odaj",5,1
+"%U%su|n",6,1
+"%Z%mie|n",4,1   # modyfikacja
+@5,0,1               # Koniec
+// Wybor rejestru DEF (bez modyfikacji)
+"%W%ybierz",1,2
+"%O%bejrzyj",2,2   # przegladanie
+@4,3,2               # Rezygnujesz
+// Ogladanie rejestru DEF(bez modyfikacji)
+"%O%bejrzyj",2,3   # przegladanie
+@2,0,3               # Koniec
+// Wybor rejestru DEF (z modyfikacja)
+"%W%ybierz",1,4
+"%D%odaj",5,4
+"%Z%mie|n",4,4   # modyfikacja
+"%U%su|n",6,4
+@4,3,4               # Rezygnujesz
+// --------------------------------------------
+% STANDARD.DLG
+PRZYCISK_CANCELID=90
+##DEFWINDOW = ,,,,ADHS,&&black/white,&&white/lblue,,&&lwhite/blue,"Sprawozdanie"
+##90,,ADP,,@5
+##11,0,ACP,,,,black/white,white/blue,blue/white,blue/white&blue/white&blue/white,ZMIENNA:oddzial,string:274
+##10,BGTL,ADP,,"%D%efinicja"
+##12,BGTL,ADP,,"Wyd%r%uk   ",,yellow/black&lwhite/black,lwhite/red&black/white,magenta/black&white
+//##13,0,ACP,,,,black/white,white/blue,blue/white,blue/white&blue/white&blue/white,ZMIENNA:kat_edek
+##15,BGTL,ADP,,"Przenie|s definicj|e ze wzorca"
+
+
+ dla oddzia|lu: #11      #         #10          #
+
+
+ #15                          #   #12          #
+
+ 
+                                  #90          #      
+% TABLICA-AKCJI-STANDARD
+"AKCJA-PRZED-WYSWIETLENIEM",SPRAWOZDANIE-PRZED
+"AKCJA-BUTTON10",DEFINIOWANIE
+"AKCJA-BUTTON15",przepisz_definicje
+"AKCJA-BUTTON12",DRUKOWANIE
+"AKCJA-PO-POLU11",ZAPISZ_ODDZIAL
+"AKCJA-PO-POLU13",ZAPISZ_ODDZIAL
+% TABLICA-AKCJI-STANDARDX
+%<TABLICA-AKCJI-STANDARD
+"AKCJA-BUTTON24",DANE-POCZATKOWE
+% SPRAWOZDANIE-PRZED.ALG
+ExDialogOp["ZmienNaglowek","Sprawozdanie "+ nazwa_spr]
+ExDialogOp["IdzDoPozycji","90"]
+//oddzial := RejWezP_S["N:FRM_str0"]
+% ZAPISZ_ODDZIAL.ALG
+ RejWstawP_S["N:FRM_str0",oddzial]
+// 
+% przepisz_definicje.alg
+if(not(Yesnalert["UWAGA!!!! $Istniej|aca definicja "+nazwa_spr+ " przepadnie. $ Czy mimo to kontynuowa|c?"])) exitalg[0]
+odczytaj_k := 2
+ksiega := ""
+wzor := ""
+exdialogop["idzdodialogu","wybierz_rodzaj_dzialania1"]
+if(odczytaj_k=2) ExitAlg[0]
+ksieg1 := wzor
+if(odczytaj_k=0) ksieg1 := ksiega
+ksieg2 := nazwa_ksieg
+if(not(yesnalert["Czy kopiowa|c definicje sprawozdania z "+ksieg1 +" do "+ksieg2+"?"])) exitalg[0]
+elem_id := DodajLogElem["SRODOWISKO","Przenoszenie sprawozdania","","Przenoszenie sprawozdania "+ nazwa_spr+" z "+ ksieg1+" do "+ksieg2]
+dyskOp["UsunPlik",ksieg2+"\data\std\"+nazwa_sprawozdania1+".*",""]
+errmess := "|Xle"
+//okalert["co="+ksieg1+"\data\std\"+nazwa_sprawozdania1+".dbf $gdzie="+ksieg2+"\data\std"]
+if(DyskOp["KopiujPlik",ksieg1+"\data\std\"+nazwa_sprawozdania1+".dbf",ksieg2+"\data\std"]) errmess := "OK"
+DodajLogElemKoniec[elem_id,errmess]
+RejOp["D:OtworzRejSprawdz","DEF.RJR+"+naz_rej1]
+ if(Rejop["D:WezPierwszyRek",""]) goto sa_definicje
+Okalert["Nie odczytano |zadnych definicji"]
+sa_definicje:
+rejop["d:zamknijrej",""]
+
+% DEFINIOWANIE.ALG
+odczytaj_k := 2
+ksiega := ""
+wzor := ""
+if(strin["PIT",nazwa_sprawozdania1]>-1 and strin["PIT5",nazwa_sprawozdania1]<0) goto pity
+RejOp["PL:OtworzRejTemp","POMOC.RJR"]
+RejOp["PA:OtworzRejSprawdz","VAT_DEKL.RJR"]
+RejOp["SA:OtworzRejSprawdz","VAT_KLAS.RJR"]
+goto po_otwarciu_rej
+pity:
+RejOp["PL:OtworzRejSprawdz","PLC_WYROZNIK.RXR"]
+RejOp["PA:OtworzRejTemp","POMOC.RJR"]
+RejOp["SA:OtworzRejTemp","POMOC.RJR"]
+po_otwarciu_rej:
+if(not(RejOp["R:OtworzRejSprawdz","rej.RJR"])) okalert["nie otworzylem"]
+if(RejOp["R:ZnajdzRek",naz_rej]) goto omin
+RejOp["R:DodajRek",""]
+RejWstawP_S["R:REJ_def",naz_rej]
+RejWstawP_S["R:REJ_ndf","sprawozdanie "+naz_rej]
+RejWstawP_S["R:REJ_dbf",naz_rej]
+omin:
+RejWstawP_S["R:REJ_ksg",ksg]
+RejOp["D:OtworzRejSprawdz","DEF.RJR+"+naz_rej1]
+if(Rejop["D:WezPierwszyRek",""]) goto sa_definicje
+exdialogop["idzdodialogu","wybierz_rodzaj_dzialania"]
+if(odczytaj_k=2) ExitAlg[0]
+ksieg1 := wzor
+if(odczytaj_k=0) ksieg1 := ksiega
+ksieg2 := nazwa_ksieg
+rejop["d:zamknijrej",""]
+if(not(yesnalert["Czy kopiowa|c definicje sprawozdania z "+ksieg1 +" do "+ksieg2+"?"])) exitalg[0]
+elem_id := DodajLogElem["SRODOWISKO","Przenoszenie sprawozdania","","Przenoszenie sprawozdania "+ nazwa_spr+" z "+ ksieg1+" do "+ksieg2]
+dyskOp["UsunPlik",ksieg2+"\data\std\"+nazwa_sprawozdania1+".*",""]
+errmess := "|Xle"
+//okalert["co="+ksieg1+"\data\std\"+nazwa_sprawozdania1+".dbf $gdzie="+ksieg2+"\data\std"]
+if(DyskOp["KopiujPlik",ksieg1+"\data\std\"+nazwa_sprawozdania1+".dbf",ksieg2+"\data\std"]) errmess := "OK"
+DodajLogElemKoniec[elem_id,errmess]
+RejOp["D:OtworzRejSprawdz","DEF.RJR+"+naz_rej1]
+ if(Rejop["D:WezPierwszyRek",""]) goto sa_definicje
+Okalert["Nie odczytano |zadnych definicji"]
+exitalg[0]
+sa_definicje:
+//
+Rejop["S:otworzrejSprawdz","STALE.RJR+"+naz_rej1+"_s"]
+//RejOp["S:ZmienKluczRej","2"]
+Rejop["O:otworzrejSprawdz","ODDZIALY.RJR"]
+//maria
+//========= tu miejsce na ewentualna konwersje
+if(not(RejOp["D:WezPierwszyRek",""])) goto  po_konwersji
+dzialy:
+rub := RejWezP_S["D:F_rub"]
+dzial := StrCut[rub,0,1]
+xRejWstawP_S["D:F_dz",dzial]
+xREjWstawP_S["D:F_poz",StrCut[rub,2,8]]
+xRejWstawP_L["D:F_dr",.T.]
+if( RejWezP_S["D:F_drk"]="X") xRejWstawP_L["D:F_dr",.N.]
+sp := ""
+if(RejWezP_S["D:F_trb"]="K") xRejWstawP_S["D:F_pob","opis"]
+if(RejWezP_S["D:F_trb"]="F") xRejWstawP_S["D:F_pob","konta"]
+if(RejWezP_S["D:F_trb"]="R") xRejWstawP_S["D:F_pob","pozycje sprawozdania"]
+if(RejWezP_S["D:F_trb"]="V") xRejWstawP_S["D:F_pob","VAT"]
+if(RejWezP_S["D:F_trb"]="D") xRejWstawP_S["D:F_pob","narastaj|aco-sta|le"]
+if(RejWezP_S["D:F_trb"]="P") xRejWstawP_S["D:F_pob","za miesi|ac-sta|le"]
+if(RejWezP_S["D:F_trb"]="C") xRejWstawP_S["D:F_pob","dane z p|lac"]
+if(RejWezP_S["D:F_trb"]="X") xRejWstawP_S["D:F_pob","rozpisanie"]
+if(RejWezP_S["D:F_trb"]="S") xRejWstawP_S["D:F_pob","sta|la"]
+if(RejWezP_S["D:F_trb"]="I") xRejWstawP_S["D:F_pob","indywidualny opis"]
+if(RejWezP_S["D:F_trb"]="A") xRejWstawP_S["D:F_pob","wykaz przychod|ow"]
+RejOp["D:ZapiszRek",""]
+if(RejOp["D:WezNastepnyRek",""]) goto dzialy
+po_konwersji:
+zmien := .N.
+if(RejOp["D:WezPierwszyREk",""]) goto dalej
+if(not(YesAlert["Brak definicji pozycji sprawozdania. $ Czy wprowadzasz pierwsz|a?"])) ExitAlg[0]
+CallAlg["DEFINICJE-DODAJ"]
+dalej:
+if(not(RejWezP_S["D:F_rub"]=="#_#")) goto dalej1
+RejOp["D:UsunRekUstaw",""]
+dalej1:
+ExDialogOp["IdzDoDialogu","DANE-WPROWADZ"]
+ RejOp["D:ZamknijRej",""]
+ RejOp["R:ZamknijRej",""]
+ RejOp["PA:ZamknijRej",""]
+ RejOp["SA:ZamknijRej",""]
+ RejOp["PL:ZamknijRej",""]
+ RejOp["P:ZamknijRej",""]
+ RejOp["S:ZamknijRej",""]
+ RejOp["O:ZamknijRej",""]
+_esc:
+// dialog do wyboru dzia³ania
+% wybierz_rodzaj_dzialania.dlg
+%<wybierz_rodzaj_dzialania.xx0
+%<wybierz_rodzaj_dzialania.xx2
+%<wybierz_rodzaj_dzialania.xx1
+//
+% wybierz_rodzaj_dzialania1.dlg
+%<wybierz_rodzaj_dzialania.xx0
+%<wybierz_rodzaj_dzialania.xx1
+//
+% wybierz_rodzaj_dzialania.xx0
+##DEFWINDOW=,,,,ADHS,,&&lwhite/lblue,,&&lwhite/blue,""
+##20,0,0,," ",,&&black/lwhite,&&lblue/lwhite,,,zmienna:odczytaj_k,,,0,0
+##21,0,0,," ",,&&black/lwhite,&&lblue/lwhite,,,zmienna:odczytaj_k,,,0,1
+##23,0,ACP,,,,,,,,zmienna:ksiega
+##24,0,ACP,,,,,,,,zmienna:wzor
+##22,0,0,," ",,&&black/lwhite,&&lblue/lwhite,,,zmienna:odczytaj_k,,,0,2
+##10,,AD,,@3,,&&blue/white,&&white/blue
+% wybierz_rodzaj_dzialania.xx2
+                  UWAGA!!!
+ 
+ SPRAWOZDANIE NIE ZOSTA|LO ZAINSTALOWANE
+ 
+ 
+% wybierz_rodzaj_dzialania.xx1
+ Co chcesz zrobi|c:
+
+   #20#<kopiuj definicje z ksi|egi:    #23     # 
+   
+   
+   #21#<kopiuj definicje z wzorca:    #24     #
+   
+   
+   #22#<zrezygnuj 
+
+
+            #10              #
+% TABLICA-AKCJI-WYBIERZ_RODZAJ_DZIALANIA,TABLICA-AKCJI-WYBIERZ_RODZAJ_DZIALANIA1
+"AKCJA-PRZED-WYSWIETLENIEM",DZIALANIE-PRZED
+"AKCJA-PRZED-WYKONYWANIEM",DZIALANIE-PRZED-WYKO
+"AKCJA-F2-POLE23",POLE23-F2
+"AKCJA-PO-POLU23",POLE23-PO
+"AKCJA-F2-POLE24",POLE24-F2
+"AKCJA-PO-POLU24",POLE24-PO
+"AKCJA-BUTTON10",DZIALANIE-AKCE
+% DZIALANIE-PRZED.ALG
+wykaz_wzor := ""
+rok := StrCut[StuDataS[d_dzisiaj],0,4]
+rok1k := StringNaLiczbe[rok]+1
+nk := 2010
+petla:
+wzorx := ToStr["wzor#nk#R4:0"]
+znak := ","
+if(nk=2010) znak := ""
+if(DyskOp["JestKatalog",wzorx,""]) wykaz_wzor := wykaz_wzor+znak+ wzorx
+nk := nk+1
+if(nk < rok1k) goto petla
+ExDialogOp["IdzDoPozycji","20"]
+//
+% DZIALANIE-PRZED-WYKO.ALG
+exdialogop["idzdopozycji","10"]
+% POLE23-F2.ALG
+A_ok := .N.
+  d_string := WybierzFinn["ksiegozbior"]
+if(d_string="") ExitAlg[0]
+A_ok := .T.
+//
+% POLE23-PO.ALG
+  d_string := ""
+  if (not(nazwa_ksieg == ksiega)) goto dalej
+    OkAlert["Ksi|ega |xr|od|lowa nie mo|ze by|c taka sama jak docelowa !"]
+    a_ok := .N.
+    ExdialogOp["IdzDoPozycji","23"]
+    ExitAlg[0]
+  dalej:
+   if(ksiega="") goto dalej5
+    if (RejOp["OtworzRej","KSIEG.RXR"]) goto dalej1
+      OkAlert["Nie mog|e otworzy|c listy z ksi|egami !"]
+      a_ok := .N.
+      ExitAlg[0]
+    dalej1:
+    RejOp["ZmienKluczRej","1"]
+    if(RejOp["ZnajdzRek",ksiega]) goto dalej4
+    a_ok := .N.
+    OkAlert["Brak ksi|egi o symbolu "+ksiega+" !"]
+    RejOp["ZamknijRej",""]
+    ExdialogOp["IdzDoPozycji","23"]
+    ExitAlg[0]
+    dalej4:
+    RejOp["ZamknijRej",""]
+dalej5:
+    a_ok := .T.
+  ExitAlg[0]
+//
+% POLE24-F2.ALG
+A_ok := .N.
+d_string := WezNazwaString["wzor2010",wykaz_wzor,"Wykaz wzorc|ow"]
+if(d_string="") ExitAlg[0]
+A_ok := .T.
+//
+% POLE24-PO.ALG
+if(OkNazwaString[wzor,wykaz_wzor+", "]) exitAlg[0]
+okalert["Niepoprawna warto|s|c!"]
+ExDialogOp["IdzDoPozycji","24"]
+ExitAlg[0]
+
+% DZIALANIE-AKCE.ALG
+// sprawdzenie czy przy pelnym srodowisku wybrano ksiege
+if(odczytaj_k=2) goto ok_1
+if(odczytaj_k=0) goto sprawdz_ksiega
+if(odczytaj_k=1) goto sprawdz_wzor
+exitalg[0]
+sprawdz_ksiega:
+if(not(ksiega="")) goto ok_1
+Okalert["Podaj symbol ksi|egi"]
+ExDialogOp["IdzDoPozycji","23"]
+ExitAlg[0]
+sprawdz_wzor:
+if(not(wzor="")) goto ok_1
+Okalert["Podaj symbol wzorca"]
+ExDialogOp["IdzDoPozycji","24"]
+ExitAlg[0]
+ok_1:
+ExDialogOp["KoniecWykonywania",""]
+ExitAlg[0]
+//
+//
+% WPROWADZANIE.ALG
+idzdowydruku["std\stand.frm",""]
+//
+% DRUKOWANIE.ALG
+drukuj := .T.
+cit8o := .N.
+ w25 := "1"
+ w26 := "1"
+ w27 := "1"
+ w28 := "1"
+ w29 := "1"
+nr := 1
+if(not(rejop["yy:otworzrejtemp","szczegoly_std.rjr"])) okalert["nie otworzyl yy"]
+// rejestr do pamietnia zmiennych do e_deklaracji
+rejop["zz:otworzrejtemp","szczegoly_std.rjr"]
+rejop["bl:otworzrejtemp","szczegoly_std.rjr"]
+//
+katalog_wz := StrCut[StuDataS[rok1],0,4]
+//rejop["yy:otworzrejtemp","szczegoly_std.rjr"]
+//
+d1 := ""
+d2 := ""
+d3 := ""
+d19 := ""
+d20 := ""
+firma := ""
+zam := ""
+data_kp := ''
+Idzdowydruku["std\druk.frm",""]
+if(not(drukuj)) rejop["yy:zamknijrej",""]
+if(not(drukuj)) rejop["zz:zamknijrej",""]
+if(not(drukuj)) ExitAlg[0]
+if(nr>0) goto drukuj1
+okalert["Nie znaleziono danych do wydrukowania!"]
+exitalg[0]
+drukuj1:
+if(not(nazwa_sprawozdania2=="vat" or nazwa_sprawozdania2=="vatd")) goto po_wstawka
+// tu dane dla zalacznikow vatzd
+l_vatspr := .
+rejop["xe:otworzrej","H-REJFAKTSPR.REX"]
+rejop["xe:zmienkluczrej","14"]
+if(not(rejop["xe:wezpierwszyrek",""])) goto zamknij_xe
+klucz := strcut[studatas[data_kp],0,7]
+if(not(rejop["xe:znajdzrek",klucz])) goto zamknij_xe
+petla_xe:
+if(rejwezp_l["xe:vatstrona"] and rejwezp_s["xe:vatco"]=="ZAP") czy_zw_zak := .T.
+if(not(rejwezp_l["xe:vatstrona"]) and rejwezp_s["xe:vatco"]=="TRA") czy_kor_spr := .T.
+if(not(rejwezp_l["xe:vatstrona"]) and rejwezp_s["xe:vatco"]=="TRA") l_vatspr := l_vatspr+1
+if(rejop["xe:weznastepnyrekn",""]) goto petla_xe
+zamknij_xe:
+if(druk == "plik .xml") goto po_wstawka1
+//rejop["xe:zamknijrej",""]
+if(l_vatspr=.) lvatzd := 0
+if(l_vatspr=.) goto omin_s
+lvatzd := l_vatspr/8
+lvatzd1 := lvatzd - round[lvatzd,0]
+if(lvatzd1>=0 )lvatzd := round[lvatzd,0]+1
+if(lvatzd1<0) lvatzd := round[lvatzd,0]
+omin_s:
+if(lvatzd=0) goto po_wstawka1
+// tu wygenerowanie plikow do zalacznikow vatzd
+rejop["xe:wezpierwszyrek",""]
+rejop["xe:znajdzrek",klucz]
+il_zal := 1
+suma_10 := .
+suma_11 := .
+petla_vatzd:
+callalg["dane_vatzd"]
+il_zal := il_zal+1
+if(il_zal<=lvatzd) goto petla_vatzd
+//
+po_wstawka1:
+rejop["xe:zamknijrej",""]
+po_wstawka:
+// WSTAWKA
+platforma := .N.
+DyskOp["WezSystemX","",""]
+if(D_STRING = "X-") platforma := .T.
+program := ""
+katalog := ""
+CallAlgFile["$$(FINN-LIB)\wspolne\podrecznik.perseus","USTAL-DANE-DO-HTML"]
+if(not(platforma) and program="") program := "c:\progra~1\intern~1\iexplore"
+DyskOp["OdczytajBiezacy","",""]
+katalog := D_string
+  nazwa_plik := nazwa_sprawozdania1+".bat"
+sciezka := WezZmiennaSrod["P*q2"]
+if(platforma) nazwa_plik := sciezka+"/"+ nazwa_sprawozdania1+".bat"
+if(nr>1 or cit8o) callalg["zrob_naglowek"]
+if(nazwa_sprawozdania2=="vat" and lvatzd>0 and not(druk == "plik .xml")) callalg["zrob_naglowek"] 
+if(nazwa_sprawozdania2=="vatd" and lvatzd>0 and not(druk == "plik .xml")) callalg["zrob_naglowek"] 
+Dyskop["usunplik",nazwa_plik,""]
+Dyskop["Dodajplik",nazwa_plik,""]
+// ==========
+// tu rozdzielenie algorytmow w zaleznosci czy forma elektroniczna czy papierowa
+if (druk == "wydruk roboczy")  idzdowydruku["std\druk_rob.frm",""]
+if (druk == "plik .xml") callalg["e-formularz.alg"]
+if (not(druk == "plik .xml" or druk == "wydruk roboczy" )) callalg["formularz.alg"]
+rejop["yy:zamknijrej",""]
+rejop["zz:zamknijrej",""]
+
+% dane_vatzd.alg
+if(nazwa_sprawozdania2=="vatd") kwartal_tak := "2"
+sciezka := WezZmiennaSrod["P*q2"]+Tostr["\vatzd#il_zal#S:0_run"]
+drukujakcja["TEXTFILEPARAM = "+sciezka+",ISO-LATIN2"]
+drukujlinia["s/d_01/#d1#S/g"]
+if(kwartal_tak="2") drukujlinia["s/d_02/#d2#S/g"]
+if(kwartal_tak="2") drukujlinia["s/d_04/#zam#S/g"]
+if(not(kwartal_tak="2")) drukujlinia["s/d_04/#d2#S/g"]
+if(not(kwartal_tak="2")) drukujlinia["s/d_02/#zam#S/g"]
+drukujlinia["s/d_03/#d3#S/g"]
+drukujlinia["s/d_05/#firma#S#zam#S/g"]
+drukujlinia["s/d_19/#d19#S/g"]
+drukujlinia["s/d_20/#d20#S/g"]
+drukujlinia["s/d_28/#il_zal#S:0/g"]
+n := 1
+petla_xe:
+no := ToStr["#n#S:0"]
+if(rejwezp_l["xe:vatstrona"]) goto nastepny_rek_xe
+if(not(rejwezp_s["xe:vatco"]=="TRA")) goto nastepny_rek_xe
+tekst := rejwezP_S["xe:vatnazwa"]
+d_string := tekst
+callalg["zamiana"]
+tekst := d_string
+drukujlinia["s/B#no#S/#tekst#S#zam#S/g"]
+drukujlinia["s/C#no#S/#rejwezP_S[""xe:vatnip""]#S#zam#S/g"]
+tekst := rejwezp_s["xe:vatsymdok"]
+d_string := tekst
+callalg["zamiana"]
+tekst := d_string
+drukujlinia["s/D#no#S_1/#tekst#S#zam#S/g"]
+data_s := studatas[rejwezp_d["xe:vatdatadok"]]
+data_s := strcut[data_s,8,2]+"-"+strcut[data_s,5,2]+"-"+strcut[data_s,0,4]
+drukujlinia["s/D#no#S_2/#data_s#S#zam#S/g"]
+data_s := studatas[rejwezp_d["xe:vatterminplat"]]
+data_s := strcut[data_s,8,2]+"-"+strcut[data_s,5,2]+"-"+strcut[data_s,0,4]
+drukujlinia["s/E#no#S/#data_s#S#zam#S/g"]
+drukujlinia["s/F#no#S/#-1*rejwezP_K[""xe:vatsumanetto""]#S:2#zam#S/g"]
+drukujlinia["s/G#no#S/#-1*rejwezP_K[""xe:vatsumavat""]#S:2#zam#S/g"]
+suma_10 := suma_10-rejwezp_k["xe:vatsumanetto"]
+suma_11 := suma_11-rejwezp_k["xe:vatsumavat"]
+n := n+1
+if(n>8) goto ominA
+nastepny_rek_xe:
+if(rejOp["xe:WezNastepnyRekn",""]) goto petla_xe
+inna_liniaA:
+no := ToStr["#n#S:0"]
+drukujlinia["s/B#no#S/#zam#S/g"]
+drukujlinia["s/C#no#S/#zam#S/g"]
+drukujlinia["s/D#no#S_1/#zam#S/g"]
+drukujlinia["s/D#no#S_2/#zam#S/g"]
+drukujlinia["s/E#no#S/#zam#S/g"]
+drukujlinia["s/F#no#S/#zam#S/g"]
+drukujlinia["s/G#no#S/#zam#S/g"]
+n := n+1
+if(n<=8) goto inna_liniaA
+ominA:
+if(il_zal=lvatzd) drukujlinia["s/F9/#round[suma_10,0]#S:0#zam#S/g"]
+if(il_zal=lvatzd) drukujlinia["s/G9/#round[suma_11,0]#S:0#zam#S/g"]
+if(not(il_zal=lvatzd)) drukujlinia["s/F9/#zam#S/g"]
+if(not(il_zal=lvatzd)) drukujlinia["s/G9/#zam#S/g"]
+DrukujAkcja["DrukujKoniec"]
+//
+
+% formularz.alg
+if(platforma) goto inne_linie1
+if(wezzmiennasrod["OS"]=="Windows_NT") program := "start "+program
+DyskOp["Dodajlinie",nazwa_plik,"@echo off"]
+n := 1
+petla_sed1:
+linia1 := "sed -f "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run ""$$(FINN-LIB)\..\druki\"+katalog_wz+"\"+nazwa_sprawozdania2+"wzor.htm"" > "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+".html"
+if(nazwa_sprawozdania2="f02" and katalog_wz="2002" and StrIn["netscape",program]>-1) linia1 := "sed -f "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run ""$$(FINN-LIB)\..\druki\"+katalog_wz+"\"+nazwa_sprawozdania2+"1wzor.htm"" > "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+".html"
+if(nazwa_sprawozdania2="vat" and data_pp>='13.04.01') linia1 := "sed -f "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run ""$$(FINN-LIB)\..\druki\"+katalog_wz+"\"+nazwa_sprawozdania2+"1wzor.htm"" > "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+".html"
+if(nazwa_sprawozdania2="vat" and data_pp>='15.07.01') linia1 := "sed -f "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run ""$$(FINN-LIB)\..\druki\"+katalog_wz+"\"+nazwa_sprawozdania2+"wzor.htm"" > "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+".html"
+if(nazwa_sprawozdania2="vatd" and data_pp>='15.07.01') linia1 := "sed -f "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run ""$$(FINN-LIB)\..\druki\"+katalog_wz+"\"+nazwa_sprawozdania2+"1wzor.htm"" > "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+".html"
+//okalert["linia1="+linia1]
+DyskOp["Dodajlinie",nazwa_plik,linia1]
+n := n+1
+if(n<=nr) goto petla_sed1
+if((nazwa_sprawozdania2=="vat" or nazwa_sprawozdania2=="vatd") and lvatzd>0) goto dodaj_vat
+if(not(cit8o)) goto l_2
+linia1 := "sed -f "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n-1#S:0"]+"_run ""$$(FINN-LIB)\..\druki\"+katalog_wz+"\"+nazwa_sprawozdania2+"owzor.htm"" > "+sciezka+"\"+nazwa_sprawozdania2+"o.html"
+DyskOp["Dodajlinie",nazwa_plik,linia1]
+goto l_2
+dodaj_vat:
+n := 1
+petla_vatzd1:
+linia1 := "sed -f "+sciezka+"\vatzd"+tostr["#n#S:0"]+"_run ""$$(FINN-LIB)\..\druki\"+katalog_wz+"\vatzdwzor.htm"" > "+sciezka+"\vatzd"+ToStr["#n#S:0"]+".html"
+DyskOp["Dodajlinie",nazwa_plik,linia1]
+n := n+1
+if(n<=lvatzd) goto petla_vatzd1
+l_2:
+linia2 := program+ " "+katalog+"\"+sciezka+"\"+nazwa_sprawozdania2+ToStr["#nr#S:0"]+".html"
+if(nr>1 or cit8o) linia2 := program+ " "+katalog+"\"+sciezka+"\nagl"+nazwa_sprawozdania2+".html"
+//okalert["linia2="+linia2]
+if(nazwa_sprawozdania2=="vat" and lvatzd>0) linia2 := program+ " "+katalog+"\"+sciezka+"\nagl"+nazwa_sprawozdania2+".html"
+if(nazwa_sprawozdania2=="vatd" and lvatzd>0) linia2 := program+ " "+katalog+"\"+sciezka+"\nagl"+nazwa_sprawozdania2+".html"
+goto wspolne1
+//
+inne_linie1:
+n := 1
+petla_sed2:
+linia1 := "sed -f "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run ""$$(FINN-LIB)/../druki/"+katalog_wz+"/"+nazwa_sprawozdania2+"wzor.htm"" > "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+".html"
+if(nazwa_sprawozdania2=="vat" and data_pp>='13.04.01') linia1 := "sed -f "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run ""$$(FINN-LIB)/../druki/"+katalog_wz+"/"+nazwa_sprawozdania2+"1wzor.htm"" > "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+".html"
+if(nazwa_sprawozdania2=="vat" and data_pp>='15.07.01') linia1 := "sed -f "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run ""$$(FINN-LIB)/../druki/"+katalog_wz+"/"+nazwa_sprawozdania2+"wzor.htm"" > "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+".html"
+if(nazwa_sprawozdania2=="vatd" and data_pp>='15.07.01') linia1 := "sed -f "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run ""$$(FINN-LIB)/../druki/"+katalog_wz+"/"+nazwa_sprawozdania2+"1wzor.htm"" > "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+".html"
+DyskOp["Dodajlinie",nazwa_plik,linia1]
+n := n+1
+if(n<=nr) goto petla_sed2
+if((nazwa_sprawozdania2=="vat" or nazwa_sprawozdania2=="vatd") and lvatzd>0) goto dodaj_vat1
+if(not(cit8o)) goto l_21
+linia1 := "sed -f "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n-1#S:0"]+"_run ""$$(FINN-LIB)/../druki/"+katalog_wz+"/"+nazwa_sprawozdania2+"owzor.htm"" > "+sciezka+"/"+nazwa_sprawozdania2+"o.html"
+DyskOp["Dodajlinie",nazwa_plik,linia1]
+goto l_21
+dodaj_vat1:
+n := 1
+petla_vatzd2:
+linia1 := "sed -f "+sciezka+"/vatzd"+tostr["#n#S:0"]+"_run ""$$(FINN-LIB)/../druki/"+katalog_wz+"/vatzdwzor.htm"" > "+sciezka+"/vatzd"+ToStr["#n#S:0"]+".html"
+DyskOp["Dodajlinie",nazwa_plik,linia1]
+n := n+1
+if(n<=lvatzd) goto petla_vatzd2
+l_21:
+//linia2 := "$$(PROG-KATALOG)../../binary/www  c:\\progra~1\\intern~1\\iexplore "+katalog+"/"+sciezka+"/"+nazwa_sprawozdania2+ToStr["#nr#S:0"]+".html"
+linia2 := ""+katalog+"/../binary/Perseus_www  c:\\progra~1\\intern~1\\iexplore "+katalog+"/"+sciezka+"/"+nazwa_sprawozdania2+ToStr["#nr#S:0"]+".html"
+//if(nr>1 or cit8o) linia2 := ""+katalog+"/../binary/www  c:\\progra~1\\intern~1\\iexplore "+katalog+"\"+sciezka+"\nagl"+nazwa_sprawozdania2+".html"
+if(nr>1 or cit8o) linia2 := ""+katalog+"/../binary/Perseus_www  c:\\progra~1\\intern~1\\iexplore "+katalog+"/"+sciezka+"/nagl"+nazwa_sprawozdania2+".html"
+if(nazwa_sprawozdania2=="vat" and lvatzd>0)  linia2 := ""+katalog+"/../binary/Perseus_www  c:\\progra~1\\intern~1\\iexplore "+katalog+"/"+sciezka+"/nagl"+nazwa_sprawozdania2+".html"
+if(nazwa_sprawozdania2=="vatd" and lvatzd>0)  linia2 := ""+katalog+"/../binary/Perseus_www  c:\\progra~1\\intern~1\\iexplore "+katalog+"/"+sciezka+"/nagl"+nazwa_sprawozdania2+".html"
+wspolne1:
+//DyskOp["Dodajlinie",nazwa_plik,linia1]
+  if (not(do_groupoffice)) goto no_go01
+    group_nazwa_spr := nazwa_sprawozdania2+ToStr["#nr#S:0"]
+    CallAlg["dopisz_linie_do_go"]
+  no_go01:
+wykonaj:
+if ((not(do_groupoffice)) or (not(do_sql))) DyskOp["DodajLinie",nazwa_plik,linia2]
+if (platforma) WolajSystem["chmod 770 "+nazwa_plik ,.T.]
+WolajSystem[nazwa_plik,.T.]
+//okalert["nazwa_plik="+nazwa_plik]
+Dyskop["usunplik",nazwa_plik,""]
+Exitalg[0]
+//
+//
+% e-formularz.alg
+//okalert["e-formularz"]
+if (DyskOp["JestKatalog","roboczy\e-deklaracje\"+nazwa_sprawozdania2+"\"+nazwa_ksieg,""]) goto dalej01
+    if (DyskOp["ZalozKatalog","roboczy\e-deklaracje\"+nazwa_sprawozdania2+"\"+nazwa_ksieg,""]) goto dalej01
+    ERRMESS := "Nie mog|e za|lo|zy|c katalogu : roboczy\e-deklaracje\"+nazwa_sprawozdania2+"\"+nazwa_ksieg+" !"
+    OkAlert[ERRMESS+""]
+    ExitAlg[0]
+dalej01:
+defzmiennaD["data2",'']
+defzmiennaK["nr",1]
+//data_s := studatas[d_dzisiaj]
+data_s := kwartal
+if(strin["--"+nazwa_sprawozdania2+"--","--pit11--pitift--pit40--pitr--pit8c--"]>-1) data_s := studatas[D_dzisiaj]+Wezgodzine[0]
+data1_s := strcut[data_s,0,4]+"_"+strcut[data_s,5,2]
+if(strin["--"+nazwa_sprawozdania2+"--","--pit11--pit40--pitr--pitift--pit8c--"]>-1) data1_s := strcut[data_s,0,4]+strcut[data_s,5,2]+strcut[data_s,8,2]+"_"+strcut[data_s,10,2]+"_"+strcut[data_s,13,2] 
+if(platforma) goto inne_linie1
+DyskOp["Dodajlinie",nazwa_plik,"@echo off"]
+n := 1
+//okalert["rodzajk="+rodzajk]
+petla_sed1:
+//linia1 := "sed -f "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run "+sciezka+"\"+nazwa_sprawozdania2+"_xml > roboczy\e-deklaracje\"+nazwa_sprawozdania2+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"("+data1_s+").txt"
+linia1 := "sed -f "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run "+sciezka+"\"+nazwa_sprawozdania2+"_xml > "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_"+data1_s+".txt"
+if(strin["--"+nazwa_sprawozdania2+"--","--pit11--pit40--pitr--pitift--pit8c--"]>-1 and rodzajk=2)  linia1 := "sed -f "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_xml > "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_"+data1_s+".txt"
+if(nazwa_sprawozdania2=="pit4r" or nazwa_sprawozdania2=="pit8ar") linia1 := "sed -f "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_xml > "+sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_"+data1_s+".txt"
+//okalert["linia1="+linia1]
+DyskOp["Dodajlinie",nazwa_plik,linia1]
+if(strin["--"+nazwa_sprawozdania2+"--","--pit11--pit40--pitift--pitr--pit8c--"]<0) goto wspolne1
+if(rodzajk=1) goto wspolne1
+//okalert["rodzajk="+rodzajk+"$linia1="+linia1]
+n := n+1
+if(n<=nr) goto petla_sed1
+goto wspolne1
+inne_linie1:
+n := 1
+petla_sed2:
+//linia1 := "sed -f "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run "+sciezka+"/"+nazwa_sprawozdania2+"_xml > /home/samba/e-deklaracje/"+nazwa_sprawozdania2+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"("+data1_s+").txt"
+linia1 := "sed -f "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run "+sciezka+"/"+nazwa_sprawozdania2+"_xml > "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_"+data1_s+".txt"
+if(strin["--"+nazwa_sprawozdania2+"--","--pit11--pit40--pitift--pitr--pit8c--"]>-1 and rodzajk=2) linia1 := "sed -f "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_xml > "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_"+data1_s+".txt"
+if(nazwa_sprawozdania2=="pit4r" or nazwa_sprawozdania2=="pit8ar") linia1 := "sed -f "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_run "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_xml > "+sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_"+data1_s+".txt"
+DyskOp["Dodajlinie",nazwa_plik,linia1]
+
+//if(not(nazwa_sprawozdania2=="pit11")) goto wspolne1
+if(rodzajk=1) goto wspolne1
+n := n+1
+if(n<=nr) goto petla_sed2
+wspolne1:
+  if (not(do_groupoffice)) goto no_go01
+    group_nazwa_spr := nazwa_sprawozdania2+ToStr["#nr#S:0"]
+    CallAlg["dopisz_linie_do_go"]
+  no_go01:
+wykonaj:
+if (platforma) WolajSystem["chmod 770 "+nazwa_plik ,.T.]
+WolajSystem[nazwa_plik,.T.]
+Dyskop["usunplik",nazwa_plik,""]
+//
+n := 1
+RejOp["POM:otworzrej","naglpit.RJR"]
+//okalert["zobacz pomocniczy przed"]
+//rejop["pom:zobaczdbf",""]
+petla_konw:
+ns := tostr["#n#S:0"]
+nazwa_x := ""
+if(rejop["pom:znajdzrek",ns]) nazwa_x := rejwezp_s["pom:pom_tekst"]
+if(platforma) goto inne_pliki
+plik_WEJ := sciezka+"\"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_"+data1_s+".txt"
+plik_OUT := "roboczy\e-deklaracje\"+nazwa_sprawozdania2+"\"+nazwa_ksieg+"\"+ToStr["#n#S:0"]+"_"+data1_s+".xml"
+if(strin["--"+nazwa_sprawozdania2+"--","--pit11--pit40--pitift--pitr--pit8c--"]>-1 and rodzajk=2) plik_OUT := "roboczy\e-deklaracje\"+nazwa_sprawozdania2+"\"+nazwa_ksieg+"\"+nazwa_x+".xml"
+goto wspolne_pliki
+inne_pliki:
+plik_WEJ := sciezka+"/"+nazwa_sprawozdania2+ToStr["#n#S:0"]+"_"+data1_s+".txt"
+plik_OUT := "roboczy/e-deklaracje/"+nazwa_sprawozdania2+"/"+nazwa_ksieg+"/"+ToStr["#n#S:0"]+"_"+data1_s+".xml"
+if(strin["--"+nazwa_sprawozdania2+"--","--pit11--pit40--pitift--pitr--pit8c--"]>-1 and rodzajk=2) plik_OUT := "roboczy/e-deklaracje/"+nazwa_sprawozdania2+"/"+nazwa_ksieg+"/"+nazwa_x+".xml"
+wspolne_pliki:
+//okalert["plik_wej="+plik_wej]
+callsl["gl_konwertuj_plik_na_utf8(""cp1250"")"]
+Dyskop["usunplik",plik_WEJ,""]
+if(strin["--"+nazwa_sprawozdania2+"--","--pit11--pit40--pitift--pitr--pit8c--"]<0) goto komunikat
+if(rodzajk=1) goto komunikat
+n := n+1
+if(n<=nr) goto petla_konw
+komunikat:
+if(rodzajk=2) goto omin_wykaz
+if(not(rejop["bl:wezpierwszyrek",""])) goto omin_wykaz
+if(not(Yesalert["Napotkano na braki w danych p|latnika lub podatnika. $ Czy wydrukowa|c wykaz?"])) goto omin_wykaz
+idzdowydruku["std\bledy_pit.prn",""]
+omin_wykaz:
+rejop["bl:zamknijrej",""]
+komunikat_e :="Utworzono plik "+ToStr["#n#S:0"]+"_"+data1_s+").xml $ do pobrania z katalogu $ roboczy/e_deklaracje/"+nazwa_sprawozdania2+"/"+nazwa_ksieg
+if(strin["--"+nazwa_sprawozdania2+"--","--pit11--pit40--pitift--pitr--pit8c--"]>-1 and rodzajk=2) komunikat_e := "Utworzono pliki .xml do pobrania z katalogu $ roboczy/e_deklaracje/"+nazwa_sprawozdania2+"/"+nazwa_ksieg
+okalert[komunikat_e]
+Exitalg[0]
+//
+% WYKONAJ-STANDARD.ALG
+naz_rej_REJ_RJR := "rej.RJR"
+naz_rej_F_RJR := "DEF.RJR"
+naz_rej_WPR_RJR := "WPR.RJR"
+naz_rej_D_TMP_RJR := "D_TMP.RJR"
+//
+// ===== pelne nazwy nazwy rejestrow
+// naz_rej - nazwa rejestru (duzymi literami); naz_rej1 - nazwa rejestru (malymi literami)
+naz_rej := ""
+naz_rej1 := ""
+naz_rej_F_DBF := ""
+naz_rej_WPR_DBF := ""
+naz_rej_D_TMP_DBF := ""
+// ===== zmienne z definicja wybranego sprawozdania do druku
+naz_rej := ""
+// ===== pozostale zmienne globalne
+miesx := .
+First_Rok := .
+First_Mies := .
+First_Data_Ksieg := ''
+Last_Data_Ksieg := ''
+Mies1_L := .
+Mies2_L := .
+Zaok := .
+Dokl := .
+Zaok_S := ""
+div := 1
+ksiegname := ""
+// *****
+//zmienne lokalne
+data_k := ''
+druk := ""
+oddzial := ""
+kat_edek := ""
+oddzial1 := ""
+kwartal := ""
+kwartal_tak := "1"
+data1 :=''
+data2 := ''
+telefon := ""
+// ===== zmienne lokalne dla procedur
+drukowac := .T.
+mies_wym_licz := .
+wym_licz := .N.
+trm_W := .N.
+naliczanie_planu := .N.
+// zmienne dla sprawozdan standardowych
+ rodz_dzial := .N.
+std := .T.
+rej_pom := .N.
+//
+% WYKONAJ-STANDARD1.ALG
+naz_rej := nazwa_sprawozdania
+naz_rej1 := nazwa_sprawozdania1
+wydruk := wydruk_std
+FinnOp["OpenMainX",""]
+ksg := nazwa_ksieg
+rok_1 := rok_ksieg
+opis_ksg := opis_ksieg
+ROK1 := POCZROK_KSIEG
+if(not(A_DATE[rok1,"Y"]<2 and (nazwa_sprawozdania1=="bilans" or nazwa_sprawozdania1=="wynkal" or nazwa_sprawozdania1=="wynpor" or nazwa_sprawozdania1=="pspbez"))) goto kontynuuj
+Okalert["Wz|or obowi|azuj|acy od 2002 roku!!"]
+ExitAlg[0]
+kontynuuj:
+max_mies := lmies_ksieg
+if(lmies_ksieg=.) max_mies := 12
+mies_pocz := A_DATE[rok1,"M"]
+ROK2 := C_Date[A_Date[rok1,"Y"]+1,A_Date[rok1,"M"],01]-1
+daty := ToStr["#stuDataS[rok1]#S - #StuDataS[rok2]#S"]
+miesiace := "BO     -"
+wykaz := ""
+wykaz1 := ""
+lp := 1
+mies := mies_pocz
+dataxd := rok1
+pp:
+miesxs := strcut[studatas[dataxd],0,7]
+//miesiace := miesiace +ToStr["#S_month[mies]#L3-"]
+miesiace := miesiace +miesxs+"-"
+//ww := C_Date[255,mies,01]
+znak := ","
+if(lp=1) znak := ""
+wykaz := wykaz+ znak+miesxs
+if(mies=3 or mies=6 or mies=9 or mies=12) wykaz1 := wykaz1+ znak+miesxs
+lp := lp+1
+mies := mies+1
+if(mies>12) mies := mies-12
+dataxd := dataxd+40
+dataxd := dataxd-A_DAte[dataxd,"D"]+1
+if(lp<max_mies+1) goto pp
+miesiace := miesiace + "BZ     -"
+if(StrCut[wykaz1,0,1]=",") wykaz1 := StrCut[wykaz1,1,StrLen[wykaz1]-1]
+if(strin["pit",nazwa_sprawozdania1]<0) goto po_wykaz 
+rok1s := strcut[studatas[poczrok_ksieg],0,4]
+d_data := poczrok_ksieg
+callsl["gl_koniec_rok()"]
+rok2s := strcut[studatas[d_data],0,4]
+wykaz := rok1s+".01,"+rok1s+".02,"+rok1s+".03,"+rok1s+".04,"+rok1s+".05,"+rok1s+".06,"+rok1s+".07,"+rok1s+".08,"+rok1s+".09,"+rok1s+".10,"+rok1s+".11,"+rok1s+".12"
+wykaz1 := rok1s+".03,"+rok1s+".06,"+rok1s+".09,"+rok1s+".12"
+if(rok1s==rok2s) goto _rokkal
+if(stringnaliczbe[rok1s]+1 = stringnaliczbe[rok2s]) goto ostatni_rok
+rok3 := stringnaliczbe[rok1s]+1
+rok3s := tostr["#rok3#S:0"]
+wykaz := wykaz+","+rok3s+".01,"+rok3s+".02,"+rok3s+".03,"+rok3s+".04,"+rok3s+".05,"+rok3s+".06,"+rok3s+".07,"+rok3s+".08,"+rok3s+".09,"+rok3s+".10,"+rok3s+".11,"+rok3s+".12"
+wykaz1 := wykaz1+","+rok3s+".03,"+rok3s+".06,"+rok3s+".09,"+rok3s+".12"
+ostatni_rok:
+ks := strcut[studatas[d_data],0,7]
+n := 1
+petla_n:
+ns := tostr["#n#S:0"]
+if(n<10) ns := "0"+ns
+if(rok2s+"."+ns> ks) goto _rokkal
+ wykaz := wykaz+","+rok2s+"."+ns 
+if(n=3 or n=6 or n=9 or n=12) wykaz1 := wykaz1+","+rok2s+"."+ns 
+n := n+1
+if(n<13) goto petla_n
+_rokkal:
+//miesiace := "BO -sty-lut-mar-kwi-maj-cze-lip-sie-wrz-pa|x-lis-gru-BZ -"
+miesiace := "BO     -"+wykaz+"BZ     -"
+mies_pocz := 1
+po_wykaz:
+//okalert["wykaz1=."+wykaz1+"."]
+//okalert["wykaz=."+wykaz+"."]
+ raport := ToStr["#os_ksieg#S&#nazwa_ksieg#S&#nazwa_sprawozdania#S"]
+ IF(RejOp["N:OtworzRejSprawdz","FRM_MEMO.RJR"]) GOTO mem_otw
+ OkAlert["Nie mog|e otworzy|c rejestru z parametrami !"]
+ ExitAlg[0]
+ mem_otw:
+ if (RejOp["N:ZnajdzRek",raport])goto read_param
+ oddzial := ""
+ kat_edek := ""
+ goto dalej1
+ read_param:
+ oddzial := RejWezP_S["N:FRM_str0"]
+ kat_edek := RejWezP_S["N:FRM_str9"]
+dalej1:
+if(not(naz_rej=="F01")) goto omin_warunek
+//IF(rok1>'99.01.01' and not(mies_pocz=1))ExDialogOp["IdzDoDialogu","STANDARDX"]
+//IF(rok1>'99.01.01' and not(mies_pocz=1))ExDialogOp["IdzDoDialogu","STANDARD"]
+//if(rok1<='99.01.01' or mies_pocz=1)  ExDialogOp["IdzDoDialogu","STANDARD"]
+// goto zamknij
+ omin_warunek:
+  do_groupoffice := .N.
+ do_sql := WezFinnPara["finnflag"] !== "*L*"
+ do_sql := .N.
+ExDialogOp["IdzDoDialogu","STANDARD"]
+ zamknij:
+RejOp["N:ZamknijREj",""]
+FinnOp["Close",""]
+//
+% DRUKOWANIE-DEFINICJI.ALG
+IdzDoWydruku["std\ekoprt_d.frm",""]
+//
+% DANE-POCZATKOWE.ALG
+// dla pit40 - inne wypelnianie
+if(nazwa_sprawozdania1="pit40") callalgfile["place\place_drukuj_pit.py;place\umowy.py;place\place.py;kadry\kadry.py","dane_poczatkowe_pit40"]
+if(nazwa_sprawozdania1="pit40") exitalg[0]
+// maria- ustalenie numeru miesiaca
+  miesx := StringNaLiczbe[StrCut[kwartal,5,2]]
+// zmiana 03.05.21
+l_miesx := StrIn[kwartal,wykaz]/8+1
+// zmiana 03.05.21- koniec
+if(not(miesx=. or miesx>12 or miesx=0)) goto jest_mies
+Okalert["Wprowadz rok i miesi|ac"]
+ExDialogOp["IdzDoPozycji","12"]
+ExitAlg[0]
+jest_mies:
+// Wprowadzanie danych poczatkowych do rejestru
+naz_rej_WPR_DBF := naz_rej_WPR_RJR+"+"+naz_rej1+"_w"
+naz_rej_F_DBF := naz_rej_F_RJR+"+"+naz_rej1
+if(not(RejOp["D:OtworzRejSprawdz",naz_rej_F_DBF])) exitalg[0]
+if(not(RejOp["W:OtworzRejSprawdz",naz_rej_WPR_DBF])) exitalg[0]
+if(RejOp["D:WezPierwszyRek",""]) goto sa_def
+Okalert["Brak definicji dla rejestru "+ naz_rej1]
+Exitalg[0]
+ sa_def:
+sym_rub1 := RejWezP_S["D:F_rub"]
+oddzial1 := oddzial
+if(oddzial="") oddzial1 := "WSZYSTKIE"
+sym_rub := oddzial1 +"*"+sym_rub1
+if(RejOp["W:ZnajdzRek",sym_rub]) goto dalej1
+if(RejWezP_S["D:F_trb"]=="K" or RejWezP_S["D:F_trb"]=="R" or RejWezP_S["D:F_trb"]=="I") goto dalej
+RejOp["W:DodajRek",""]
+    xRejWstawP_S["W:WPR_dzial",oddzial1]
+    xRejWstawP_S["W:WPR_rub",sym_rub1]
+    xRejWstawP_S["W:WPR_naz",RejWezP_S["D:F_naz"]]
+    xRejWstawP_S["W:WPR_def",RejWezP_S["D:F_def"]]
+    RejOp["W:ZapiszRek",""]
+goto dalej
+dalej1:
+if(RejWezP_S["D:F_trb"]=="K" or RejWezP_S["D:F_trb"]=="R" or RejWezP_S["D:F_trb"]=="I") RejOp["W:UsunRek",""]
+dalej:
+ if(RejOp["D:WezNastepnyRek",""]) goto sa_def
+RejOp["W:WezPierwszyRek",""]
+RejOp["WP:OtworzRejTemp",naz_rej_WPR_DBF]
+REjOp["W:ZmienKluczRej","2"]
+if(not(RejOp["W:ZnajdzRek",oddzial1]))goto brak
+petlaxx:
+RejOp["WP:DodajREk",""]
+REjOp["W:PrzeniesPola","WP:"]
+// zmiana 03.05.21 - zamiast miesx trzeba wpisac l_miesx
+xRejWstawP_K["WP:WPR_M13",RejWezP_K["W:WPR_M"+ToStr["#l_miesx#S:0"]]]
+Rejop["WP:ZapiszRek",""]
+petlaxy:
+if(not(Rejop["W:WezNastepnyRek",""])) goto brak
+if(RejWezP_S["W:Wpr_dzial"]==oddzial1) goto petlaxx
+goto petlaxy
+brak:
+RejOp["WP:WezPierwszyRek",""]
+IF(not(nazwa_sprawozdania1="wynkal" or nazwa_sprawozdania1="wynpor" or nazwa_sprawozdania1="psppor" or nazwa_sprawozdania1="pspbez" or nazwa_sprawozdania1="wynmikro")) ExDialogOp["IdzDoDialogu","Dane-poczatkowe"]
+IF(nazwa_sprawozdania1="wynkal" or nazwa_sprawozdania1="wynpor" or nazwa_sprawozdania1="psppor" or nazwa_sprawozdania1="pspbez" or nazwa_sprawozdania1="wynmikro") ExDialogOp["IdzDoDialogu","Dane-pomocnicze"]
+//
+% TABLICA-AKCJI-DANE-POCZATKOWE,TABLICA-AKCJI-DANE-POMOCNICZE
+"AKCJA-PRZED-WYSWIETLENIEM",DANE-POCZATKOWE-PRZED
+"AKCJA-BUTTON1",AUTOMAT
+"AKCJA-F2-POLE2",KSIEGOZBIOR-F2
+"AKCJA-PO-POLU2",KSIEGOZBIOR-SPRAWDZ
+"AKCJA-BUTTON20",DANE-POMOCNICZE-AKCEPTUJESZ
+"AKCJA-BUTTON0",DANE-POCZATKOWE-AKCEPTUJESZ
+"AKCJA-BUTTON21",DANE-POMOCNICZE-REZYGNUJESZ
+% DANE-POCZATKOWE-PRZED.ALG
+if(not(kwartal="")) goto ok
+Okalert["Wprowadz rok i miesi|ac"]
+ExDialogOp["IdzDoPozycji","12"]
+ExitAlg[0]
+ok:
+ ksieg_old := ""
+  rok := A_DATE[rok1,"Y"]
+  rokp := C_DATE[rok,01,01]-1
+  okres := ToStr["#rokp#S    ORAZ    #rok1-1#S"]
+  rokx := ToStr["#StringNaLiczbe[StrCut[kwartal,0,4]]-1#S:0"]
+  if(miesx<12)  data_s := C_DATE[StringNaLiczbe[StrCut[rokx,2,2]],StringNaLiczbe[StrCut[kwartal,5,2]]+1,1]-1
+  if(miesx=12) data_s := C_DATE[StringNaLiczbe[StrCut[rokx,2,2]],StringNaLiczbe[StrCut[kwartal,5,2]],31]
+if(nazwa_sprawozdania1=="wynkal" or nazwa_sprawozdania1 == "wynpor" or nazwa_sprawozdania1 == "psppor" or nazwa_sprawozdania1 == "pspbez" or nazwa_sprawozdania1=="wynmikro") okres := ToStr["#StuDataS[data_s]#S"]
+ExDialogOp["ZmienNaglowek","Dane uzupe|lniaj|ace dla oddzia|lu " +oddzial1+ " na "+ okres]
+if(nazwa_sprawozdania1=="wynkal" or nazwa_sprawozdania1 == "wynpor" or nazwa_sprawozdania1="wynmikro") ExDialogOp["IdzDoPozycji","102"]
+if(not(nazwa_sprawozdania1=="wynkal" or nazwa_sprawozdania1 == "wynpor" or nazwa_sprawozdania1=="wynmikro")) ExDialogOp["IdzDoPozycji","101"]
+% KSIEGOZBIOR-F2.ALG
+D_STRING := WybierzFinn["Ksiegozbior"]
+A_OK := .T.
+if (D_STRING = "") A_OK := .N.
+ExitAlg[0]
+% DANE-POMOCNICZE-AKCEPTUJESZ.ALG
+if(YesAlert["Czy zapisa|c dane"]) goto zapisz
+if(nazwa_sprawozdania1="wynpor"or nazwa_sprawozdania1 ="wynkal" or nazwa_sprawozdania1=="wynmikro") ExDialogOp["IdzDoPozycji","102"]
+if(not(nazwa_sprawozdania1="wynpor"or nazwa_sprawozdania1 ="wynkal" or nazwa_sprawozdania1 =="wynmikro")) ExDialogOp["IdzDoPozycji","101"]
+ExitAlg[0]
+zapisz:
+RejOp["W:ZmienKluczRej","1"]
+if(not(RejOp["WP:WezPierwszyREk",""])) goto koniec
+petla:
+RejOp["W:ZnajdzRek",oddzial1+"*"+RejWezP_S["WP:WPR_rub"]]
+// zmiana 03.05.21
+RejWstawP_K["W:Wpr_M"+ToStr["#l_miesx#S:0"],RejWezP_K["WP:WPR_M13"]]
+if(RejOp["WP:WezNastepnyRek",""])goto petla
+koniec:
+RejOp["WP:ZamknijRej",""]
+RejOp["W:ZamknijRej",""]
+ExDialogOp["KoniecWykonywania",""]
+ExitAlg[0]
+//
+% DANE-POCZATKOWE-AKCEPTUJESZ.ALG
+if(YesAlert["Czy zapisa|c dane"]) goto zapisz
+if(nazwa_sprawozdania1="wynpor"or nazwa_sprawozdania1 ="wynkal" or nazwa_sprawozdania1="wynmikro") ExDialogOp["IdzDoPozycji","102"]
+if(not(nazwa_sprawozdania1="wynpor"or nazwa_sprawozdania1 ="wynkal" or nazwa_sprawozdania1="wynmikro")) ExDialogOp["IdzDoPozycji","101"]
+ExitAlg[0]
+zapisz:
+RejOp["W:ZmienKluczRej","1"]
+if(not(RejOp["WP:WezPierwszyREk",""])) goto koniec
+petla:
+RejOp["W:ZnajdzRek",oddzial1+"*"+RejWezP_S["WP:WPR_rub"]]
+RejWstawP_K["W:Wpr_M0",RejWezP_K["WP:WPR_M0"]]
+RejWstawP_K["W:Wpr_M1",RejWezP_K["WP:WPR_M1"]]
+if(RejOp["WP:WezNastepnyRek",""])goto petla
+koniec:
+RejOp["WP:ZamknijRej",""]
+RejOp["W:ZamknijRej",""]
+ExDialogOp["KoniecWykonywania",""]
+ExitAlg[0]
+//
+% DANE-POMOCNICZE-REZYGNUJESZ.ALG
+if(YesNAlert["Czy rezygnujesz z wprowadzonych zmian?"]) goto koniec
+if(nazwa_sprawozdania1="wynpor"or nazwa_sprawozdania1 ="wynkal" or nazwa_sprawozdania1="wynmikro") ExDialogOp["IdzDoPozycji","102"]
+if(not(nazwa_sprawozdania1="wynpor"or nazwa_sprawozdania1 ="wynkal" or nazwa_sprawozdania1="wynmikro")) ExDialogOp["IdzDoPozycji","101"]
+ExitAlg[0]
+koniec:
+RejOp["WP:ZamknijRej",""]
+RejOp["W:ZamknijRej",""]
+ExDialogOp["KoniecWykonywania",""]
+ExitAlg[0]
+% KSIEGOZBIOR-SPRAWDZ.ALG
+ExDialogOp["IdzDoPozycji","200"]
+ExitAlg[0]
+% AUTOMAT.ALG
+ IF(NOT(KSIEG_OLD="") and not(ksieg_old=ksg)) goto nalicz-automat
+if(ksieg_old= "") Okalert["Podaj nazw|e ksi|egi |xr|od|lowej!!"]
+if(ksieg_old=ksg) Okalert["Ksi|ega |xr|od|lowa nie mo|ze by|c ksi|eg|a bie|z|ac|a !"]
+ExDialogOp["IdzDoPozycji","2"]
+ExitAlg[0]
+ nalicz-automat:
+// maria1
+if(not(FinnOp["OpenMainX",ksieg_old])) ExitAlg[0]
+if(not(RejOp["Z:OtworzRejSprawdz","EKO_DAT.RJR+"+naz_rej1+"_e"])) Exitalg[0]
+if(not(RejOP["Z:WezPierwszyRek",""])) goto brak
+if(RejOp["T:OtworzRejTemp","EKO_DAT.RJR+"+naz_rej1+"_e"])
+wroc:
+Rejop["T:DodajRek",""]
+RejOp["Z:PrzeniesPola","T:"]
+RejOp["T:ZapiszRek",""]
+if(RejOp["Z:WezNastepnyRek",""]) goto wroc
+RejOp["Z:ZamknijRej",""]
+Finnop["Close",""]
+if(not(RejOp["Y:OtworzRejSprawdz","WPR.RJR+"+naz_rej1+"_w"])) okalert["nieotworzylem WPR"]
+if(not(RejOp["Y:WezPierwszyRek",""])) goto brak
+petla1:
+symbol := RejWezP_S["Y:wpr_rub"]
+if(not(rejOp["T:ZnajdzRek",symbol])) goto nastepny
+First_mies := A_DATE[poczrok_ksieg,"M"]
+mies_K_rok1 := 13- First_mies
+mies_k_rok := ToStr["#mies_k_rok1#S:0"]
+RejWstawP_K["Y:Wpr_M0",RejWezP_K["T:D_M"+mies_k_rok]]
+RejWstawP_K["Y:WPR_M1",RejWezP_K["T:D_M12"]]
+nastepny:
+if(RejOp["Y:WezNastepnyRek",""]) goto petla1
+RejOp["T:ZamknijRej",""]
+brak:
+RejOp["Y:ZamknijRej",""]
+ExDialogOp["WyswietlPozycje","101"]
+ExitAlg[0]
+// ustalenie rubryk z danymi do przepisania
+% DANE-POCZ.DLG
+%<DANE-POCZ.XXX
+ #20          # #21                  # #22               # #23               #
+% DANE-POCZ1.DLG
+%<DANE-POCZ.XXX
+ #20          # #21                                      # #24               #
+% DANE-POCZ.XXX
+##20,D,P,,,,,,,,POLE:WP:WPR_rub
+##21,D,P,,,,,,,,POLE:WP:WPR_naz
+##22,0,P,,,,,,,,POLE:WP:WPR_M0,xkwota:2
+##23,0,P,,,,,,,,POLE:WP:WPR_M1,xkwota:2
+##24,0,P,,,,,,,,POLE:WP:WPR_M13,xkwota:2
+//
+% TABLICA-AKCJI-DANE-POCZ,TABLICA-AKCJI-DANE-POCZ1
+"AKCJA-PRZED-WYSWIETLENIEM",DANE-POCZ-PRZED
+"AKCJA-DODAJLINIE",DANE-POCZ-DODAJ
+"AKCJA-USUNLINIE",DANE-POCZ-USUN
+% DANE-POCZ-PRZED.ALG
+if(nazwa_sprawozdania1=="wynkal" or nazwa_sprawozdania1 == "wynpor" or nazwa_sprawozdania1="wynmikro") ExDialogOp["IdzDoPozycji","24"]
+if(not(nazwa_sprawozdania1=="wynkal" or nazwa_sprawozdania1 == "wynpor" or nazwa_sprawozdania1="wynmikro")) ExDialogOp["IdzDoPozycji","22"]
+% DANE-POCZ-DODAJ.ALG
+A_OK := .N.
+% DANE-POCZ-USUN.ALG
+A_OK := .N.
+% DANE-POCZATKOWE.BEG
+##DEFWINDOW =6,,,,ADH,&&black/white,&&lwhite/lblue,,&&white/blue,"Dane"
+##11,D,0,,,,yellow/black&white/black,,,,ZMIENNA:naz_rej
+##12,D,0,,,,lwhite/black&white/black,,,,ZMIENNA:nazwa_spr
+##13,D,0,,,,yellow/black&white/black,,,,ZMIENNA:
+okres
+##14,D,0,,,,yellow/black&white/black,,,,ZMIENNA:ksg
+##20,,ADP,,@3
+##0,,ADP,,@3
+##21,,ADP,,@4
+##111,TLD,0,,"Symb.rubryki    Nazwa rubryki                              Kwota",,&&white/blue
+##110,TLD,0,,"Symb.rubryki    Nazwa rubryki          Kwota pocz.okresu   Kwota ko|nca okresu",,yellow/blue&black/white
+##1,BGTL,ACP,,"Naliczenie automatyczne"
+##2,0,ACP,,,,,,,,ZMIENNA:ksieg_old
+% DANE-POCZATKOWE.DLG
+%<DANE-POCZATKOWE.BEG
+##101,0,ACPM,,,,,,,,WIELE_REKORDOW:DANE-POCZ,WP,KLUCZ,2,WP,,DO
+
+#110                                                                          #
+                                                                        
+#101                                                                          #
+
+
+       #0             #   #21               # 
+//   #0                 #   #1                       # z ksi|egi #2      #
+// maria
+% DANE-POMOCNICZE.DLG
+PRZYCISK_CANCELID=21
+%<DANE-POCZATKOWE.BEG
+##102,0,ACPM,,,,,,,,WIELE_REKORDOW:DANE-POCZ1,WP,KLUCZ,2,WP,,DO
+
+#111                                                                         #
+                                                                        
+ #102                                                                       #
+
+
+       #20             #   #21               # 
+% F01.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "F01"
+nazwa_sprawozdania1 := "f01"
+nazwa_sprawozdania2 := "f01"
+wydruk_std := "f01.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "F01"
+CallAlg["WYKONAJ-STANDARD1"]
+//CAllalg["zmien"]
+//
+% F02.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "F02"
+nazwa_sprawozdania1 := "f02"
+nazwa_sprawozdania2 := "f02"
+wydruk_std := "f02.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "F02"
+CallAlg["WYKONAJ-STANDARD1"]
+//
+% PSPPOR.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "PSPPOR"
+nazwa_sprawozdania1 := "psppor"
+nazwa_sprawozdania2 := "ppp"
+wydruk_std := "psppor.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "Przep|lywy pieni|e|zne-metoda po|srednia"
+CallAlg["WYKONAJ-STANDARD1"]
+//CAllfrm["std\zmien"]
+//
+% PSPBEZ.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "PSPBEZ"
+nazwa_sprawozdania1 := "pspbez"
+nazwa_sprawozdania2 := "ppb"
+wydruk_std := "psppor.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "Przep|lywy pieni|e|zne-metoda bezpo|srednia"
+CallAlg["WYKONAJ-STANDARD1"]
+//
+% CIT8.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "CIT8"
+nazwa_sprawozdania1 := "cit8"
+nazwa_sprawozdania2 := "cit8"
+wydruk_std := "cit8.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "CIT-8"
+CallAlg["WYKONAJ-STANDARD1"]
+//CAllalg["zmien"]
+//
+% CIT.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "CIT"
+nazwa_sprawozdania1 := "cit"
+nazwa_sprawozdania2 := "cit"
+wydruk_std := "cit.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "CIT-2"
+CallAlg["WYKONAJ-STANDARD1"]
+//
+% WSKAZNIKI.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "WSK"
+nazwa_sprawozdania1 := "wsk"
+nazwa_sprawozdania2 := "wsk"
+wydruk_std := "wsk.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "Wska|xniki ekonomiczne"
+CallAlg["WYKONAJ-STANDARD1"]
+% BILANS.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "BILANS"
+nazwa_sprawozdania1 := "bilans"
+nazwa_sprawozdania2 := "bil"
+wydruk_std := "bilans.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "BILANS"
+CallAlg["WYKONAJ-STANDARD1"]
+% BILANS-SKR.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "BILANSS"
+nazwa_sprawozdania1 := "bilanss"
+nazwa_sprawozdania2 := "bils"
+wydruk_std := "bilanss.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "BILANS SKR|OCONY"
+CallAlg["WYKONAJ-STANDARD1"]
+//
+% BILANS-MIKRO.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "BILANSM"
+nazwa_sprawozdania1 := "bilansm"
+nazwa_sprawozdania2 := "bilm"
+wydruk_std := "bilansm.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "BILANS MIKRO"
+CallAlg["WYKONAJ-STANDARD1"]
+% WYNPOR.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "WYNPOR"
+nazwa_sprawozdania1 := "wynpor"
+nazwa_sprawozdania2 := "wp"
+wydruk_std := "wynpor.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "Rachunek zysk|ow i strat (por|ownawczy)"
+CallAlg["WYKONAJ-STANDARD1"]
+% WYNPOR-SKR.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "WYNPORS"
+nazwa_sprawozdania1 := "wynpors"
+nazwa_sprawozdania2 := "wps"
+wydruk_std := "wynpors.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "Rachunek zysk|ow i strat (por|ownawczy)"
+CallAlg["WYKONAJ-STANDARD1"]
+% WYNKAL.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "WYNKAL"
+nazwa_sprawozdania1 := "wynkal"
+nazwa_sprawozdania2 := "wk"
+wydruk_std := "wynpor.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "Rachunek zysk|ow i strat (kalkulacyjny)"
+CallAlg["WYKONAJ-STANDARD1"]
+% WYNKAL-SKR.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "WYNKALS"
+nazwa_sprawozdania1 := "wynkals"
+nazwa_sprawozdania2 := "wks"
+wydruk_std := "wynpors.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "Rachunek zysk|ow i strat (kalkulacyjny)"
+CallAlg["WYKONAJ-STANDARD1"]
+% WYNMIKRO.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "WYNMIKRO"
+nazwa_sprawozdania1 := "wynmikro"
+nazwa_sprawozdania2 := "wkm"
+wydruk_std := "wynmikro.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "Rachunek zysk|ow i strat (mikro)"
+CallAlg["WYKONAJ-STANDARD1"]
+% VAT-7.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "VAT"
+nazwa_sprawozdania1 := "vat"
+nazwa_sprawozdania2 := "vat"
+wydruk_std := "vat.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "Deklaracja VAT-7"
+CallAlg["WYKONAJ-STANDARD1"]
+//
+% VAT-7D.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "VATD"
+nazwa_sprawozdania1 := "vatd"
+nazwa_sprawozdania2 := "vatd"
+wydruk_std := "vatd.frm"
+sprawozdanie := "0_00"
+kwartal_tak := "2"
+nazwa_spr := "Deklaracja VAT-7D"
+CallAlg["WYKONAJ-STANDARD1"]
+
+% PITR.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "PITR"
+nazwa_sprawozdania1 := "pitr"
+nazwa_sprawozdania2 := "pitr"
+wydruk_std := "pitr.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "PIT R"
+CallAlg["WYKONAJ-STANDARD1"]
+//
+% PIT11.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "PIT11"
+nazwa_sprawozdania1 := "pit11"
+nazwa_sprawozdania2 := "pit11"
+wydruk_std := "pit11.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "PIT 11/8B"
+CallAlg["WYKONAJ-STANDARD1"]
+//callalg["zmien"]
+//
+% PIT8C.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "PIT8C"
+nazwa_sprawozdania1 := "pit8c"
+nazwa_sprawozdania2 := "pit8c"
+wydruk_std := "pit8c.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "PIT 8C"
+// tu odtworzenie na podstawie slownika rejestru pozycji pitu
+//rejop["usunplikrej","zrodla.rjr"]
+//rejop["xx:otworzrej","zrodla.rjr"]
+//callalgfile["place/dodprzych.alg","przepisz_15_8c"]
+////rejop["xx:zobaczdbf",""]
+//rejop["xx:zamknijrej",""]
+CallAlg["WYKONAJ-STANDARD1"]
+//callalg["zmien"]
+
+% PITIFT.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "PITIFT"
+nazwa_sprawozdania1 := "pitift"
+nazwa_sprawozdania2 := "pitift"
+wydruk_std := "pitift.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "PIT IFT-1/IFT-1T"
+CallAlg["WYKONAJ-STANDARD1"]
+//callalg["zmien"]
+//
+% PIT40.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "PIT40"
+nazwa_sprawozdania1 := "pit40"
+nazwa_sprawozdania2 := "pit40"
+wydruk_std := "pit40.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "PIT-40"
+CallAlg["WYKONAJ-STANDARD1"]
+//callalg["zmien"]
+//
+% PIT4.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "PIT4"
+nazwa_sprawozdania1 := "pit4"
+nazwa_sprawozdania2 := "pit4"
+wydruk_std := "pit4.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "PIT-4"
+CallAlg["WYKONAJ-STANDARD1"]
+//CAllfrm["std\zmien"]
+% PIT4R.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "PIT4R"
+nazwa_sprawozdania1 := "pit4r"
+nazwa_sprawozdania2 := "pit4r"
+wydruk_std := "pit4r.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "PIT-4R"
+CallAlg["WYKONAJ-STANDARD1"]
+
+% PIT8AR.ALG
+CallAlg["WYKONAJ-STANDARD"]
+nazwa_sprawozdania := "PIT8AR"
+nazwa_sprawozdania1 := "pit8ar"
+nazwa_sprawozdania2 := "pit8ar"
+wydruk_std := "pit8ar.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "PIT-8AR"
+// tu odtworzenie na podstawie slownika rejestru pozycji pitu
+rejop["usunplikrej","zrodla.rjr"]
+rejop["xx:otworzrej","zrodla.rjr"]
+callalgfile["place/dodprzych.alg","przepisz_15_8ar"]
+//rejop["xx:zobaczdbf",""]
+rejop["xx:zamknijrej",""]
+ CallAlg["WYKONAJ-STANDARD1"]
+
+//---------------------------------------
+//
+// wywolanie rejestru definicji sprawozdania jako dialogu
+// maria
+% TABLICA-AKCJI-DEFINICJE-LOOK
+"AKCJA-BUTTON25",DRUKOWANIE-DEFINICJI
+//
+//**** nowy dialog do drukowania sprawozdan standardowych
+% PARAMSTD.XXX
+PRZYCISK_CANCELID=22
+##DEFWINDOW= ,,,,ADHS,&&black/white,&&lwhite/lblue,&&black/white,&&lwhite/blue,"Wydruk sprawozdania "
+##12,0,AC,,,,&&blue/white,&&lwhite/lblue,,,zmienna:kwartal,string:30720
+##13,D,0,,,,&&blue/white,,,,zmienna:oddzial2
+##14,DT,0,,"(RRRR.MM)",,&&lwhite/gray
+##15,0,AC,,,,&&blue/white,&&lwhite/lblue,,,zmienna:data1,ydate
+##16,0,AC,,,,&&blue/white,&&lwhite/lblue,,,zmienna:data2,ydate
+##17,B,0,,"Deklaracja kwartalna ",,&&black/white,&&lwhite/lblue,,,zmienna:kwartal_tak,,,0,2
+##18,B,0,,"Deklaracja miesi|eczna",,&&black/white,&&lwhite/lblue,,,zmienna:kwartal_tak,,,0,1
+##21,,AD,,@3,,&&black/white,&&white/lblue
+##22,,AD,,@4,,&&black/white,&&white/lblue
+##31,0,0,,,,&&blue/white,&&lwhite/lblue,,,zmienna:Zaokr,dic:16
+##32,0,0,,,,&&blue/white,&&lwhite/lblue,,,zmienna:Dokl,byte
+##36,0,AC,,,,&&blue/white,&&lwhite/lblue,,,zmienna:druk,dic:17
+##35,0,0,,,,&&blue/white,&&lwhite/lblue,,,zmienna:telefon
+##100,DZ,ADH,,"Prezentacja kwot",,,,,&&lwhite/blue
+##101,DZ,ADH,,"Rodzaj wydruku",,,,,&&lwhite/blue
+##102,DZ,ADH,,"Telefon kontaktowy",,,,,&&lwhite/blue
+##37,,AD,,"Dane uzupe|lniaj|ace",,&&black/white,&&white/lblue
+##50,0,P,,"Zapisz do GroupOffice",,,,,,ZMIENNA:do_groupoffice,,0,1,T
+##51,0,P,,,,,,,,ZMIENNA:do_groupoffice,,O,50,N
+##52,0,P,,"Zapisz do SQL",,,,,,ZMIENNA:do_sql,,0,1,T
+##53,0,P,,,,,,,,ZMIENNA:do_sql,,O,52,N
+% PARAMSTD.END
+ #100
+  #31                     #     
+                                   #21             #
+  miejsc po przecinku: #32#     
+                              #100<
+ #101
+
+  |! #36                    #       #22             #
+
+  #50                      #
+//  #52                      #
+                              #101<        
+ #102
+
+      #35             #
+                              #102<        
+% PARAMSTD1.END
+
+  #37                      #
+% PARAMSTD.DLG
+%< PARAMSTD.XXX
+
+ Na koniec #12      #     dla oddzia|lu #13        #
+
+           #14      #
+
+%<PARAMSTD.END
+% PARAMSTD3.DLG
+%< PARAMSTD.XXX
+
+ Za okres  #15    # - #16    #  dla oddzia|lu #13        #
+
+
+%<PARAMSTD.END
+% PARAMSTD2.DLG
+%<PARAMSTD.DLG
+%<PARAMSTD1.END
+% TABLICA-AKCJI-PARAMSTD,TABLICA-AKCJI-PARAMSTD2
+"AKCJA-PRZED-WYSWIETLENIEM",PARAMSTD-PRZED
+"AKCJA-F2-POLE12",DATY-PATRZ
+"AKCJA-PO-POLU12",DATY-SPRAWDZ
+"AKCJA-BUTTON21",PARAMSTD-AKCEPTUJESZ
+"AKCJA-PRZED-POLEM21",PARAMSTD-KWARTAL
+"AKCJA-PO-POLU32",PARAMSTD-KWOTA
+"AKCJA-BUTTON37",DANE-POCZATKOWE
+% TABLICA-AKCJI-PARAMSTD3
+"AKCJA-PRZED-WYSWIETLENIEM",PARAMSTD3-PRZED
+"AKCJA-PO-POLU32",PARAMSTD-KWOTA
+"AKCJA-BUTTON37",DANE-POCZATKOWE
+"AKCJA-BUTTON21",PARAMSTD3-AKCEPTUJESZ
+
+% PARAMSTD3-PRZED.ALG
+ExDialogOp["ZmienNaglowek","Wydruk sprawozdania "+ nazwa_spr]
+oddzial2 := oddzial
+if(oddzial="") oddzial2 := "wszystkie"
+ExDialogOp["IdzDoPozycji","15"]
+ExitAlg[0]
+//
+% PARAMSTD3-AKCEPTUJESZ.ALG
+ if(not(data1='')) goto sprawdz_data2
+ okalert["wprowad|x dat|e pocz|atku okresu ! "]
+ ExDialogOp["IdzDopozycji","15"]
+ ExitAlg[0]
+sprawdz_data2:
+ if(not(data2='')) goto sprawdz_kwartal
+ okalert["wprowad|x dat|e ko|nca okresu ! "]
+ ExDialogOp["IdzDopozycji","16"]
+ ExitAlg[0]
+sprawdz_kwartal:
+if(data2>=data1) goto ok_kwartal
+ okalert["Niepoprawna kolejno|s|c dat! "]
+ ExDialogOp["IdzDopozycji","15"]
+ ExitAlg[0]
+ ok_kwartal:
+pocz_rkal := poczrok_ksieg
+d_data := poczrok_ksieg
+callsl["gl_koniec_rok()"]
+kon_rkal := d_data
+rodz_rok := "obrotowego"
+if(strin["PIT",nazwa_sprawozdania]>-1) pocz_rkal := C_date[A_date[poczrok_ksieg,"Y"],1,1]
+if(strin["PIT",nazwa_sprawozdania]>-1) rodz_rok := "kalendarzowego"
+ if (data1>= pocz_rkal) goto ok_data1 
+ okalert["Data spoza roku!"]
+ ExDialogOp["IdzDopozycji","15"]
+ ExitAlg[0]
+  ok_data1:
+ if(data2<= kon_rkal) goto ok_data2
+ okalert["Data spoza roku obrotowego!"]
+ ExDialogOp["IdzDopozycji","16"]
+ ExitAlg[0]
+ok_data2:
+if(strin["PIT",nazwa_sprawozdania]<0) goto ok_przedzial
+// tu sprawdzenie czy obie daty z tego samego roku kalendarzowego
+if(A_date[data1,"Y"]=A_date[data2,"Y"]) goto ok_przedzial
+ okalert["Daty pocz|atku i ko|nca okresu dotycz|a r|o|znych lat kalendarzowych!"]
+ ExDialogOp["IdzDopozycji","16"]
+ ExitAlg[0]
+
+ok_przedzial:
+ if (dokl = .) dokl := Lkropka_ksieg
+ if (dokl < 3) goto _ok_dokl
+ BEEP[0]
+ OkAlert["Niedopuszczalna dok|ladno|s|c !"]
+ExDialogOp["IdzDoPozycji","32"]
+ExitAlg[0]
+ _ok_dokl:
+eXdIALOGoP["koniecwykonywania",""]
+//
+% PARAMSTD1.DLG
+%< PARAMSTD.XXX
+                               dla oddzia|lu #13        #
+
+  na koniec: #12   #          #17                      #
+                              #18                      #
+            #14     #
+
+%<PARAMSTD.END
+% TABLICA-AKCJI-PARAMSTD1
+"AKCJA-PRZED-WYSWIETLENIEM",PARAMSTD1-PRZED
+"AKCJA-F2-POLE12",DATY-PATRZ1
+"AKCJA-PO-POLU12",DATY-SPRAWDZ1
+"AKCJA-BUTTON17",TYP-DEKLARACJI
+"AKCJA-BUTTON18",TYP-DEKLARACJI
+"AKCJA-BUTTON21",PARAMSTD1-AKCEPTUJESZ
+"AKCJA-PO-POLU32",PARAMSTD-KWOTA
+//
+%PARAMSTD1-PRZED.ALG
+ExDialogOp["ZmienNaglowek","Wydruk sprawozdania "+ nazwa_spr]
+oddzial2 := oddzial
+if(oddzial="") oddzial2 := "wszystkie"
+ExDialogOp["IdzDoPozycji","15"]
+ExitAlg[0]
+//
+% TYP-DEKLARACJI.ALG
+ExdialogOp["ZmienWartoscGrupy","0"]
+% DATY-PATRZ1.ALG
+A_ok := .N.
+if(kwartal_tak="1") d_string := WezNazwaString[ToSTr["#StrCut[wykaz,0,7]#S"],ToStr["#wykaz#S"],"Data"]
+if(kwartal_tak="2") d_string := WezNazwaString[ToSTr["#StrCut[wykaz1,0,7]#S"],ToStr["#wykaz1#S"],"Data"]
+if(d_string="") ExitAlg[0]
+A_ok := .T.
+//
+% DATY-SPRAWDZ1.ALG
+if(kwartal_tak="2") goto xx
+if(OkNazwaString[kwartal,wykaz+", ,"]) exitAlg[0]
+goto xx1
+xx:
+if(OkNazwaString[kwartal,wykaz1+", ,"]) exitAlg[0]
+xx1:
+okalert["Niepoprawna warto|s|c!"]
+ExDialogOp["IdzDoPozycji","12"]
+ExitAlg[0]
+//
+% PARAMSTD1-AKCEPTUJESZ.ALG
+if(not(kwartal="")) goto ok_data
+OkAlert["Wprowad|x miesi|ac ko|ncz|acy okres"]
+ExDialogOp["IdzDoPozycji","12"]
+ExitAlg[0]
+ok_data:
+if(kwartal_tak="1") goto koniec_sprawdzania
+if(StrIn[kwartal,wykaz1]>-1) goto koniec_sprawdzania
+OkAlert["Niepoprawny miesi|ac ko|ncz|acy okres"]
+ExDialogOp["IdzDoPozycji","12"]
+ExitAlg[0]
+koniec_sprawdzania:
+ if (dokl = .) dokl := Lkropka_ksieg
+ if (dokl < 3) goto _ok_dokl
+ BEEP[0]
+ OkAlert["Niedopuszczalna dok|ladno|s|c !"]
+ExDialogOp["IdzDoPozycji","32"]
+ExitAlg[0]
+ _ok_dokl:
+ExDialogOp["koniecwykonywania",""]
+//
+% PARAMSTD-PRZED.ALG
+ExDialogOp["ZmienNaglowek","Wydruk sprawozdania "+ nazwa_spr]
+oddzial2 := oddzial
+if(oddzial="") oddzial2 := "wszystkie"
+ExDialogOp["IdzDoPozycji","12"]
+ExitAlg[0]
+//
+% PARAMSTD-KWOTA.ALG
+IF(dokl=0 or dokl=1 or dokl=2) goto ok
+Okalert["Nieprawid|lowa ilo|s|c miejsc po przecinku!"]
+ExDialogOp["IdzDoPozycji","32"]
+ok:
+ExitAlg[0]
+% PARAMSTD-KWARTAL.ALG
+ if(not(kwartal="")) goto sprawdz_kwartal
+ okalert["wprowad|x miesi|ac ko|ncz|acy okres ! "]
+ ExDialogOp["IdzDopozycji","12"]
+ ExitAlg[0]
+sprawdz_kwartal:
+d_data := poczrok_ksieg
+callsl["gl_koniec_rok"]
+kon_rkal := d_data
+if(StringNaLiczbe[STrCut[kwartal,5,2]]>0 and StringNaLiczbe[STrCut[kwartal,5,2]]<13) goto ok_kwartal
+//if(StringNaLiczbe[STrCut[kwartal,5,2]]>0) goto ok_kwartal
+ okalert["Niepoprawny miesi|ac ko|ncz|acy okres ! "]
+ ExDialogOp["IdzDopozycji","12"]
+ ExitAlg[0]
+ ok_kwartal:
+ data := C_DATE[StringNaLiczbe[StrCut[kwartal,2,2]],StringNaLiczbe[StrCut[kwartal,5,2]],1]
+pocz_rkal := poczrok_ksieg
+rodz_rok := "obrotowego"
+if(strin["PIT",nazwa_sprawozdania]<0) goto sprawdz_daty
+pocz_rkal := C_date[A_date[poczrok_ksieg,"Y"],1,1]
+rok1s := strcut[studatas[poczrok_ksieg],0,4]
+rok2s := strcut[studatas[kon_rkal],0,4]
+rodz_rok := "kalendarzowego"
+if(rok1s==rok2s) goto sprawdz_daty
+ if (data>= pocz_rkal and data<= stringnadate[strcut[kwartal,2,2]+".12.31"]) goto ok_data1
+ okalert["Data spoza roku kalendarzowego!"]
+ ExDialogOp["IdzDopozycji","12"]
+ ExitAlg[0]
+sprawdz_daty:
+//okalert["data="+data+"$pocz_rkal="+pocz_rkal+"$kon_rkal="+kon_rkal]
+ if (data>= pocz_rkal and data<= kon_rkal) goto ok_data1
+ okalert["Data spoza roku "+rodz_rok+"!"]
+ ExDialogOp["IdzDopozycji","12"]
+ ExitAlg[0]
+  ok_data1:
+//okalert["koniec akcept"]
+  ExitAlg[0]
+% DATY-PATRZ.ALG
+A_ok := .N.
+d_string := WezNazwaString[ToSTr["#StrCut[wykaz,0,7]#S"],ToStr["#wykaz#S"],"Data"]
+if(d_string="") ExitAlg[0]
+A_ok := .T.
+//
+% DATY-SPRAWDZ.ALG
+if(OkNazwaString[kwartal,wykaz+", ,"]) exitAlg[0]
+okalert["Niepoprawna warto|s|c!"]
+ExDialogOp["IdzDoPozycji","12"]
+ExitAlg[0]
+//
+% PARAMSTD-AKCEPTUJESZ.ALG
+ if(not(kwartal="")) goto sprawdz_kwartal
+ okalert["wprowad|x miesi|ac ko|ncz|acy okres ! "]
+ ExDialogOp["IdzDopozycji","12"]
+ ExitAlg[0]
+sprawdz_kwartal:
+if(StringNaLiczbe[STrCut[kwartal,5,2]]>0 and StringNaLiczbe[STrCut[kwartal,5,2]]<13) goto ok_kwartal
+//if(StringNaLiczbe[STrCut[kwartal,5,2]]>0) goto ok_kwartal
+ okalert["Niepoprawny miesi|ac ko|ncz|acy okres ! "]
+ ExDialogOp["IdzDopozycji","12"]
+ ExitAlg[0]
+ ok_kwartal:
+pocz_rkal := poczrok_ksieg
+d_data := pocz_rkal
+callsl["gl_koniec_rok()"]
+kon_rkal := d_data
+rodz_rok := "obrotowego"
+if(strin["PIT",nazwa_sprawozdania]<0) goto po_daty1
+pocz_rkal := C_date[A_date[poczrok_ksieg,"Y"],1,1]
+rodz_rok := "kalendarzowego"
+rok1s := strcut[studatas[poczrok_ksieg],0,4]
+rok2s := strcut[studatas[kon_rkal],0,4]
+if(rok1s==rok2s) goto po_daty1
+data := stringnadate[strcut[kwartal,2,5]+".01"]
+ if (data>= pocz_rkal and data<= stringnadate[strcut[kwartal,2,2]+".12.31"]) goto ok_data1
+ okalert["Data spoza roku "+strcut[kwartal,0,4]+" !"]
+ ExDialogOp["IdzDopozycji","12"]
+ ExitAlg[0]
+po_daty1:
+ data := C_DATE[StringNaLiczbe[StrCut[kwartal,2,2]],StringNaLiczbe[StrCut[kwartal,5,2]],1]
+// okalert["xx data="+data+"$pocz_rkal="+pocz_rkal+"$kon_rkal="+kon_rkal]
+if (data>= pocz_rkal and data<= kon_rkal) goto ok_data1
+ okalert["Data spoza roku "+rodz_rok+"!"]
+ ExDialogOp["IdzDopozycji","12"]
+ ExitAlg[0]
+  ok_data1:
+ if (dokl = .) dokl := Lkropka_ksieg
+ if (dokl < 3) goto _ok_dokl
+ BEEP[0]
+ OkAlert["Niedopuszczalna dok|ladno|s|c !"]
+ExDialogOp["IdzDoPozycji","32"]
+ExitAlg[0]
+ _ok_dokl:
+eXdIALOGoP["koniecwykonywania",""]
+//
+// dialog glowny do definiowania pozycji sprawozdania
+% DANE-WPROWADZ.dlg
+PRZYCISK_CANCELID = 10
+##DEFWINDOW = 5,1,22,107,ADH,,,,&&lwhite/blue,"Definiowanie "
+##110,BSN,P,,,,yellow/blue&black/white,,,,MENU_ROZWIJANE
+##102,0,ACHM,,"Symbol pozycji  Nazwa pozycji",,&&black/white,&&lwhite/lblue,blue/white,&&lwhite/gray,WIELE_REKORDOW:DEF,D,KLUCZ,1,D,,DS
+##104,0,ACHM,,"Definicja pozycji",,,,,&&lwhite/gray,dialog:dane-zmien1
+##101,D,0,,,,black/white,white/blue,blue/white,blue/white&blue/white&blue/white,ZMIENNA:oddzial2
+##11,D,0,,,,blue/white&white/black,,,,ZMIENNA:naz_rej
+##12,D,0,,,,blue/white&white/black,,,,ZMIENNA:nazwa_spr
+##13,D,0,,,,blue/white&white/black,,,,ZMIENNA:okres
+##14,D,0,,,,blue/white&white/black,,,,ZMIENNA:ksg
+ #110                                                                                              #110
+
+
+ #102                                                         #104         
+
+
+                                       
+                                       
+
+
+
+
+                                       
+                                                                         
+                                                     
+
+
+
+
+
+
+                                                                                
+                                                                            
+
+                                                 
+
+
+                                                                                                         #104
+                                                           #102
+//                                                                          
+// SPRAWOZDANIE #11      #                    Oddzia|l: #101      #
+% MENU-EKO
+P = 3,,ADS
+*10,@5
+*11,"Operacje"
+126,"Z%m%ie|n"
+128,"%D%odaj"
+127,"%U%su|n"
+
+199,"Zapisz pozycje do %S%QL"
+*12,"Znajd|x"
+123,"Pozycj|e"
+124,"%N%ast|epn|a pozycj|e"
+125,"%F%iltr"
+*131,"Druku%j%"
+129,"Definicje pozycji"
+132,"Wprowadzone sta|le"
+133,"Konta nieprzyporz|adkowane"
+*130,"Usu|n Sta|le"
+// Tablica akcji glownego dialogu do definiowania pozycji
+% TABLICA-AKCJI-DANE-WPROWADZ
+"AKCJA-PRZED-WYSWIETLENIEM",DANE-WPROWADZ-PRZED
+"AKCJA-PRZED-WYKONYWANIEM",DANE-WPROWADZ-PRZEDW
+"AKCJA-BUTTON123",DEFINICJE-SZUKAJ
+"AKCJA-BUTTON124",DEFINICJE-NASTEPNY
+"AKCJA-BUTTON125",DEFINICJE-FILTR
+"AKCJA-BUTTON127",DEFINICJE-USUN
+"AKCJA-BUTTON126",DEFINICJE-ZMIEN
+"AKCJA-BUTTON128",DEFINICJE-DODAJ
+"AKCJA-BUTTON129",DEFINICJE-POZYCJI-DRUKUJ
+"AKCJA-BUTTON132",DEFINICJE-STALYCH-DRUKUJ
+"AKCJA-BUTTON133",DEFINICJE-KONTA-POMINIETE
+"AKCJA-BUTTON130",DEFINICJE-USUN-STALE
+"AKCJA-BUTTON199",DEFINICJE-SQL
+//
+% DANE-WPROWADZ-PRZED.ALG
+pomoc := .N.
+ExDialogOp["UstawMenuParam","110:MENU-EKO"]
+oddzial2 := oddzial
+if(oddzial="") oddzial2 := "wszystkie"
+ExDialogOp["ZmienNaglowek","Definiowane "+ nazwa_spr +" dla oddzia|lu "+oddzial2]
+% DANE-WPROWADZ-PRZEDW.ALG
+ExDialogOp["IdzDoPozycji","102"]
+//oddzial := ""
+% DEFINICJE-SZUKAJ.ALG
+  ExDialogOp["UstawWarunek","102:DEF-WAR"]
+  ExDialogOp["IdzDoPozycji","102"]
+  ExitAlg[0]
+//
+% DEFINICJE-NASTEPNY.ALG
+  ExDialogOp["UstawNastepny","102"]
+  ExDialogOp["IdzDoPozycji","102"]
+  ExitAlg[0]
+//
+% DEFINICJE-FILTR.ALG
+  ExDialogOp["UstawFiltr","102:DEF-WAR"]
+  ExDialogOp["IdzDoPozycji","102"]
+  ExDialogOp["WyswietlPozycje","104"]
+
+// sekcja z warunkiem do wyszukiwania i filtrowania
+% DEF-WAR.box
+"Dzia|l:       ",200
+"Pozycja:      ",201
+"Nazwa pozycji:",101
+"Czy do druku:",202
+"Pobieranie danych:",203
+"Rodzaj kwoty:",103
+//
+% DEFINICJE-ZMIEN.ALG
+m := .
+zmien := .T.
+D_POS := 24
+ExDialogOp["IdzDoDialogu","dane-zmien"]
+ExDialogOp["IdzDoPozycji","102"]
+% DEFINICJE-USUN.alg
+if(drk1=.N.)goto usun
+okalert["Usuwa|c mo|zna tylko pozycje nie do druku !"]
+ExdialogOp["IdzDoPozycji","127"]
+Exitalg[0]
+usun:
+if(not(def="0_00"))goto usun1
+okalert["Pozycji nie wolno usun|a|c!!"]
+ExdialogOp["IdzDoPozycji","127"]
+Exitalg[0]
+usun1:
+if(not(YesAlert["Usun|a|c pozycj|e $ "+ RejWezP_S["D:F_rub"]+" ?"])) goto nie_usun
+if( m=1) goto xx
+xx1:
+oddzial1 := oddzial
+if(oddzial="") oddzial1 := "WSZYSTKIE"
+RejOp["S:ZnajdzRek",""+oddzial1+"*"+ RejWezP_S["D:F_rub"]]
+//RejOp["S:UsunREk",""]
+xx:
+RejOp["D:UsunREkustaw",""]
+ExDialogOp["WyswietlPozycje","102"]
+ExdialogOp["IdzDoPozycji","102"]
+Exitalg[0]
+nie_usun:
+ExdialogOp["IdzDoPozycji","102"]
+Exitalg[0]
+//
+% DEFINICJE-DODAJ.alg
+m := .
+D_POS := 1
+ExDialogOp["IdzDoDialogu","DANE-DODAJ"]
+ExDialogOp["Wyswietlpozycje","102"]
+ExDialogOp["IdzDoPozycji","102"]
+//
+% DEFINICJE-POZYCJI-DRUKUJ.ALG
+PARAM_REJ1 := "DEF.RJR+"+naz_rej1
+PARAM_REJ := "DEF.RJR"
+RejOp["a:OtworzRej1","KOL-NAGL.RJR"]
+RejOp["b:OtworzRej1","KOL-ELEM.RJR"]
+RejOp["X:OtworzRej1",PARAM_REJ1]
+RejInitN["X:SZUKAJ_WARUNEK"]
+PARAM_NAZWA := "Definicje pozycji sprawozdania "+nazwa_spr
+PARAM_DIALID := 35
+PARAM_SLOW := "DEFIMP"
+PARAM_INDNAME := "F_rub"
+PARAM_REJX := "X:"
+PARAM_WAR_DIALOG := "DEF-WAR"
+PARAM_STANDARDOWY := "KOL-DRUKUJ-STANDARDOWE-KOLUMNY"
+KOLUMNY_STANDARDOWE_POLE_MODIF := ""
+D_POS := 0
+//["przed-dialog-pozycji"]
+ExDialogOp["IdzDoDialogu","KOL-DRUKUJ-DEFINICJE-POZYCJI"]
+if (D_POS = 5) goto koniec
+  PARAM_KEYFIELD := 100
+  PARAM_PARAMID := "DRUKUJ-DEFINICJE-POZYCJI"
+  PARAM_NAZWAWYDRUKU := "Wykaz definicji pozycji sprawozdania "
+  CallAlg["KOL-DRUKUJ-DRUKUJ"]
+koniec:
+RejOp["A:ZamknijRej",""]
+RejOp["B:ZamknijRej",""]
+RejOp["X:ZamknijRej",""]
+RejUsunN["SZUKAJ_WARUNEK"]
+% KOL-DRUKUJ-DEFINICJE-POZYCJI.DLG
+%< GL-STANDARDOWY-DIALOG-KOLUMNY.DLG
+% TABLICA-AKCJI-KOL-DRUKUJ-DEFINICJE-POZYCJI
+%< TABLICA-AKCJI-KOL-DRUKUJ-START
+//------------------
+//
+% DEFINICJE-KONTA-POMINIETE.ALG
+finnop["@3Openmain",""]
+finnop["setp",""]
+rejop["kk:otworzrejtemp","KONTA_POMINIETE.RJR"]
+if(not(finnop["tofirstdok",""])) goto koniec
+// przepisanie kont z planu kont do rejestru pomocniczego
+petla_k:
+if(K_NOACT) goto nastepny_k
+rejop["kk:dodajrek",""]
+xrejwstawp_s["kk:k_sym",k_sym]
+xrejwstawp_s["kk:k_naz",k_nazwa]
+xrejwstawp_s["kk:k_syn",ksynt]
+xrejwstawp_s["kk:k_synnaz",ksyntnazwa]
+xrejwstawp_l["kk:k_tak",.N.]
+rejop["kk:zapiszrek",""]
+nastepny_k:
+if(finnop["tonextdok",""]) goto petla_k
+// przegladanie definicji sprawozdania i odznaczenie kont uzytych w definicji
+rejop["dd:drotworzplik","d:"]
+rejop["dd:wezpierwszyrek",""]
+petla_dd:
+if(not(rejwezp_s["dd:F_trb"]=="F")) goto nastepny_dd
+n := 0
+petla_linia:
+linia := RejWezP_S["Dd:F_D"+ToStr["#n#S:0"]]
+if(linia ="") goto nastepna_linia
+ opr_def := StrCut[linia,0,2]
+ pole_def := StrCut[linia,2,StrLen[linia]-2]
+ knt := StrCut[pole_def,0,StrLen[pole_def]-3]
+ rodz := StrCut[pole_def,StrLen[pole_def]-3,3]
+ if(strcut[rodz,0,1]=" ") rodz := strcut[rodz,1,2]
+ konto := knt
+finnop["setp",konto]
+if(not(finnop["tofirstdok",""])) goto nastepna_linia
+petla_konto:
+if(not(rejop["kk:znajdzrek",k_sym])) goto omin_wstaw
+ xrejwstawp_l["kk:k_tak",.T.]
+if(rodz="XWN" or rodz ="XMA" or rodz="PWN" or rodz="PMA") goto omin_wstaw1
+xrejwstawp_k["kk:k_"+rodz,rejwezp_k["kk:k_"+rodz]+1]
+omin_wstaw1:
+rejop["kk:zapiszrek",""]
+omin_wstaw:
+if(finnop["tonextdok",""]) goto petla_konto
+nastepna_linia:
+n := n+1
+if(n<10) goto petla_linia
+nastepny_dd:
+if(rejop["dd:weznastepnyrek",""]) goto petla_dd
+// 
+//rejop["kk:zobaczdbf",""]
+// ustawianie danych
+rejop["kk:wezpierwszyrek",""]
+petla_kk:
+if(not(rejwezp_l["kk:k_tak"])) goto nastepny_kk
+if(rejwezp_k["kk:k_wn"]=rejwezp_k["kk:k_ma"] and rejwezp_k["kk:k_swn"]=rejwezp_k["kk:k_sma"] and rejwezp_k["kk:k_kwn"]=rejwezp_k["kk:k_kma"]) goto nastepny_kk
+rejwstawp_l["kk:k_tak",.N.]
+nastepny_kk:
+if(rejop["kk:weznastepnyrek",""]) goto petla_kk
+callalg["drukuj_konta_pominiete"]
+koniec:
+rejop["kk:zamknijrej",""]
+finnop["close",""]
+
+% drukuj_konta_pominiete.alg
+//rejop["kk:zobaczdbf",""]
+rejop["kk:zmienkluczrej","3"]
+rejop["kk:szukajrek","N*000/00000000"]
+if(rejwezp_l["kk:k_tak"]) Okalert["Nie znaleziono danych do wydrukowania"]
+if(rejwezp_l["kk:k_tak"]) Exitalg[0]
+drukujakcja["dialogparam=konta_pominiete"]
+if(d_przerwane) goto koniec
+drukujustawnaglowek[.T.,"head_pominiete",3]
+konto_old := ""
+petla_kk:
+if(rejwezp_l["kk:k_tak"]) goto nastepny_kk
+if(rejwezp_s["kk:k_syn"]==konto_old) goto drukuj_analityke
+drukujlinia["@T@L*#rejwezp_s[""kk:k_syn""]#S@@ @L@@ @L#rejwezp_s[""kk:k_synnaz""]#S@@ @L#rejwezp_k[""kk:k_wn""]#R4:0@@ @L#rejwezp_k[""kk:k_ma""]#R4:0@@ @L#rejwezp_k[""kk:k_swn""]#R4:0@@ @L#rejwezp_k[""kk:k_sma""]#R4:0@@ @L#rejwezp_k[""kk:k_kwn""]#R4:0@@ @L#rejwezp_k[""kk:k_kma""]#R4:0@@@@"]
+drukuj_analityke:
+drukujlinia["@T@L@@ @L#rejwezp_s[""kk:k_sym""]#S@@ @L#rejwezp_s[""kk:k_naz""]#S@@ @L#rejwezp_k[""kk:k_wn""]#R4:0@@ @L#rejwezp_k[""kk:k_ma""]#R4:0@@ @L#rejwezp_k[""kk:k_swn""]#R4:0@@ @L#rejwezp_k[""kk:k_sma""]#R4:0@@ @L#rejwezp_k[""kk:k_kwn""]#R4:0@@ @L#rejwezp_k[""kk:k_kma""]#R4:0@@@@"]
+konto_old := rejwezp_s["kk:k_syn"]
+nastepny_kk:
+if(rejop["kk:weznastepnyrek",""]) goto petla_kk
+koniec:
+drukujakcja["drukujkoniec"]
+//
+% head_pominiete.alg
+drukujlinia["@T@WKonta pomini|ete w definicji sprawozdania #nazwa_spr#S , data wydruku #d_dzisiaj#S@@@J@@@@"]
+drukujlinia["@Q@T@LKonto syntetyczne@@ @LKonto analityczne@@ @LNazwa konta@@ @LWN@@ @LMA@@ @L SWN@@ @LSMA@@ @LKWN@@ @LKMA@@@@"]
+//
+% DEFINICJE-STALYCH-DRUKUJ.ALG
+PARAM_REJ1 := "STALE.RJR+"+naz_rej1+"_s"
+PARAM_REJ := "STALE.RJR"
+RejOp["a:OtworzRej1","KOL-NAGL.RJR"]
+RejOp["b:OtworzRej1","KOL-ELEM.RJR"]
+RejOp["X:OtworzRej1",PARAM_REJ1]
+RejInitN["X:SZUKAJ_WARUNEK"]
+PARAM_NAZWA := "Definicje sta|lych dla sprawozdania "+nazwa_spr
+PARAM_DIALID := 36
+PARAM_SLOW := "STALEIMP"
+PARAM_INDNAME := "D_dzial"
+PARAM_REJX := "X:"
+PARAM_WAR_DIALOG := "STALE-WAR"
+PARAM_KEYID := 2
+PARAM_STANDARDOWY := "KOL-DRUKUJ-STANDARDOWE-KOLUMNY"
+KOLUMNY_STANDARDOWE_POLE_MODIF := ""
+D_POS := 0
+ExDialogOp["IdzDoDialogu","KOL-DRUKUJ-DEFINICJE-STALYCH"]
+if (D_POS = 5) goto koniec
+  PARAM_KEYFIELD := 100
+  PARAM_PARAMID := "DRUKUJ-DEFINICJE-STALYCH"
+pp := ""
+if(param_keyid=2) pp := "oddzia|ly"
+if(param_keyid=3) pp := "pozycje sprawozdania"
+  PARAM_NAZWAWYDRUKU := "Wykaz definicji sta|lych sprawozdania " + nazwa_spr + "w podziale na "+pp
+  CallAlg["KOL-DRUKUJ-DRUKUJ"]
+koniec:
+RejOp["A:ZamknijRej",""]
+RejOp["B:ZamknijRej",""]
+RejOp["X:ZamknijRej",""]
+RejUsunN["SZUKAJ_WARUNEK"]
+% KOL-DRUKUJ-DEFINICJE-STALYCH.DLG
+%< KOL-DRUKUJ-STANDARD-XXX.XXX
+##13,0,P,,"wed|lug oddzia|l|ow",,,,,,ZMIENNA:PARAM_KEYID,,A,1,"2"
+##14,0,P,,"wed|lug pozycji sprawozdania",,,,,,ZMIENNA:PARAM_KEYID,,,1,"3"
+  #15                     #  Uk|lad kolumn: #52         #
+                             Szeroko|s|c:   #54# znak|ow
+  ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+  ³                                                          ³  
+  ³  Symbole: od #10             #   #0                      ³
+  ³           do #11             #                       #0  ³
+  ³                                                          ³
+  ³                                                          ³
+  ³  #12         #   #53         #   #1                      ³
+  ³                                                      #1  ³
+  ³                                                          ³
+  ³  Porz|adek drukowania:                                    ³
+  ³  ---------------------                                   ³ 
+  ³  #13                                    #                ³ 
+  ³  #14                                    #                ³ 
+  ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+    #2             #                    #5            #
+
+% TABLICA-AKCJI-KOL-DRUKUJ-DEFINICJE-STALYCH
+%< TABLICA-AKCJI-KOL-DRUKUJ-START
+//
+% DEFINICJE-USUN-STALE.ALG
+if(not(yesalert["Czy usun|a|c wszystkie sta|le dla oddzia|lu "+oddzial2+"?"]))ExitAlg[0]
+if(RejOp["S:WezPierwszyRek",""]) goto ok
+Okalert["Brak stalych!!"]
+ExitAlg[0]
+ok:
+if(not(RejWezP_S["S:D_dzial"]==oddzial1)) goto nastepny
+xRejWstawP_K["S:D_M0",.]
+xRejWstawP_K["S:D_M1",.]
+xRejWstawP_K["S:D_M2",.]
+xRejWstawP_K["S:D_M3",.]
+xRejWstawP_K["S:D_M4",.]
+xRejWstawP_K["S:D_M5",.]
+xRejWstawP_K["S:D_M6",.]
+xRejWstawP_K["S:D_M7",.]
+xRejWstawP_K["S:D_M8",.]
+xRejWstawP_K["S:D_M9",.]
+xRejWstawP_K["S:D_M10",.]
+xRejWstawP_K["S:D_M11",.]
+xRejWstawP_K["S:D_M12",.]
+xRejWstawP_K["S:D_M13",.]
+xRejWstawP_K["S:D_M14",.]
+xRejWstawP_K["S:D_M15",.]
+xRejWstawP_K["S:D_M16",.]
+xRejWstawP_K["S:D_M17",.]
+xRejWstawP_K["S:D_M18",.]
+xRejWstawP_K["S:D_M19",.]
+xRejWstawP_K["S:D_M20",.]
+xRejWstawP_K["S:D_M21",.]
+xRejWstawP_K["S:D_M22",.]
+xRejWstawP_K["S:D_M23",.]
+xRejWstawP_K["S:D_M24",.]
+xRejWstawP_K["S:D_M25",.]
+RejOp["S:ZapiszRek",""]
+nastepny:
+if(RejOp["S:WezNastepnyRek",""]) goto ok
+ExitAlg[0]
+//
+//
+% DEF.DLG
+##200,G,D,,,,,&&lwhite/lblue,,,POLE:D:F_rub
+##31,D,P,,,,,,,,POLE:D:F_naz
+ #200         # #31                                           # 
+% TABLICA-AKCJI-DEF
+"AKCJA-PRZED-WYKONYWANIEM",DEF-PRZED
+// mariaxxx
+% DEF-PRZED.ALG
+drk := RejWezP_S["D:F_drk"]
+drk1 := .T.
+if(DRK="X") drk1 := .N.
+trb1 := RejWezP_S["D:F_trb"]
+// maria
+if(trb1="K") trb := "opis"
+if(trb1="R") trb := "pozycje sprawozdania"
+if(trb1="V") trb := "VAT"
+if(trb1="C") trb := "dane z p|lac"
+if(trb1="F") trb := "konta"
+if(trb1="D") trb := "narastaj|aco-sta|le"
+if(trb1="P") trb := "za miesi|ac-sta|le"
+if(trb1="X") trb := "rozpisanie"
+if(trb1="S") trb := "sta|la"
+if(trb1="I") trb := "indywidualny opis"
+if(trb1="A") trb := "wykaz przychod|ow"
+def := RejWezP_S["D:F_rub"]
+typ := RejWezP_S["D:F_typ"]
+typ_poz := RejWezP_S["D:F_typoz"]
+ExDialogOp["PozycjaNiewprowadzana","200"]
+ExDialogOp["Pozycjanieaktywna","104"]
+ExDialogOp["WYSWIETLPOZYCJE","104"]
+ExDialogOp["WYSWIETLPOZYCJE","101"]
+//
+// dialogi dla pozycji 103
+// dialog w przypadku pobierania danych z kont lub pozycji sprawozdania
+// **** dialog w przypadku pozycji bedacej opisem
+% dane_do_sprawozdania-1.dlg
+##50,0,P,,,,blue/white&white/black,,,,Pole:P:pom_tekst
+#50                                    #
+//**** dialog do definiowania pozycji w oparciu o konta ksiegowe
+% tablica-akcji-dane-do-sprawozdania-1
+"Akcja-przed-wyswietleniem",przed-1
+% przed-1.alg
+pom_tekst_old := RejWezP_S["P:pom_tekst"]
+% dane_do_sprawozdania-2e.dlg
+##5,DR,P,,,,,,,,Pole:P:pom_poz
+##6,0,P,,,,,,,,Pole:P:pom_oper
+##52,0,P,,,,,,,,Pole:P:pom_konto1,2000:3
+##53,0,P,,,,,,,,Pole:P:pom_konto2,2000:3
+//##54,0,P,,,,,,,,Pole:P:pom_obr,string:2
+##54,0,P,,,,,,,,SLOWNIK:pom_obr,NAZWASPROBROTOW
+#5#:#6##52        #-#53        # #54#
+//
+% tablica-akcji-dane_do_sprawozdania-2e
+"Akcja-przed-wyswietleniem",przed-2e
+"Akcja-przed-wykonywaniem",przed-wyk-2e
+"AKCJA-F2-POLE6",operator-2e
+"Akcja-Po-polu6",po-operator-2e
+//"AKCJA-F2-POLE54",obroty-2e
+//"Akcja-Po-polu54",po-obroty-2e
+"AKCJA-OKLINIA",linia-ok-2e
+//
+% przed-2e.alg
+//pom_obr := ""
+pom_obr := RejWezP_S["P:pom_obr"]
+pom_oper := RejWezP_S["P:pom_oper"]
+pom_oper_old := RejWezP_S["P:pom_oper"]
+ExDialogOp["pozycjanieaktywna","5"]
+//ExDialogop["wyswietlpozycje","54"]
+ExDialogOp["IdzdoPozycji","6"]
+% przed-wyk-2e.alg
+pom_obr := RejWezP_S["P:pom_obr"]
+ExDialogop["wyswietlpozycje","54"]
+//
+% operator-2e.alg
+A_ok := .N.
+d_string := WezNazwaString["+","+,-","Operator"]
+if(d_string="") ExitAlg[0]
+A_ok := .T.
+//
+% po-operator-2e.alg
+if(OkNazwaString[RejWezP_S["P:pom_oper"],"+, ,-"]) exitAlg[0]
+okalert["Niepoprawna warto|s|c!"]
+ExDialogOp["IdzDoPozycji","6"]
+ExitAlg[0]
+//
+% obroty-2e.alg
+A_ok := .N.
+d_string := WezNazwaString["WN","WN,SWN,KWN,PWN,XWN,MA,SMA,KMA,PMA,XMA","Rodzaj obrot|ow"]
+if(d_string="") ExitAlg[0]
+A_ok := .T.
+//
+% po-obroty-2e.alg
+//if(OkNazwaString[RejWezP_S["P:pom_obr"],"WN,XWN,SWN,KWN,PWN, ,MA,XMA,SMA,KMA,PMA"]) exitAlg[0]
+//okalert["Niepoprawna warto|s|c!"]
+//ExDialogOp["IdzDoPozycji","54"]
+ExitAlg[0]
+//
+% linia-ok-2e.alg
+A_ok := .N.
+pusta := .N.
+rejwstawp_s["P:pom_obr",pom_obr]
+if(RejWezP_S["P:pom_oper"]=""and RejWezP_S["P:pom_konto1"]=""and RejWezP_S["P:pom_konto2"]=""and RejWezP_S["P:pom_obr"]="")pusta := .T.
+if(pusta) goto XX
+if (not(RejWezP_S["P:pom_oper"]="")) goto ok1
+okalert["Wprowad|x operator!"]
+ExDialogop["idzdopozycji","6"]
+ExitAlg[0]
+ok1:
+if(not(RejWezP_S["P:pom_konto1"]="")) goto ok2
+if(RejWezP_S["P:pom_konto2"]="") okalert["Wprowad|x konto!"]
+if(not(RejWezP_S["P:pom_konto2"]="")) okalert["Wprowad|x konto pocz|atkowe zakresu!"]
+ExDialogop["idzdopozycji","52"]
+ExitAlg[0]
+ok2:
+if(RejWezP_S["P:pom_konto2"]="") goto ok21
+kontop := RejWezP_S["P:pom_konto1"]+" " +RejWezP_S["P:pom_konto2"]
+if(Strin["*",kontop]<0 and Strin["?",kontop]<0) goto ok21 
+okalert["Przy podawaniu zakresu kont nie mo|zna wykorzystywa|c $ znak|ow '*' i '?' !"]
+ExDialogop["idzdopozycji","52"]
+ExitAlg[0]
+ok21:
+kontop := RejWezP_S["P:pom_konto1"]+RejWezP_S["P:pom_konto2"]
+if(StrIn["-",kontop]<0) goto ok22 
+okalert["W symbolach kont u|zyto nieprawid|lowych znak|ow!"]
+ExDialogop["idzdopozycji","52"]
+ExitAlg[0]
+ok22:
+if(not(RejWezP_S["P:pom_obr"]="")) goto ok3
+okalert["Wprowad|x rodzaj obrot|ow"]
+ExDialogop["idzdopozycji","54"]
+ExitAlg[0]
+ok3:
+a_ok := .T.
+RejOp["P:ZapiszRek",""]
+exitalg[0]
+xx:
+A_ok := .T.
+// koniec dialogu do definiowania pozycji w oparciu o konta ksiegowe
+//
+//**** dialog dla definiowania stalych ( narastajaco i za miesiac)
+% dane_do_sprawozdania-3e.dlg
+##5,DR,P,,,,,,,,Pole:P:pom_poz
+##52,0,P,,,,,,,,Pole:P:pom_kwota
+ #5    #:      #52               #
+% tablica-akcji-dane_do_sprawozdania-3e
+"Akcja-przed-wyswietleniem",przed-3e
+"Akcja-po-polu52",po-kwota-3e
+% przed-3e.alg
+//pom_obr := ""
+pom_obr := RejWezP_S["P:pom_obr"]
+pom_oper := RejWezP_S["P:pom_oper"]
+pom_oper_old := RejWezP_S["P:pom_oper"]
+ExDialogOp["pozycjanieaktywna","5"]
+% po-kwota-3e.alg
+RejOp["P:ZapiszRek",""]
+exitalg[0]
+//
+// dialog do definiowania pozycji na podstawie danych z VAT
+% dane_do_sprawozdania-6e.dlg
+##5,D,P,,,,,,,,Pole:P:pom_poz
+##6,0,P,,,,,,,,Pole:P:pom_oper
+##52,0,P,,,,,,,,Pole:P:pom_vat
+##53,0,P,,,,,,,,Pole:P:pom_obr,string:2
+#5#: #6#        #52#            #53 #
+//
+% tablica-akcji-dane_do_sprawozdania-6e
+"Akcja-przed-wyswietleniem",przed-6e
+"AKCJA-F2-POLE6",operator-2e
+"Akcja-Po-polu6",po-operator-2e
+"AKCJA-F2-POLE52",pozycje-6e
+"Akcja-Po-polu52",po-pozycje-6e
+"Akcja-F2-POLE53",obroty-6e
+"Akcja-po-polu53",po-obroty-6e
+"AKCJA-OKLINIA",linia-ok-6e
+% przed-6e.alg
+ExDialogOp["pozycjanieaktywna","5"]
+ExDialogOp["IdzdoPozycji","6"]
+% pozycje-6e.alg
+d_string := ""
+// tu podlaczenie vat- maria
+  ExDialogOp["IdzDoDialogu","DEKLARACJA-LOOK-SPR"]
+A_OK := .N.
+if(d_string="") ExitAlg[0]
+A_OK := .T.
+RejwstawP_S["P:pom_vat",d_string]
+//
+% DEKLARACJA-LOOK-SPR.DLG
+%< DEKLARACJA-LOOK-BEG.XXX
+#101#10    #    #24    ##21    #  #22    #  #20    #  #101
+
+%< DEKLARACJA-LOOK-END.XXX
+% TABLICA-AKCJI-DEKLARACJA-LOOK-SPR
+%< TABLICA-AKCJI-DEKLARACJA-LOOK
+"AKCJA-BUTTON24",DEKLARACJA-WYBOR
+//
+% DEKLARACJA-WYBOR.alg
+d_string := RejWezP_S["PA:DEKL_num"]
+ExDialogop["Koniecwykonywania",""]
+ExitAlg[0]
+% po-pozycje-6e.alg
+if(RejWezP_S["P:pom_vat"]="") goto ok
+if(RejOp["PA:ZnajdzRek",RejWezP_S["P:pom_vat"]]) goto ok
+okalert["pozycja nie zosta|la zdefiniowana!"]
+ExDialogOp["IdzDopozycji","52"]
+ExitAlg[0]
+ok:
+//
+% obroty-6e.alg
+A_ok := .N.
+d_string := WezNazwaString["VAT","VAT,NETTO","Rodzaj danych"]
+if(d_string="") ExitAlg[0]
+A_ok := .T.
+//
+% po-obroty-6e.alg
+if(OkNazwaString[RejWezP_S["P:pom_obr"],"VAT, ,NETTO,"]) exitAlg[0]
+okalert["Niepoprawna warto|s|c!"]
+ExDialogOp["IdzDoPozycji","53"]
+ExitAlg[0]
+//
+% linia-ok-6e.alg
+A_ok := .N.
+pusta := .N.
+if(RejWezP_S["P:pom_oper"]=""and RejWezP_S["P:pom_vat"]="") pusta := .T.
+if(pusta) goto XX
+if (not(RejWezP_S["P:pom_oper"]="")) goto ok1
+okalert["Wprowad|x operator!"]
+ExDialogop["idzdopozycji","51"]
+ExitAlg[0]
+ok1:
+if(not(RejWezP_S["P:pom_vat"]="")) goto ok2
+okalert["Wprowad|x symbol pozycji!"]
+ExDialogop["idzdopozycji","52"]
+ExitAlg[0]
+ok2:
+if(not(RejWezP_S["P:pom_obr"]="")) goto ok3
+okalert["Wprowad|x rodzaj kwoty!"]
+ExDialogop["idzdopozycji","53"]
+ExitAlg[0]
+OK3:
+a_ok := .T.
+RejOp["P:ZapiszRek",""]
+exitalg[0]
+xx:
+A_ok := .T.
+// koniec dialogu do definiowania pozycji w oparciu o vat
+//
+// dialog do definiowania pozycji na podstawie wykazu przychodow
+% dane_do_sprawozdania-10e.dlg
+##5,D,P,,,,,,,,Pole:P:pom_poz
+##6,0,P,,,,,,,,Pole:P:pom_oper
+##52,0,P,,,,,,,,Pole:P:pom_vat
+##53,0,P,,,,,,,,Pole:P:pom_obr,string:2
+#5#: #6#        #52#            #53 #
+//
+% tablica-akcji-dane_do_sprawozdania-10e
+"Akcja-przed-wyswietleniem",przed-10e
+"AKCJA-F2-POLE6",operator-2e
+"Akcja-Po-polu6",po-operator-2e
+"AKCJA-F2-POLE52",!SL.gl_f2_rejestr("zrodla.rjr","z_dzial")
+"AKCJA-PO-POLU52",!SL.gl_popolu_rejestr("zrodla.rjr","z_dzial","1",rejwezp_s("p:pom_vat"),"")
+"Akcja-F2-POLE53",obroty-10e
+"Akcja-po-polu53",po-obroty-10e
+"AKCJA-OKLINIA",linia-ok-10e
+% przed-10e.alg
+ExDialogOp["pozycjanieaktywna","5"]
+ExDialogOp["IdzdoPozycji","6"]
+//
+% obroty-10e.alg
+A_ok := .N.
+d_string := WezNazwaString["PRZ","PRZ,KZW,KUP,POD,OPI","Rodzaj danych"]
+if(d_string="") ExitAlg[0]
+A_ok := .T.
+//
+% po-obroty-10e.alg
+if(OkNazwaString[RejWezP_S["P:pom_obr"],"PRZ, ,KZW,KUP,POD,OPI,"]) exitAlg[0]
+okalert["Niepoprawna warto|s|c!"]
+ExDialogOp["IdzDoPozycji","53"]
+ExitAlg[0]
+//
+% linia-ok-10e.alg
+A_ok := .N.
+pusta := .N.
+if(RejWezP_S["P:pom_oper"]=""and RejWezP_S["P:pom_vat"]="") pusta := .T.
+if(pusta) goto XX
+if (not(RejWezP_S["P:pom_oper"]="")) goto ok1
+okalert["Wprowad|x operator!"]
+ExDialogop["idzdopozycji","51"]
+ExitAlg[0]
+ok1:
+if(not(RejWezP_S["P:pom_vat"]="")) goto ok2
+okalert["Wprowad|x symbol pozycji!"]
+ExDialogop["idzdopozycji","52"]
+ExitAlg[0]
+ok2:
+if(not(RejWezP_S["P:pom_obr"]="")) goto ok3
+okalert["Wprowad|x rodzaj kwoty!"]
+ExDialogop["idzdopozycji","53"]
+ExitAlg[0]
+OK3:
+a_ok := .T.
+RejOp["P:ZapiszRek",""]
+exitalg[0]
+xx:
+A_ok := .T.
+// koniec dialogu do definiowania pozycji w oparciu o zrodla przychodu
+//
+// definiowanie pozycji na podstawie plac
+% dane_do_sprawozdania-7e.dlg
+##5,D,P,,,,,,,,Pole:P:pom_poz
+##6,0,P,,,,,,,,Pole:P:pom_oper
+##52,0,P,,,,,,,,Pole:P:pom_vat
+##53,0,P,,,,,,,,SLOWNIK:pom_obr,PIT118B
+#5#: #6#        #52#            #53 #
+//
+% tablica-akcji-dane_do_sprawozdania-7e
+"Akcja-przed-wyswietleniem",przed-7e
+"AKCJA-PRZED-WYKONYWANIEM", przed-wyk-2e
+"AKCJA-F2-POLE52",pozycje-7e
+"Akcja-Po-polu52",po-pozycje-7e
+"AKCJA-OKLINIA",linia-ok-7e
+% przed-7e.alg
+pom_obr := RejWezP_S["P:pom_obr"]
+pom_oper := RejWezP_S["P:pom_oper"]
+ExDialogOp["pozycjanieaktywna","5"]
+ExDialogOp["pozycjanieaktywna","6"]
+ExDialogOp["IdzdoPozycji","52"]
+% przed-wyk-7e.alg
+pom_obr := RejWezP_S["P:pom_obr"]
+ExDialogop["wyswietlpozycje","53"]
+% pozycje-7e.alg
+d_string := ""
+CallSl["gl_f2_rejestr(""PLC_WYROZNIK.RXR"",""plc_wyr_symb"")"]
+//callalgfile["place\place.py","wyroznik_pokaz"]
+A_OK := .N.
+if(d_string="") ExitAlg[0]
+A_OK := .T.
+RejwstawP_S["P:pom_vat",d_string]
+//
+% po-pozycje-7e.alg
+if(RejWezP_S["P:pom_vat"]="") goto ok
+if(RejOp["PL:ZnajdzRek",RejWezP_S["P:pom_vat"]]) goto ok
+okalert["pozycja nie zosta|la zdefiniowana!"]
+ExDialogOp["IdzDopozycji","52"]
+ExitAlg[0]
+ok:
+//
+% linia-ok-7e.alg
+A_ok := .N.
+pusta := .N.
+RejwstawP_S["P:pom_obr",pom_obr]
+if(RejWezP_S["P:pom_vat"]="") pusta := .T.
+if(pusta) goto XX
+ok1:
+if(not(RejWezP_S["P:pom_vat"]="")) goto ok2
+okalert["Wprowad|x symbol wyr|o|znika do PIT!"]
+ExDialogop["idzdopozycji","52"]
+ExitAlg[0]
+ok2:
+if(not(RejWezP_S["P:pom_obr"]="")) goto ok3
+okalert["Wprowad|x rodzaj kwoty!"]
+ExDialogop["idzdopozycji","53"]
+ExitAlg[0]
+OK3:
+a_ok := .T.
+if(not(RejWezP_S["P:pom_vat"]="" or RejWezP_S["P:pom_obr"]="")) xrejwstawp_s["P:pom_oper","+"]
+RejOp["P:ZapiszRek",""]
+ExDialogop["wyswietlpozycje","6"]
+exitalg[0]
+xx:
+A_ok := .T.
+//
+//
+// dialog do definiowania pozycji na podstawie innych pozycji sprawozdania
+% dane_do_sprawozdania-5e.dlg
+##5,D,P,,,,,,,,Pole:P:pom_poz
+##6,0,P,,,,,,,,Slownik:pom_oper,NAZWAOPER
+##52,0,P,,,,,,,,Pole:P:pom_pozycja
+ #5#: #6#  #52                          #
+//
+% tablica-akcji-dane_do_sprawozdania-5e
+"Akcja-przed-wyswietleniem",przed-2e
+"Akcja-przed-wykonywaniem",przed-wyk-5e
+//"AKCJA-F2-POLE6",operator-5e
+//"Akcja-Po-polu6",po-operator-5e
+"AKCJA-F2-POLE52",pozycje-5e
+"Akcja-Po-polu52",po-pozycje-5e
+"AKCJA-OKLINIA",linia-ok-5e
+% przed-wyk-5e.alg
+pom_oper := RejWezP_S["P:pom_oper"]
+ExDialogop["wyswietlpozycje","6"]
+//
+% operator-5e.alg
+A_ok := .N.
+d_string := WezNazwaString["+","+,-,*,/,>,<,>>,<<,<=,>=","Operator"]
+if(d_string="") ExitAlg[0]
+A_ok := .T.
+//
+% po-operator-5e.alg
+if(OkNazwaString[RejWezP_S["P:pom_oper"],"+, ,-,*,/,>,<,>>,<<,<=,>="]) exitAlg[0]
+okalert["Niepoprawna warto|s|c!"]
+ExDialogOp["IdzDoPozycji","6"]
+ExitAlg[0]
+//
+% pozycje-5e.alg
+d_string := ""
+ExDialogOp["idzdodialogu","pozycje"]
+A_OK := .N.
+if(d_string="") ExitAlg[0]
+A_OK := .T.
+RejwstawP_S["P:pom_pozycja",d_string]
+//
+% po-pozycje-5e.alg
+if(RejWezP_S["P:pom_pozycja"]="") goto ok
+if(RejOp["D:ZnajdzRek",RejWezP_S["P:pom_pozycja"]]) goto ok
+okalert["pozycja nie zosta|la zdefiniowana!"]
+ExDialogOp["IdzDopozycji","52"]
+ExitAlg[0]
+ok:
+//
+% linia-ok-5e.alg
+A_ok := .N.
+pusta := .N.
+Rejwstawp_s["P:pom_oper",pom_oper]
+if(RejWezP_S["P:pom_oper"]=""and RejWezP_S["P:pom_pozycja"]="") pusta := .T.
+if(pusta) goto XX
+if (not(RejWezP_S["P:pom_oper"]="")) goto ok1
+okalert["Wprowad|x operator!"]
+ExDialogop["idzdopozycji","51"]
+ExitAlg[0]
+ok1:
+if(not(RejWezP_S["P:pom_pozycja"]="")) goto ok2
+okalert["Wprowad|x symbol pozycji!"]
+ExDialogop["idzdopozycji","52"]
+ExitAlg[0]
+ok2:
+if(not(RejWezP_S["P:pom_pozycja"]==def)) goto ok3
+okalert["Pozycja nie mo|ze odwolywa|c si|e do samej siebie!"]
+ExDialogop["idzdopozycji","52"]
+ExitAlg[0]
+ok3:
+a_ok := .T.
+RejOp["P:ZapiszRek",""]
+exitalg[0]
+xx:
+A_ok := .T.
+// dialog do definiowania pozycji rozpisania wskazanej pozycji sprawozdania
+% dane_do_sprawozdania-8e.dlg
+##5,D,P,,,,,,,,Pole:P:pom_poz
+##52,0,P,,,,,,,,Pole:P:pom_pozycja
+ #5#:      #52                          #
+//
+% tablica-akcji-dane_do_sprawozdania-8e
+"Akcja-przed-wyswietleniem",przed-8e
+"AKCJA-F2-POLE52",pozycje-5e
+"Akcja-Po-polu52",po-pozycje-5e
+"AKCJA-OKLINIA",linia-ok-8e
+% przed-8e.alg
+ExDialogOp["IdzdoPozycji","52"]
+% linia-ok-8e.alg
+A_ok := .N.
+pusta := .N.
+if(RejWezP_S["P:pom_pozycja"]="") pusta := .T.
+if(pusta) goto XX
+if(not(RejWezP_S["P:pom_pozycja"]="")) goto ok2
+okalert["Wprowad|x symbol pozycji!"]
+ExDialogop["idzdopozycji","52"]
+ExitAlg[0]
+ok2:
+if(not(RejWezP_S["P:pom_pozycja"]==def)) goto ok3
+okalert["Pozycja nie mo|ze odwolywa|c si|e do samej siebie!"]
+ExDialogop["idzdopozycji","52"]
+ExitAlg[0]
+ok3:
+a_ok := .T.
+RejOp["P:ZapiszRek",""]
+exitalg[0]
+xx:
+A_ok := .T.
+//
+% dane_do_sprawozdania-9e.dlg
+##5,D,P,,,,,,,,Pole:P:pom_poz
+##52,0,P,,,,,,,,Pole:P:pom_kwota
+ #5#:      #52                          #
+//
+% tablica-akcji-dane_do_sprawozdania-9e
+"Akcja-przed-wyswietleniem",przed-9e
+"AKCJA-OKLINIA",linia-ok-9e
+% przed-9e.alg
+ExDialogOp["IdzdoPozycji","52"]
+% linia-ok-9e.alg
+A_ok := .N.
+pusta := .N.
+if(RejWezP_k["P:pom_kwota"]=.) pusta := .T.
+if(pusta) goto XX
+a_ok := .T.
+RejOp["P:ZapiszRek",""]
+exitalg[0]
+xx:
+A_ok := .T.
+
+// koniec dialogu do definiowania pozycji w oparciu o konta ksiegowe
+//
+% pozycje.dlg
+##DEFWINDOW= ,,,,ADP
+##101,TLD,0,,"pozycja    Nazwa pozycji",,&&lwhite/gray
+##100,0,BCPM,,,,,,,,MENU_NA_REKORDY:pozycje,D,KLUCZ,1
+##0,,ADP,,@4
+##1,,ADP,,"%W%yb|or"
+#101                                               #
+
+#100
+
+
+
+              
+
+                                                   #100
+
+
+ #1         #          #0           #
+
+% Pozycje.MEN
+D = 52,"Pozycja    Nazwa pozycji"
+100
+101
+
+% Tablica-akcji-pozycje
+"Akcja-przed-wyswietleniem",przed-pozycje
+"AKCJA-BUTTON1",pozycje-wybor
+% przed-pozycje.alg
+ExDialogOp["IdzDoPozycji","100"]
+% pozycje-wybor.alg
+d_string := RejWezP_S["D:F_rub"]
+ExDialogop["Koniecwykonywania",""]
+ExitAlg[0]
+// dialog do edycji danych pozycji
+% DANE-DODAJ.dlg
+##DEFWINDOW = 8,63,29,106,ACPH,,,,&&lwhite/gray,"Definicja pozycji"
+##1,0,0,,,,&&blue/white,&&lwhite/lblue,,,zmienna:dzial,string:2
+##19,0,0,,,,&&blue/white,&&lwhite/lblue,,,Zmienna:pozycja,string:2
+##22,D,0,,,,&&blue/white,&&lwhite/lblue,,,ZMIENNA:drk1
+##24,0,0,,,,&&blue/white,&&lwhite/lblue,,,ZMIENNA:typ,dic:10
+##25,0,0,,,,&&blue/white,&&lwhite/lblue,,,ZMIENNA:typ_poz,dic:100
+##20,0,0,,,,&&blue/white,&&lwhite/lblue,,,Zmienna:F_nazwa,string::48
+//##21,0,0,,,,&&blue/white,&&lwhite/lblue,,,ZMIENNA:trb,dic:91
+##21,0,0,,,,&&blue/white,&&lwhite/lblue,,,SLOWNIK
+##23,D,0,,,,&&lwhite/gray,,,,ZMIENNA:ngl
+##103,0,P,,,,black/white,white/blue,blue/white,,wiele_rekordow
+##33,,0,,@3,,&&black/lwhite,&&lwhite/blue
+##34,,0,,@4,,&&black/lwhite,&&lwhite/blue
+dzia|l: #1#<  pozycja: #19     # do druku: #22#  
+typ kwoty:#24#      typ pozycji: #25 #
+o:#20                                          #
+definicja uwzgl|ednia: #21                     #
+#23                                            #
+#103
+
+
+
+
+
+
+
+
+          
+
+
+
+                                               #103
+
+  #33        #     #34         #
+//
+% TABLICA-AKCJI-DANE-DODAJ
+"AKCJA-PRZED-WYSWIETLENIEM",DANE-DODAJ-PRZED
+"AKCJA-PO-POLU1",DANE-DODAJ-DZIAL
+"AKCJA-PO-POLU19",DANE-DODAJ-SYMBOL
+"AKCJA-PO-POLU21",DANE-DODAJ-EDYTUJ
+"AKCJA-BUTTON33",DANE-DODAJ-AKCEPTUJESZ
+"AKCJA-BUTTON34",DANE-DODAJ-REZYGNUJESZ
+//
+//MMMM
+% DANE-DODAJ-PRZED.ALG
+def := ""
+dzial := ""
+pozycja := ""
+F_nazwa := ""
+drk := "X"
+drk1 := .N.
+trb1 := "K"
+trb := "opis"
+trb2 := "Pozycja opisowa"
+ngl := ""
+oddzial := ""
+oddzial1 := ""
+typ := ""
+typ_poz := ""
+//ExDialogOp["pozycjaNiewprowadzana","24"]
+nazwa_slow := "91"
+if(strin["PIT",nazwa_sprawozdania1]>-1) nazwa_slow := "SPOSOB"
+if(nazwa_sprawozdania1 == "pit4" or nazwa_sprawozdania1 == "pit4r" or nazwa_sprawozdania1 == "pit8ar") nazwa_slow := "SPOSOB2"
+//if(nazwa_sprawozdania1 == "pit8c") nazwa_slow := "SPOSOB4"
+if(strin["PIT5",nazwa_sprawozdania1]>-1) nazwa_slow := "SPOSOB3"
+//okalert["nazwa_slow="+nazwa_slow]
+ExDialogOp["UstawMenuParam","21:trb,"+nazwa_slow]
+ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-1,D,,,D,,D"]
+% DANE-DODAJ-DZIAL.ALG
+if(not(dzial="")) goto xx
+Okalert["Pole musi by|c wype|lnione!"]
+ExDialogOp["IdzDoPozycji","1"]
+Exitalg[0]
+xx:
+% DANE-DODAJ-SYMBOL.ALG
+dzial1 := dzial
+def := dzial1+ "_"+pozycja
+if(not(Rejop["D:ZnajdzRek",def])) goto xx1
+okalert["Powt|orzony symbol pozycji!"]
+ExDialogOp["IdzDoPozycji","19"]
+Exitalg[0]
+xx1:
+//
+//
+% DANE-DODAJ-EDYTUJ.ALG
+callalg["DANE-WPROWADZ-ZMIEN1"]
+RejOp["P:WyczyscRej",""]
+//if(trb1="K") goto omin
+n := 0
+if(trb1="K") n := 10 
+if(trb1="I") n := 3
+if(trb1="X" or trb1="S") n := 1
+if(trb1="F" or trb1="R" or trb1="V") n := 10
+if(trb1="D" or trb1 ="P") n := 14
+if((trb1="D" or trb1 ="P") and not(lmies_ksieg=.)) n := lmies_ksieg+2
+if(trb1="C") n := 14
+if(trb1="A") n := 1
+n1 := 0
+petla:
+REjOp["P:DodajRek",""]
+x := ""
+if(n1+1<10) x := "0"
+x1 := ""
+if(n1<10) x1 := "0"
+RejWstawP_S["P:pom_id",ToStr["#x1#S#n1#S:0"]]
+if(trb1="F" or trb1="R" or trb1="V" or trb1="C" or trb1="X" or trb1="S" or trb1="A") RejWstawP_S["P:pom_poz",ToStr["#x#S#n1+1#S:0"]]
+if(trb1="D" or trb1 ="P") RejWstawP_S["P:pom_poz",StrCut[miesiace,8*n1,7]]
+n1 := n1+1
+// maria -n1
+if(not(n1+1>n)) goto petla
+omin:
+// maria1 - ustalenie wartosci zmiennej m ( w zaleznosci od trybu)
+CallAlg["DANE-WPROWADZ-ZMIEN2"]
+IF(trb1="R") m := 5
+if(m=1) ngl := ""
+if(m=2) ngl := "lp oper.  konto1       konto2    obr."
+if(m=3) ngl := "mies        kwota narastaj|aco"
+if(m=4) ngl := "mies        kwota za miesi|ac"
+if(m=5) ngl := "lp  oper.  symbol pozycji sprawozdania"  
+if(m=6) ngl := "lp oper. pozycja deklaracji wyr|o|znik"
+if(m=7) ngl := "lp oper.       wyr|o|znik        rodzaj kwoty"
+if(m=8) ngl := "lp         symbol pozycji sprawozdania"  
+if(m=10) ngl := "lp oper. pozycja deklaracji wyr|o|znik"
+RejOp["P:WezPierwszyREk",""]
+// wywolanie odpowiedniego dialogu do wprowadzania definicji( w zal. od m)
+CallAlg["DANE-WPROWADZ-ZMIEN3x"]
+CallAlg["DANE-WPROWADZ-ZMIEN4"]
+//
+% DANE-DODAJ-AKCEPTUJESZ.ALG
+if( YesAlert["Czy dodajesz dane?"]) goto xx
+ExDialogOp["IdzDoPozycji","103"]
+ExitAlg[0]
+xx:
+if(RejOp["D:ZnajdzRek",def]) goto omin_def
+RejOp["D:DodajRek",""]
+xRejWstawP_S["D:F_rub",def]
+xRejWstawP_S["D:F_drk","X"]
+xRejWstawP_L["D:F_dr",.N.]
+xRejWstawP_S["D:F_dz",dzial]
+xRejWstawP_S["D:F_poz",pozycja]
+omin_def:
+xRejWstawP_S["D:F_naz",F_nazwa]
+xRejWstawP_S["D:F_trb",trb1]
+xRejWstawP_S["D:F_pob",trb]
+xRejWstawP_S["D:F_typ",typ]
+xRejWstawP_S["D:F_typoz",typ_poz]
+n := 0
+RejOp["P:WezPierwszyRek",""]
+if(not(m=1 or m=2 or m=5 or m=6 or m=7 or m=8 or m=9 or m=10)) goto dalej1
+linia := ""
+konta := ""
+petla0:
+if(m=2)goto inne_konta
+if(m=5 or m=8) konta := RejWezP_S["P:pom_pozycja"]
+if(m=6 or m=7) goto linia6
+if(m=10) goto linia10
+goto linia
+inne_konta:
+konta := RejWezP_S["P:pom_konto1"]
+if(not(RejWezP_S["P:pom_konto2"]="")) konta := konta+"-"+ RejWezP_S["P:pom_konto2"]
+linia:
+linia := ToStr["#RejWezP_S[""P:pom_oper""]#S #konta#S #RejWezP_S[""P:pom_obr""]#S"]
+if(m = 1) linia := RejWezP_S["P:pom_tekst"]
+if(m = 9) linia := tostr["#rejwezp_k[""P:pom_kwota""]#S:2"]
+xRejWstawP_S["D:F_D"+ToStr["#n#S:0"],linia]
+n := n+1
+if(rejop["P:WezNastepnyRek",""]) goto petla0
+goto zapisz
+linia6:
+linia := ToStr["#RejWezP_S[""P:pom_oper""]#L1 #RejWezP_S[""P:pom_vat""]#L3 #RejWezP_S[""P:pom_obr""]#L5"]
+xRejWstawP_S["D:F_D"+ToStr["#n#S:0"],linia]
+n := n+1
+if(rejop["P:WezNastepnyRek",""]) goto petla0
+goto zapisz
+linia10:
+linia := ToStr["#RejWezP_S[""P:pom_oper""]#L1 #RejWezP_S[""P:pom_vat""]#L4 #RejWezP_S[""P:pom_obr""]#L3"]
+xRejWstawP_S["D:F_D"+ToStr["#n#S:0"],linia]
+n := n+1
+if(rejop["P:WezNastepnyRek",""]) goto petla0
+goto zapisz
+dalej1:
+//if(m=1) goto zapisz
+if(not(m=3 or m=4)) goto xx1
+oddzial1 := oddzial
+if(oddzial="") oddzial1 := "WSZYSTKIE" 
+if(RejOp["S:ZnajdzREk",oddzial1+"*"+RejWezP_S["D:F_rub"]]) goto xx1
+REjOp["S:DodajRek",""]
+xRejWstawP_S["S:D_dzial",oddzial1]
+xRejWstawP_S["S:D_rub",def]
+xRejWstawP_S["S:D_naz",F_nazwa]
+xRejWstawP_S["S:D_def",nazwa_spr]
+xx1:
+if(m=4)goto dalej2
+nm := 13
+if(not(lmies_ksieg=.)) nm := lmies_ksieg+1
+petla1:
+if(n<nm) xRejWstawP_K["S:D_M"+ToStr["#n#S:0"],RejWezP_K["P:pom_kwota"]]
+if(n=nm) xRejWstawP_K["S:D_M25",RejWezP_K["P:pom_kwota"]]
+n := n+1
+if(rejop["P:WezNastepnyRek",""]) goto petla1
+goto zapisz
+dalej2:
+nm := 13
+if(not(lmies_ksieg=.)) nm := lmies_ksieg+1
+sum_kwota := .
+petla2:
+if(RejWezP_K["P:pom_kwota"]=.) sum_kwota := .
+ sum_kwota := sum_kwota+ RejWezP_K["P:pom_kwota"]
+if(n<nm) xRejWstawP_K["S:D_M"+ToStr["#n#S:0"],sum_kwota]
+if(n=nm) xRejWstawP_K["S:D_M25",sum_kwota]
+n := n+1
+if(rejop["P:WezNastepnyRek",""]) goto petla2
+zapisz:
+Rejop["D:ZapiszREk",""]
+RejOp["D:ZnajdzREk",def]
+RejOp["P:ZamknijRej",""]
+pomoc := .N.
+//
+Rejop["S:ZapiszREk",""]
+zmien := .N.
+ExDialogOp["koniecWykonywania",""]
+//
+% DANE-DODAJ-REZYGNUJESZ.ALG
+zmien := .N.
+ExDialogOp["KoniecWykonywania",""]
+ExDialogOp["Wyswietlpozycje","102"]
+//if(not(RejWezP_S["D:F_trb"]=="K")) REjOp["P:zamknijrej",""]
+//if(not(RejWezP_S["D:F_trb"]=="K")) pomoc := .N.
+REjOp["P:zamknijrej",""]
+pomoc := .N.
+ExitAlg[0]
+//
+// dialog zmieniajacy dane identyczny jak dialog dodajacy nowe dane
+% dane-zmien1.dlg
+%< dane-dodaj.dlg
+% dane-zmien.dlg
+%< dane-dodaj.dlg
+% TABLICA-AKCJI-DANE-ZMIEN1
+"AKCJA-PRZED-WYswietleniem",DANE-ZMIEN1-PRZED
+//
+% DANE-ZMIEN1-PRZED.ALG
+def := REjwezP_S["D:F_rub"]
+dzial := StrCut[def,0,1]
+pozycja := StrCut[def,2,8]
+F_nazwa := REjwezP_S["D:F_naz"]
+typ := RejWezP_S["D:F_typ"]
+typ_poz := RejWezP_S["D:F_typoz"]
+drk := RejWezP_S["D:F_drk"]
+drk1 := .T.
+if(drk="X") drk1 := .N.
+trb := ""
+trb2 := "Pozycja opisowa"
+trb1 := RejWezP_S["D:F_trb"]
+if(trb1="K") trb := "opis"
+if(trb1="R") trb := "pozycje sprawozdania"
+if(trb1="V") trb := "VAT"
+if(trb1="C") trb := "dane z p|lac"
+if(trb1="F") trb := "konta"
+if(trb1="D") trb := "narastaj|aco-sta|le"
+if(trb1="P") trb := "za miesi|ac-sta|le"
+if(trb1="X") trb := "rozpisanie"
+if(trb1="S") trb := "sta|la"
+if(trb1="I") trb := "indywidualny opis"
+if(trb1="A") trb := "wykaz przychod|ow"
+ngl := ""
+if(trb1="F") ngl := "lp oper.  konto1       konto2    obr."
+if(trb1="D") ngl := "mies        kwota narastaj|aco"
+if(trb1="P") ngl := "mies        kwota za miesi|ac"
+if(trb1="R") ngl := "lp  oper.  nr pozycji sprawozdania"  
+if(trb1="V") ngl := "lp  oper. pozycja deklaracji wyr|o|znik"
+if(trb1="C") ngl := "lp  oper.       wyr|o|znik        Rodzaj kwoty"
+if(trb1="X") ngl := "lp         nr pozycji sprawozdania"  
+if(trb1="S") ngl := "lp         kwota "  
+if(trb1="A") ngl := "lp  oper. pozycja deklaracji wyr|o|znik"
+if(pomoc) goto wyczysc1
+RejOp["P:OtworzRejSprawdz","Pomoc.rjr"]
+pomoc := .T.
+wyczysc1:
+RejOp["P:WyczyscRej",""]
+callalg["odczytaj-ponownie"]
+ooo:
+m := 1
+if(trb1="F") m := 2
+if(trb1 = "D") m := 3
+if(trb1 = "P") m := 4
+if(trb1="R") m := 5
+if(trb1="V") m := 6
+if(trb1="C") m := 7
+if(trb1="X") m := 8
+if(trb1="S") m := 9
+if(trb1="A") m := 10
+nazwa_slow := "91"
+if(strin["PIT",nazwa_sprawozdania1]>-1) nazwa_slow := "SPOSOB"
+if(nazwa_sprawozdania1 =="pit4" or nazwa_sprawozdania1 =="pit4r" or nazwa_sprawozdania1 =="pit8ar") nazwa_slow := "SPOSOB2"
+if(strin["PIT5",nazwa_sprawozdania1]>-1) nazwa_slow := "SPOSOB3"
+ExDialogOp["UstawMenuParam","21:trb,"+nazwa_slow]
+if(m=1) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-1,P,,,P,,DO"]
+if(m=2) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-2e,P,,,P,,DO"]
+if(m=3 or m=4) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-3e,P,,,P,,DO"]
+if(m=5) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-5e,P,,,P,,DO"]
+if(m=6) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-6e,P,,,P,,DO"]
+if(m=7) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-7e,P,,,P,,DO"]
+if(m=8) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-8e,P,,,P,,DO"]
+if(m=9) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-9e,P,,,P,,DO"]
+if(m=10) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-10e,P,,,P,,DO"]
+% TABLICA-AKCJI-DANE-ZMIEN
+"AKCJA-PRZED-WYswietleniem",DANE-ZMIEN-PRZED
+"AKCJA-PO-POLU21",DANE-ZMIEN-EDYTUJ
+"AKCJA-BUTTON33",DANE-DODAJ-AKCEPTUJESZ
+"AKCJA-BUTTON34",DANE-DODAJ-REZYGNUJESZ
+// MMMM
+% DANE-ZMIEN-PRZED.ALG
+m := 1
+if(trb1="F") m := 2
+if(trb1 = "D") m := 3
+if(trb1 = "P") m := 4
+if(trb1="R") m := 5
+if(trb1="V") m := 6
+if(trb1="C") m := 7
+if(trb1="X") m := 8
+if(trb1="S") m := 9
+if(trb1="A") m := 10
+nazwa_slow := "91"
+if(strin["PIT",nazwa_sprawozdania1]>-1) nazwa_slow := "SPOSOB"
+if(nazwa_sprawozdania1=="pit4" or nazwa_sprawozdania1=="pit4r" or nazwa_sprawozdania1=="pit8ar") nazwa_slow := "SPOSOB2"
+//if(nazwa_sprawozdania1=="pit8c") nazwa_slow := "SPOSOB4"
+if(strin["PIT5",nazwa_sprawozdania1]>-1) nazwa_slow := "SPOSOB3"
+ExDialogOp["UstawMenuParam","21:trb,"+nazwa_slow]
+if(m=1) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-1,P,,,P,,DO"]
+if(m=2) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-2e,P,,,P,,DO"]
+if(m=3 or m=4) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-3e,P,,,P,,DO"]
+if(m=5) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-5e,P,,,P,,DO"]
+if(m=6) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-6e,P,,,P,,DO"]
+if(m=7) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-7e,P,,,P,,DO"]
+if(m=8) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-8e,P,,,P,,DO"]
+if(m=9) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-9e,P,,,P,,DO"]
+if(m=10) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-10e,P,,,P,,DO"]
+ExDialogOp["PozycjaNieaktywna","1"]
+ExDialogOp["PozycjaNieaktywna","19"]
+ExdialogOP["IdzDoPozycji","103"]
+//
+% DANE-ZMIEN-EDYTUJ.ALG
+//okalert["3"]
+trb_old1 := RejWezP_S["D:F_trb"]
+trb_old := trb1
+callalg["DANE-WPROWADZ-ZMIEN1"]
+if(trb_old=trb1) goto ok1
+//if(trb_old="K")goto ok2
+Rejop["P:ZamknijRej",""]
+pomoc := .N.
+//if(trb1="K")goto ok1
+ok2:
+if(pomoc) goto wyczysc2
+RejOp["P:OtworzRejSprawdz","POMOC.RJR"]
+pomoc := .T.
+wyczysc2:
+//okalert["trb1="+trb1 +"$ trb_old1="+trb_old1]
+if(trb1=trb_old) goto ok1
+RejOp["P:WyczyscREj",""]
+n := 0
+if(trb1="K") n := 9 
+if(trb1="I") n := 2
+if(trb1="F" or trb1="R" or trb1="V" or trb1="A") n := 9
+if(trb1="D" or trb1 ="P") n := 13
+if((trb1="D" or trb1 ="P") and not(lmies_ksieg=.)) n := lmies_ksieg+1
+if(trb1="C") n := 13
+//okalert["trb1="+trb1+"$ n="+n]
+//if(trb1="V") n := 1
+n1 := 0
+petla:
+REjOp["P:DodajRek",""]
+x := ""
+if(n1+1<10) x :="0"
+x1 := ""
+if(n1<10) x1 :="0"
+RejWstawP_S["P:pom_id",ToStr["#x1#S#n1#S:0"]]
+if(trb1="F" or trb1="R" or trb1="V" or trb1="C" or trb1="X" or trb1="S" or trb1="A")RejWstawP_S["P:pom_poz",ToStr["#x#S#n1+1#S:0"]]
+if(trb1="D" or trb1 ="P") RejWstawP_S["P:pom_poz",StrCut[miesiace,8*n1,7]]
+n1 := n1+1
+if(not(n1>n)) goto petla
+RejOp["P:ZmienKluczRej","1"]
+RejOp["P:WezPierwszyREk",""]
+//if(trb1="D" or trb1 ="P")ExDialogOp["PozycjaWprowadzana","24"]
+//if(trb1="D" or trb1 ="P")ExDialogOp["PozycjaAktywna","24"]
+ok1:
+CallAlg["DANE-WPROWADZ-ZMIEN2"]
+IF(trb1="R") m := 5
+if(m=1) ngl := ""
+if(m=2) ngl := "lp oper.  konto1       konto2    obr."
+if(m=3) ngl := "mies        kwota narastaj|aco"
+if(m=4) ngl := "mies        kwota za miesi|ac"
+if(m=5) ngl := "lp  oper.  nr pozycji sprawozdania"  
+if(m=6) ngl := "lp  oper. pozycja deklaracji wyr|o|znik"
+if(m=7) ngl := "lp oper.       wyr|o|znik        rodzaj kwoty"
+if(m=8) ngl := "lp         nr pozycji sprawozdania"  
+if(m=9) ngl := "lp         Kwota"  
+if(m=10) ngl := "lp  oper. pozycja deklaracji wyr|o|znik"
+CallAlg["DANE-WPROWADZ-ZMIEN3x"]
+CallAlg["DANE-WPROWADZ-ZMIEN4"]
+//
+% odczytaj-ponownie.alg
+// odszukanie rekordu z kwotami
+oddzial1 := oddzial
+if(oddzial="") oddzial1 := "WSZYSTKIE"
+if(Rejop["S:ZnajdzRek",oddzial1+"*"+def]) goto xx 
+if(trb1="K" or trb1="F" or trb1="R" or trb1="V" or trb="C" or trb="X" or trb="S" or trb="I" or trb1="A") goto xx 
+REjOp["S:DodajRek",""]
+xRejWstawP_S["S:D_dzial",oddzial1]
+xRejWstawP_S["S:D_rub",def]
+xRejWstawP_S["S:D_naz",F_nazwa]
+RejOp["S:ZapiszRek",""]
+// odczytanie wczesniej zdefiniowanych danych
+xx:
+if(trb1="F") goto odczytaj-linie-F
+if(trb1="R") goto odczytaj-linie-R
+if(trb1="V") goto odczytaj-linie-V
+if(trb1="D") goto odczytaj-kwoty-N
+if(trb1="P") goto odczytaj-kwoty-M
+if(trb1="K" or trb1="I") goto odczytaj-linie-K
+if(trb1="C") goto odczytaj-linie-V
+if(trb1="X") goto odczytaj-linie-X
+if(trb1="S") goto odczytaj-linie-S
+if(trb1="A") goto odczytaj-linie-A
+odczytaj-linie-K:
+n1 := 0
+nk := 3
+if(trb1="K") nk := 10
+odczyt-k:
+RejOp["P:DodajRek",""]
+x := "0"
+x1 := "0"
+xRejWstawP_S["P:pom_id",ToStr["#x1#S#n1#S:0"]]
+xRejWstawP_S["P:pom_poz",ToStr["#x#S#n1+1#S:0"]]
+linia := RejWezP_S["D:F_D"+ToStr["#n1#S:0"]]
+if (linia = "") goto nastepna-k
+xREjWstawP_S["P:pom_tekst",linia]
+nastepna-k:
+RejOp["P:ZapiszRek",""]
+n1 := n1+1
+if(n1<nk) goto odczyt-k
+goto ok1
+//
+odczytaj-linie-F:
+//okalert["1"]
+n1 := 0
+odczyt-f:
+RejOp["P:DodajRek",""]
+x := ""
+if(n1+1<10) x :="0"
+x1 := ""
+if(n1<10) x1 :="0"
+xRejWstawP_S["P:pom_id",ToStr["#x1#S#n1#S:0"]]
+xRejWstawP_S["P:pom_poz",ToStr["#x#S#n1+1#S:0"]]
+linia := RejWezP_S["D:F_D"+ToStr["#n1#S:0"]]
+if (linia = "") goto nastepna-f
+l_linia := StrLen[linia]
+xREjWstawP_S["P:pom_oper",StrCut[linia,0,2]]
+xRejWstawP_S["P:pom_obr",StrCut[linia,l_linia-3,3]]
+linia1 := StrCut[linia,2,l_linia-5]
+l_linia1 := StrLen[linia1]
+if(StrIn["-",linia1]<0) xRejWstawP_S["P:pom_konto1",linia1]
+if(not(StrIn["-",linia1]<0))xRejWstawP_S["P:pom_konto1",StrCut[linia1,0,StrIn["-",linia1]]]
+if(not(StrIn["-",linia1]<0))xRejWstawP_S["P:pom_konto2",StrCut[linia1,StrIn["-",linia1]+1,l_linia1-StrIn["-",linia1]]]
+nastepna-f:
+RejOp["P:ZapiszRek",""]
+n1 := n1+1
+if(n1<10) goto odczyt-f
+goto ok1
+odczytaj-linie-R:
+n1 := 0
+odczyt-r:
+RejOp["P:DodajRek",""]
+x := ""
+if(n1+1<10) x :="0"
+x1 := ""
+if(n1<10) x1 :="0"      
+pom_oper := ""
+pom_pozycja := ""
+xRejWstawP_S["P:pom_id",ToStr["#x1#S#n1#S:0"]]
+xRejWstawP_S["P:pom_poz",ToStr["#x#S#n1+1#S:0"]]
+linia := RejWezP_S["D:F_D"+ToStr["#n1#S:0"]]
+if (linia = "") goto nastepna-r
+l_linia := StrLen[linia]
+pom_oper := StrCut[linia,0,2]
+pom_pozycja := StrCut[linia,2,l_linia-2]
+spacja_usun:
+if(not(StrCut[pom_pozycja,0,1]=" ")) goto wstaw
+pom_pozycja := StrCut[pom_pozycja,1,l_linia-2]
+goto spacja_usun
+wstaw:
+xREjWstawP_S["P:pom_oper",pom_oper]
+xRejWstawP_S["P:pom_pozycja",pom_pozycja]
+nastepna-r:
+RejOp["P:ZapiszRek",""]
+n1 := n1+1
+if(n1<10) goto odczyt-r
+goto ok1
+// -----
+odczytaj-linie-X:
+n1 := 0
+RejOp["P:DodajRek",""]
+pom_oper := ""
+pom_pozycja := ""
+xRejWstawP_S["P:pom_id","00"]
+xRejWstawP_S["P:pom_poz","01"]
+linia := RejWezP_S["D:F_D"+ToStr["#n1#S:0"]]
+if (linia = "") goto ok1
+l_linia := StrLen[linia]
+spacja_usun1:
+if(not(StrCut[linia,0,1]=" ")) goto wstaw1
+linia := StrCut[linia,1,l_linia]
+goto spacja_usun1
+wstaw1:
+xRejWstawP_S["P:pom_pozycja",linia]
+RejOp["P:ZapiszRek",""]
+goto ok1
+//
+odczytaj-linie-S:
+n1 := 0
+RejOp["P:DodajRek",""]
+pom_oper := ""
+pom_kwota := .
+xRejWstawP_S["P:pom_id","00"]
+xRejWstawP_S["P:pom_poz","01"]
+linia := RejWezP_S["D:F_D"+ToStr["#n1#S:0"]]
+if (linia = "") goto ok1
+l_linia := StrLen[linia]
+spacja_usun2:
+if(not(StrCut[linia,0,1]=" ")) goto wstaw2
+linia := StrCut[linia,1,l_linia]
+goto spacja_usun2
+wstaw2:
+xRejWstawP_K["P:pom_kwota",stringnaliczbe[linia]]
+RejOp["P:ZapiszRek",""]
+goto ok1
+// POCZ
+odczytaj-linie-v:
+n1 := 0
+lim := 10
+if(trb1="C") lim := 14
+odczyt-v:
+RejOp["P:DodajRek",""]
+x := ""
+if(n1+1<10) x :="0"
+x1 := ""
+if(n1<10) x1 :="0"      
+pom_oper := ""
+pom_VAT := ""
+pom_obr := ""
+xRejWstawP_S["P:pom_id",ToStr["#x1#S#n1#S:0"]]
+xRejWstawP_S["P:pom_poz",ToStr["#x#S#n1+1#S:0"]]
+linia := RejWezP_S["D:F_D"+ToStr["#n1#S:0"]]
+if (linia = "") goto nastepna-v
+l_linia := StrLen[linia]
+pom_oper := StrCut[linia,0,1]
+pom_VAT := StrCut[linia,2,3]
+pom_obr := StrCut[linia,6,5]
+wstaw_v:
+xREjWstawP_S["P:pom_oper",pom_oper]
+xRejWstawP_S["P:pom_vat",pom_vat]
+xRejWstawP_S["P:pom_obr",pom_obr]
+nastepna-v:
+RejOp["P:ZapiszRek",""]
+n1 := n1+1
+if(n1<lim) goto odczyt-v
+goto ok1
+odczytaj-linie-a:
+n1 := 0
+lim := 10
+if(trb1="C") lim := 14
+odczyt-a:
+RejOp["P:DodajRek",""]
+x := ""
+if(n1+1<10) x :="0"
+x1 := ""
+if(n1<10) x1 :="0"      
+pom_oper := ""
+pom_VAT := ""
+pom_obr := ""
+xRejWstawP_S["P:pom_id",ToStr["#x1#S#n1#S:0"]]
+xRejWstawP_S["P:pom_poz",ToStr["#x#S#n1+1#S:0"]]
+linia := RejWezP_S["D:F_D"+ToStr["#n1#S:0"]]
+if (linia = "") goto nastepna-a
+l_linia := StrLen[linia]
+pom_oper := StrCut[linia,0,1]
+pom_VAT := StrCut[linia,2,4]
+pom_obr := StrCut[linia,7,3]
+wstaw_a:
+xREjWstawP_S["P:pom_oper",pom_oper]
+xRejWstawP_S["P:pom_vat",pom_vat]
+xRejWstawP_S["P:pom_obr",pom_obr]
+nastepna-a:
+RejOp["P:ZapiszRek",""]
+n1 := n1+1
+if(n1<lim) goto odczyt-a
+goto ok1
+// KON
+odczytaj-kwoty-N:
+nm := 14
+if(not(lmies_ksieg=.)) nm := lmies_ksieg+2
+n1 := 0
+odczyt-n:
+RejOp["P:DodajRek",""]
+x1 := ""
+if(n1<10) x1 :="0"
+xRejWstawP_S["P:pom_id",ToStr["#x1#S#n1#S:0"]]
+xRejWstawP_S["P:pom_poz",StrCut[miesiace,8*n1,7]]
+if (n1 <nm-1) xRejWstawP_K["P:pom_kwota",RejWezP_K["S:D_M"+ToStr["#n1#S:0"]]]
+if (n1 =nm-1) xRejWstawP_K["P:pom_kwota",RejWezP_K["S:D_M25"]]
+RejOp["P:ZapiszRek",""]
+n1 := n1+1
+if(n1<nm) goto odczyt-n
+goto ok1
+odczytaj-kwoty-M:
+nm := 14
+if(not(lmies_ksieg=.)) nm := lmies_ksieg+2
+n1 := 0
+odczyt-m:
+RejOp["P:DodajRek",""]
+x1 := ""
+if(n1<10) x1 :="0"
+xRejWstawP_S["P:pom_id",ToStr["#x1#S#n1#S:0"]]
+xRejWstawP_S["P:pom_poz",StrCut[miesiace,8*n1,7]]
+kwota := .
+if(n1=0) kwota := RejWezP_K["S:D_M"+ToStr["#n1#S:0"]]
+if(n1=0) goto mm
+if(n1=nm-1) goto inne_mm
+if(not(RejWezP_K["S:D_M"+ToStr["#n1#S:0"]]=.)) kwota := RejWezP_K["S:D_M"+ToStr["#n1#S:0"]]-RejWezP_K["S:D_M"+ToStr["#n1-1#S:0"]]
+goto mm
+inne_mm:
+if(not(RejWezP_K["S:D_M25"]=.)) kwota := RejWezP_K["S:D_M25"]-RejWezP_K["S:D_M"+ToStr["#n1-1#S:0"]]
+mm:
+xRejWstawP_K["P:pom_kwota",kwota]
+RejOp["P:ZapiszRek",""]
+n1 := n1+1
+if(n1<nm) goto odczyt-m
+ok1:
+RejOp["P:WezPierwszyRek",""]
+ok:
+//
+% TABLICA-AKCJI-DANE_POZYCJI
+"AKCJA-PRZED-WYSWIETLENIEM",DANE-POZYCJI-PRZED
+"AKCJA-PRZED-WYKONYWANIEM",DEF-PRZED1
+"AKCJA-PO-POLU21",DANE-WPROWADZ-ZMIEN
+//
+% DANE-WPROWADZ-ZMIEN1.ALG
+if(not(trb = "")) goto ok
+okalert["podaj spos|ob pobierania danych do sprawozdania!"]
+ExDialogOp["Idzdopozycji","21"]
+Exitalg[0]                                                   
+ok:
+trb2 := "Pozycja opisowa"
+if(trb="opis") trb1 := "K"
+if(trb="pozycje sprawozdania") trb1 := "R"
+if(trb="VAT") trb1 := "V"
+if(trb="konta") trb1 := "F"
+if(trb="narastaj|aco-sta|le") trb1 := "D"
+if(trb="za miesi|ac-sta|le") trb1 := "P"
+if(trb="dane z p|lac") trb1 := "C"
+if(trb="rozpisanie") trb1 := "X"
+if(trb="sta|la") trb1 := "S"
+if(trb="indywidualny opis") trb1 := "I"
+if(trb="wykaz przychod|ow") trb1 := "A"
+% DANE-WPROWADZ-ZMIEN2.ALG
+m := 1
+if(trb1="F" or trb1="R") m := 2
+if(trb1 = "D") m := 3
+if(trb1="P") m := 4
+if(trb1="V") m := 6
+if(trb1="C") m := 7
+if(trb1="X") m := 8
+if(trb1="S") m := 9
+if(trb1="A") m := 10
+% DANE-WPROWADZ-ZMIEN3X.ALG
+if(m=1) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-1,P,,,P,,DO"]
+if(m=2) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-2e,P,,,P,,DO"]
+if(m=3 or m=4) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-3e,P,,,P,,DO"]
+if(m=5) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-5e,P,,,P,,DO"]
+if(m=6) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-6e,P,,,P,,DO"]
+if(m=7) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-7e,P,,,P,,DO"]
+if(m=8) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-8e,P,,,P,,DO"]
+if(m=9) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-9e,P,,,P,,DO"]
+if(m=10) ExDialogOp["UstawMenuParam","103:dane_do_sprawozdania-10e,P,,,P,,DO"]
+% DANE-WPROWADZ-ZMIEN4.ALG
+ExDialogOp["PozycjaNieAktywna","23"]
+ExDialogOp["PozycjaAktywna","103"]
+//if(m=1) ExDialogOp["PozycjaNieAktywna","103"]
+ExDialogOp["PozycjaWprowadzana","103"]
+//if(m=1) ExDialogOp["PozycjaNieWprowadzana","103"]
+ExDialogOp["Wyswietlpozycje","23"]
+ExDialogOp["wyswietlPozycje","103"]
+ExitAlg[0]
+% zmien.alg
+RejOp["D:OtworzRejSprawdz","DEF.RJR+"+nazwa_sprawozdania1]
+RejOp["D:WezPierwszyRek",""]
+petla:
+RejWstawP_L["D:F_dr",.T.]
+RejWstawP_S["D:F_drk",""]
+if(RejOp["D:WezNastepnyRek",""]) goto petla
+okalert["koniec"]
+RejOp["D:ZamknijRej",""]
+//
+% zamiana_old.alg
+// zamienianie znakow szczegolnych dla sed ( / i & )
+// zmienna podstawiana na d_string
+d_string2 := ""
+d_string1 := d_string
+petla:
+ mm := strIn["/",d_string1]
+IF(mm <0) d_string2 := d_string2 + d_string1
+if(mm<0) goto sprawdz&
+d_string2 := d_string2 + StrCut[d_string1,0,mm]+"\/"
+dl_str1 := strlen[d_string1]
+d_string1 := Strcut[d_string1,mm+1,dl_str1-mm-1]
+goto petla
+sprawdz&:
+if(strIn["&",d_string2]<0) d_string := d_string2
+if(strIn["&",d_string2]<0) ExitAlg[0]
+d_string1 := d_string2
+d_string := ""
+petla1:
+ mm := strIn["&",d_string1]
+IF(mm <0) d_string := d_string + d_string1
+if(mm<0) ExitAlg[0]
+d_string := d_string + StrCut[d_string1,0,mm]+"\&"
+dl_str1 := strlen[d_string1]
+d_string1 := Strcut[d_string1,mm+1,dl_str1-mm-1]
+goto petla1
+//
+//
+% zamiana1.alg
+// zamiana separatora tysiecy na spacje
+// kwota przed zamiana wchodzi jako d_string i jako d_string opuszcza alg
+// w przypadku e_deklaracji - zamiana na puste
+spacja := " "
+if(druk == "plik .xml") spacja := ""
+if(strIn[",",d_string]<0) ExitAlg[0]
+d_string1 := d_string
+d_string := ""
+petla2:
+ mm := strIn[",",d_string1]
+IF(mm <0) d_string := d_string + d_string1
+//okalert["dddd="+d_string]
+if(mm<0) ExitAlg[0]
+d_string := d_string + StrCut[d_string1,0,mm]+spacja
+dl_str1 := strlen[d_string1]
+d_string1 := Strcut[d_string1,mm+1,dl_str1-mm-1]
+goto petla2
+//
+% DIALOG-WYNMIKRO.DLG
+##DEFWINDOW= ,,,,ADHS,,&&white/lblue,,&&lwhite/blue,"Dane dodatkowe "
+##17,0,P,,"art.3 ust.1a pkt 1,3 i 4 oraz ust.1b",,,,,,zmienna:cel,,,1,1
+##18,0,P,,"art.3 ust.1a pkt 2",,,,,,zmienna:cel,,,1,2
+##200,DZ,ADH,,"Dane uzupe|lniaj|ace",,,,,&&lwhite/blue
+##4,,AD,,@4,,&&black/lwhite,&&lwhite/blue
+##16,,AD,,@3,,&&black/lwhite,&&lwhite/blue
+
+#200
+ Jednostka mikro, o kt|orej mowa w ustawie o rachunkowo|sci:
+ #17                                                    # 
+ #18                                                    #
+                                                           #200<
+
+
+
+     #16             #   #4             #
+//
+% DIALOG-CIT.DLG
+##DEFWINDOW= ,,,,ADHS,,&&white/lblue,,&&lwhite/blue,"Dane dodatkowe "
+##17,0,P,,"z|lo|zenie zeznania",,,,,,zmienna:cel,,,1,1
+##18,0,P,,"korekta zeznania",,,,,,zmienna:cel,,,1,2
+##200,DZ,ADH,,"Dane uzupe|lniaj|ace",,,,,&&lwhite/blue
+##4,,AD,,@4,,&&black/lwhite,&&lwhite/blue
+##16,,AD,,@3,,&&black/lwhite,&&lwhite/blue
+
+#200
+ Cel z|lo|zenia formularza:
+   #17               #         #18                 #
+                                                        #200<
+
+
+
+     #16             #   #4             #
+% DIALOG-CIT8.DLG
+##DEFWINDOW= ,,,,ADHS,,&&white/lblue,,&&lwhite/blue,"Dane dodatkowe "
+##17,0,P,,"z|lo|zenie zeznania",,,,,,zmienna:cel,,,1,1
+##18,0,P,,"korekta zeznania",,,,,,zmienna:cel,,,1,2
+##23,0,P,,"tak",,&&black/lwhite,&&blue/lwhite,,,zmienna:zwrot,,0,23,T
+##24,0,P,,"nie",,,,,,zmienna:zwrot,,O,23,N
+##25,0,P,,"tak",,,,,,zmienna:termin,,0,25,T
+##26,0,P,,"nie",,,,,,zmienna:termin,,O,25,N
+##13,0,P,,"tak",,,,,,zmienna:dokumentacja,,0,13,T
+##14,0,P,,"nie",,,,,,zmienna:dokumentacja,,O,13,N
+##12,0,P,,"nie",,,,,,zmienna:zwolnienie,,,0,3
+##11,0,P,,"utraci|l prawo do zwolnienia",,,,,,zmienna:zwolnienie,,,0,2
+##10,0,P,,"tak",,,,,,zmienna:zwolnienie,,,0,1
+##15,0,0,,,,&&blue/white,&&lwhite/lblue,,,zmienna:rok_zwolnienia,string:2048
+##16,,AD,,@3,,&&black/lwhite,&&lwhite/blue
+##200,DZ,ADH,,"Dane uzupe|lniaj|ace",,,,,&&lwhite/blue
+##19,0,P,,"tak",,,,,,zmienna:cit8O,,0,19,T
+##20,0,P,,"nie",,,,,,zmienna:cit8O,,O,19,N
+##4,,AD,,@4,,&&black/lwhite,&&lwhite/blue
+
+#200
+ Cel z|lo|zenia formularza:
+  #17               #         #18                 #
+  
+ Podatnik wni|os|l do sp|o|lki wk|lad niepieni|e|zny
+ w postaci komercjalizowanej w|lasno|sci intelektualnej: #23  #     #24  #
+ 
+ Podatnik uwzgl|ednia odsetki w KUP (art.15c ustawy):   #25  #     #26  #
+ 
+ Podatnik by|l obowi|azany do sporz|adzenia 
+ dokumentacji (art.9a ust.1):                          #13  #     #14  #
+
+ Podatnik korzysta ze zwolnienia w bie|z|acym roku podatkowym:
+  #12                                             #
+  #11                                             #
+  #10                                             # 
+                                                                        #200<
+
+ Czy drukowa|c za|l|acznik CIT-8/O:
+  #19  #           #20  #
+
+
+
+ #16           #   #4           #
+% TABLICA-AKCJI-DIALOG-CIT8,TABLICA-AKCJI-DIALOG-VAT,TABLICA-AKCJI-DIALOG-CIT,TABLICA-AKCJI-DIALOG-VATD,TABLICA-AKCJI-DIALOG-PIT5,TABLICA-AKCJI-DIALOG-PIT5L,TABLICA-AKCJI-DIALOG-WYNMIKRO
+"AKCJA-BUTTON16",cit8-akceptujesz
+"AKCJA-BUTTON4",!exdialogop["koniecwykonywania",""]
+% cit8-akceptujesz.alg
+if(rok_zwolnienia="" or strlen[rok_zwolnienia]=4) goto ok
+okalert["Nieprawid|lowy format roku !"]
+ExDialogOp["idzdopozycji","15"]
+Exitalg[0]
+ok:
+ExDialogOp["koniecwykonywania",""]
+Exitalg[0] 
+ 
+% DIALOG-VAT.DLG
+##DEFWINDOW= ,,,,ADHS,,&&white/lblue,,&&lwhite/blue,"Dane dodatkowe "
+##17,0,P,,"1. art.86 ust.8 pkt1 ustawy",,,,,,zmienna:p1,,0,17,T
+##18,0,P,,"",,,,,,zmienna:p1,,O,17,N
+##10,0,P,,"2. art.119 ustawy",,,,,,zmienna:p2,,0,10,T
+##11,0,P,,"",,,,,,zmienna:p2,,O,10,N
+##12,0,P,,"3. art.120 ust.4 i 5 ustawy",,,,,,zmienna:p3,,0,12,T
+##13,0,P,,"",,,,,,zmienna:p3,,O,12,N
+##14,0,P,,"4. art.122 ustawy",,,,,,zmienna:p4,,0,14,T
+##15,0,P,,"",,,,,,zmienna:p4,,O,14,N
+##19,0,P,,"5. art.136 ustawy",,,,,,zmienna:p5,,0,19,T
+##20,0,P,,"",,,,,,zmienna:p5,,O,19,N
+##22,0,P,,"z|lo|zenie deklaracji",,,,,,zmienna:dokumentacja,,0,22,N
+##21,0,P,,"korekta deklaracji",,,,,,zmienna:dokumentacja,,O,22,T
+##23,0,P,,"tak",,,,,,zmienna:zwrot,,0,23,T
+##24,0,P,,"nie",,,,,,zmienna:zwrot,,O,23,N
+##25,0,P,,"tak",,,,,,zmienna:termin,,0,25,T
+##26,0,P,,"nie",,,,,,zmienna:termin,,O,25,N
+##27,0,P,,,,,,,,zmienna:str7,string:2
+##28,0,P,,,,,,,,zmienna:str8,string:2
+##29,0,P,,,,,,,,zmienna:telefon
+##16,,AD,,@3,,&&black/lwhite,&&lwhite/blue
+##4,,AD,,@4,,&&black/lwhite,&&lwhite/blue
+
+Cel z|lo|zenia formularza:
+ #22                                                   #
+ #21                                                   #
+
+Podatnik wykonywa|l czynno|sci, o kt|orych mowa w:
+ #17                                                   #
+ #10                                                   #
+ #12                                                   # 
+ #14                                                   # 
+ #19                                                   # 
+
+Do deklaracji do|l|aczono:
+ wniosek o zwrot podatku                   #23 #   #24 #
+ wniosek o przyspieszenie terminu zwrotu   #25 #   #26 #
+ 
+Dane osoby sporz|adzaj|acej deklaracj|e:
+Nazwisko : #27                                         #
+Imi|e:     #28                 #  tel.: #29            #
+
+
+ #16           #    #4             #
+
+//
+% DIALOG-VATD.DLG
+##DEFWINDOW= ,,,,ADHS,,&&white/lblue,,&&lwhite/blue,"Dane dodatkowe "
+##10,0,P,,"2. art.119 ustawy",,,,,,zmienna:p2,,0,10,T
+##11,0,P,,"",,,,,,zmienna:p2,,O,10,N
+##12,0,P,,"3. art.120 ust.4 i 5 ustawy",,,,,,zmienna:p3,,0,12,T
+##13,0,P,,"",,,,,,zmienna:p3,,O,12,N
+##14,0,P,,"4. art.122 ustawy",,,,,,zmienna:p4,,0,14,T
+##15,0,P,,"",,,,,,zmienna:p4,,O,14,N
+##19,0,P,,"5. art.136 ustawy",,,,,,zmienna:p5,,0,19,T
+##20,0,P,,"",,,,,,zmienna:p5,,O,19,N
+##22,0,P,,"z|lo|zenie deklaracji",,,,,,zmienna:dokumentacja,,0,22,N
+##21,0,P,,"korekta deklaracji",,,,,,zmienna:dokumentacja,,O,22,T
+##23,0,P,,"tak",,,,,,zmienna:zwrot,,0,23,T
+##24,0,P,,"nie",,,,,,zmienna:zwrot,,O,23,N
+##25,0,P,,"tak",,,,,,zmienna:termin,,0,25,T
+##26,0,P,,"nie",,,,,,zmienna:termin,,O,25,N
+##17,0,P,,"tak",,,,,,zmienna:p1,,0,17,T
+##18,0,P,,"nie",,,,,,zmienna:p1,,O,17,N
+##30,0,P,,"tak",,,,,,zmienna:p6,,0,30,T
+##31,0,P,,"nie",,,,,,zmienna:p6,,O,30,N
+##27,0,P,,,,,,,,zmienna:str7,string:2
+##28,0,P,,,,,,,,zmienna:str8,string:2
+##29,0,P,,,,,,,,zmienna:telefon
+##16,,AD,,@3,,&&black/lwhite,&&lwhite/blue
+##4,,AD,,@4,,&&black/lwhite,&&lwhite/blue
+
+Cel z|lo|zenia formularza:
+ #22                                                     #
+ #21                                                     #
+
+Zaliczy|c nadp|lat|e na poczet przysz|lych 
+zobowi|aza|n podatkowych :                     #30 #   #31 #
+
+Podatnik wykonywa|l czynno|sci, o kt|orych mowa w:
+ #10                                                     #
+ #12                                                     # 
+ #14                                                     # 
+ #19                                                     # 
+
+
+Do deklaracji do|l|aczono:
+ 1.wniosek o zwrot podatku                   #23 #   #24 #
+ 2.wniosek o przyspieszenie terminu zwrotu   #25 #   #26 #
+ 3.wniosek o zaliczenie nadp|laty na poczet   
+   przysz|lych zobowi|aza|n podatkowych:        #17 #   #18 #
+
+Dane osoby sporz|adzaj|acej deklaracj|e:
+Nazwisko : #27                                         #
+Imi|e:     #28                 #  tel.: #29            #
+
+
+ #16           #    #4             #
+
+//
+% zrob_naglowek.alg
+drukujakcja["TEXTFILEPARAM = "+sciezka+"/nagl"+nazwa_sprawozdania2+".html"+",ISO-LATIN2"]
+callfrm["std\nagl"+nazwa_sprawozdania2+".prn"]
+drukujakcja["drukujkoniec"]
+//
+% opis_indywidualny.dlg
+##DEFWINDOW= ,,,,ADHS,,&&white/lblue,,&&lwhite/blue,"Opis indywidualny"
+##13,D,0,,,,&&blue/white,,,,POLE:D:F_rub
+##14,D,0,,,,&&blue/white,,,,POLE:D:F_naz
+##15,0,0,,,,&&black/lwhite,&&white/lblue,,,ZMIENNA:tekst1
+##17,0,0,,,,&&black/lwhite,&&white/lblue,,,ZMIENNA:tekst2
+##18,0,0,,,,&&black/lwhite,&&white/lblue,,,ZMIENNA:tekst3
+##16,,AD,,@3,,&&black/lwhite,&&lwhite/blue
+##4,,AD,,@4,,&&black/lwhite,&&lwhite/blue
+
+ Pozycja:   #13       # - #14                                       #
+
+ Opis indywidualny:
+ #15                                                                # 
+ #17                                                                #
+ #18                                                                #
+
+
+
+   #16          #           #4           #
+% TABLICA-AKCJI-OPIS_INDYWIDUALNY
+"AKCJA-PRZED-WYSWIETLENIEM",PRZED-OPIS_INDYWIDUALNY
+% PRZED-OPIS_INDYWIDUALNY.ALG
+klucz := prac1+"*"+oddzial1+"*"+rejwezp_s["D:f_rub"]
+if(not(rejop["w:znajdzrek",klucz])) goto podstaw_wspolne
+tekst1 := rejwezp_s["w:wpr_s1"]
+tekst2 := rejwezp_s["w:wpr_s2"]
+tekst3 := rejwezp_s["w:wpr_s3"]
+goto zmien_naglowek
+podstaw_wspolne:
+rejop["w:dodajrek",""]
+xrejwstawp_s["w:wpr_rub",rejwezp_s["D:f_rub"]]
+xrejwstawp_s["w:wpr_P1",prac1]
+xrejwstawp_s["w:wpr_dzial",oddzial1]
+xrejwstawp_s["w:wpr_s4","I"]
+rejop["w:zapiszrek",""]
+tekst1 := rejwezp_s["d:F_D0"]
+tekst2 := rejwezp_s["d:F_D1"]
+tekst3 := rejwezp_s["d:F_D2"]
+zmien_naglowek:
+ExDialogOp["ZmienNaglowek",naglowek]
+
+% ROZPISANIE.DLG
+##DEFWINDOW= ,,,,ADHS,,&&white/lblue,,&&lwhite/blue,"Rozpisanie kwoty"
+##13,D,0,,,,&&blue/white,,,,POLE:D:F_rub
+##14,D,0,,,,&&blue/white,,,,POLE:D:F_naz
+##11,D,ADP,,,,&&blue/white,,,,POLE:A:F_rub
+##12,D,P,,,,&&blue/white,,,,POLE:A:F_naz
+##17,0,0,,,,&&black/lwhite,&&white/lblue,,,ZMIENNA:wyn
+##18,D,0,,,,&&black/lwhite,&&white/lblue,,,ZMIENNA:kwota_max,xkwota:2
+##15,D,P,,,,&&black/white,,,,POLE:B:D_M2
+##16,,AD,,@3,,&&black/lwhite,&&lwhite/blue
+##4,,AD,,@4,,&&black/lwhite,&&lwhite/blue
+##200,DZ,ADP
+#200
+ Pozycja:   #13       # - #14                                       #
+                                                                     #200<
+                                                                        
+
+
+ Z pozycji #11       # - #12                                       #
+
+
+ Przypada kwota:      #17                # (max: #18               #)
+
+ (do rozpisania kwota #15                #)
+
+
+   #16          #           #4           #
+% TABLICA-AKCJI-ROZPISANIE
+"AKCJA-PRZED-WYSWIETLENIEM",ROZPISANIE_PRZED
+"AKCJA-BUTTON16",ROZPISANIE_AKCEPTUJESZ
+"AKCJA-BUTTON4",ROZPISANIE_REZYGNUJESZ
+//
+% ROZPISANIE_PRZED.ALG
+kwota_max := .
+wyn := .
+klucz := prac1+"*"+oddzial1+"*"+rejwezp_s["D:f_rub"]
+if(not(rejop["w:znajdzrek",klucz])) goto dodaj_rek
+kwota_max := rejwezp_k["w:wpr_M0"]
+wyn := rejwezp_k["w:wpr_M1"]
+goto zmien_naglowek
+dodaj_rek:
+rejop["w:dodajrek",""]
+xrejwstawp_s["w:wpr_rub",rejwezp_s["D:f_rub"]]
+xrejwstawp_s["w:wpr_P1",prac1]
+xrejwstawp_s["w:wpr_dzial",oddzial1]
+xrejwstawp_s["w:wpr_s4","X"]
+rejop["w:zapiszrek",""]
+zmien_naglowek:
+ExDialogOp["ZmienNaglowek",naglowek]
+% ROZPISANIE_AKCEPTUJESZ.ALG
+if(wyn=.) goto end
+if(wyn<=rejwezp_k["b:D_M2"]) goto sprawdz
+Okalert["Kwota nie mo|ze by|c wi|eksza od kwoty wyliczonej $ dla pozycji "+ rejwezp_s["A:f_rub"]+" - "+rejwezp_s["a:f_naz"]+" !"]
+ExDialogOp["idzdopozycji","17"]
+ExitAlg[0]
+sprawdz:
+if(kwota_max=.) goto end
+if(wyn<=kwota_max) goto end
+Okalert["Kwota wi|eksza od kwoty mo|zliwej do rozpisania!"]
+ExDialogOp["idzdopozycji","17"]
+ExitAlg[0]
+end:
+ExDialogop["Koniecwykonywania",""]
+ExitAlg[0]
+% ROZPISANIE_REZYGNUJESZ.ALG
+wyn := .
+ExDialogop["Koniecwykonywania",""]
+ExitAlg[0]
+
+% rozpisz_na_miesiace.alg
+kk := ''
+pp := ''
+k := ''
+if(not(lmies_ksieg=.)) goto inne_d
+if(not(data_p='')) d := Zrokiem[data_p]
+if(data_p='') d := poczrok_ksieg
+goto wspolne_d
+inne_d:
+d := data_p
+if(data_p='') d := poczrok_ksieg
+wspolne_d:
+nazwa_n := strcut[studatas[d],0,7]
+n := StrIn[nazwa_mies,miesiace]/8
+petla_d:
+callalg["koniec_mies"]
+if(not(lmies_ksieg=.)) goto inne_k
+if( k>zrokiem[data_k]) goto koniec
+goto wspolne_k
+inne_k:
+if(k>data_k) goto koniec
+wspolne_k:
+nm := 12
+if(not(lmies_ksieg=.)) nm := lmies_ksieg
+setokr[pp,kk]
+k00 := O[konto2]
+if(str3="P" and k2<0) k00 := 0
+if(n=1) k01 := k00
+if(n=2) k02 := k00
+if(n=3) k03 := k00
+if(n=4) k04 := k00
+if(n=5) k05 := k00
+if(n=6) k06 := k00
+if(n=7) k07 := k00
+if(n=8) k08 := k00
+if(n=9) k09 := k00
+if(n=10) k10 := k00
+if(n=11) k11 := k00
+if(n=12) k12 := k00
+if(n=13) k13 := k00
+if(n=14) k14 := k00
+if(n=15) k15 := k00
+if(n=16) k16 := k00
+if(n=17) k17 := k00
+if(n=18) k18 := k00
+if(n=19) k19 := k00
+if(n=20) k20 := k00
+if(n=21) k21 := k00
+if(n=22) k22 := k00
+if(n=23) k23 := k00
+if(n=24) k24 := k00
+d := k+1
+n := n+1
+if(n>nm) goto koniec
+goto petla_d
+koniec:
+setokr[data_p,data_k]
+% koniec_mies.alg
+k := d+40
+k := k - A_date[k,"D"]
+if(not(lmies_ksieg=.)) goto inne_pp
+pp := C_date[255,A_date[d,"M"],1]
+kk := C_date[255,A_date[k,"M"],A_date[k,"D"]]
+goto wspolne_pp
+inne_pp:
+if(not(lmies_ksieg=.)) pp := d
+if(not(lmies_ksieg=.)) kk := k
+wspolne_pp:
+// ===========================================
+// sql darek
+// ===========================================
+% DEFINICJE-SQL.ALG
+    sql_ksiega := nazwa_ksieg
+    sql_spr := naz_rej
+    if (not(rejop["d:wezpierwszyrek",""])) ExitAlg[0]
+    callsl["odtworz_spr_sql"]
+//    
+% ZAPISZ-POZYCJE-SQL.ALG
+    if (sql_czysc) callsl["wyczysc_spr_poz_sql"]
+    callsl["zapisz_spr_poz_sql"]
+//    
+% SL.std-raporty-dane-do-sql
+
+define zapisz_spr_poz_sql()
+{
+    variable ks,spr,mc,poz,kw1,kw2;
+    variable s,ss;
+    ustawazmienna_S("BAZADANYCH");
+    () = callalg("SRODOWISKO_SQL");
+    variable baza= dajazmienna_S("BAZA");
+    if (not(baza == "")) ustawazmienna_S("BAZADANYCH",baza+".");
+    ks = dajazmienna_S("sql_ksiega");
+    spr = dajazmienna_S("sql_spr");
+    mc = string(dajazmienna_K("sql_mc"));
+    poz = dajazmienna_S("sql_poz");
+    kw1 = dajazmienna_S("sql_kw1");
+    kw2 = dajazmienna_S("sql_kw2");
+    ss = "INSERT INTO "+dajazmienna_S("BAZADANYCH")+"ksiegi_std_pozw (ksiega,spr,spr_poz,spr_mc,spr_kwota1,spr_kwota2) VALUES ";
+    s = ss+"('"+ks+"','"+spr+"','"+poz+"',"+mc+","+kw1+","+kw2+")";
+    () = sql_komenda("",s);    
+}
+
+define wyczysc_spr_poz_sql()
+{
+    variable ks,spr,mc;
+    variable s,ss;
+    ustawazmienna_S("BAZADANYCH");
+    () = callalg("SRODOWISKO_SQL");
+    variable baza= dajazmienna_S("BAZA");
+    if (not(baza == "")) ustawazmienna_S("BAZADANYCH",baza+".");
+
+    ks = dajazmienna_S("sql_ksiega");
+    spr = dajazmienna_S("sql_spr");
+    mc = string(dajazmienna_K("sql_mc"));
+    ss = " WHERE ksiega ='"+ks+"' AND spr='"+spr+"' AND spr_mc="+mc;
+    s = "DELETE FROM "+dajazmienna_S("BAZADANYCH")+"ksiegi_std_pozw";
+    () = sql_op("komenda",s+ss);
+}
+    
+define rap_std_sql(co)
+{
+	if (gl_czy_temp) return 1; 
+	 if (gl_czy_sql(99)){
+		 ustawazmienna_K("REJ_ID",co);
+		 () = callalgfile("sql\\std_sql.perseus","SL.STD_SQL->akcja_std");
+	}
+	return 1;
+}
+
+define odtworz_spr_sql()
+{
+    variable ks,spr;
+    variable s,ss;
+    ustawazmienna_S("BAZADANYCH");
+    () = callalg("SRODOWISKO_SQL");
+    variable baza= dajazmienna_S("BAZA");
+    if (not(baza == "")) ustawazmienna_S("BAZADANYCH",baza+".");
+
+    ks = dajazmienna_S("sql_ksiega");
+    spr = dajazmienna_S("sql_spr");
+    ss = " WHERE ksiega ='"+ks+"' AND spr='"+spr+"'";
+    s = "DELETE FROM "+dajazmienna_S("BAZADANYCH")+"ksiegi_std_poz ";
+    () = sql_komenda("",s+ss);
+    ss = "INSERT INTO "+dajazmienna_S("BAZADANYCH")+"ksiegi_std_poz (ksiega,spr,spr_poz,spr_poz_nazwa) VALUES ";
+    if (rejop("d:wezpierwszyrek")) {
+        do {
+              s = ss;
+              s = s+"('"+ks+"','"+spr+"','";
+              s = s+rejwezp_s("D:F_rub")+"','";
+              s = s+gl_wytnij_znaki(rejwezp_s("D:F_naz"))+"')" ;
+              () = sql_komenda("",s);
+       } while (rejop("d:weznastepnyrek"));
+   }
+} 
+
+

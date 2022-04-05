@@ -1,0 +1,243 @@
+//
+%% ustawczekajinfo["Start4","Przygotowanie danych. Prosz|e czeka|c ..."]
+%% id_ngl := rejwezp_k["naz:id_nagl"]
+%% d_string := studatas[rejwezp_d["naz:dataod"]]+"_"+studatas[rejwezp_d["naz:datado"]]
+%% d_string_z := "."
+%% d_string_na := ""
+%% callsl["gl_zmien_tekst"]
+%% tekst := d_string
+%% plik_vat := "VAT_"+tekst
+%% formatpolskie := "ISO-LATIN2"
+%% plik := PLIK_OUT+"/"+plik_vat+".xml,"+formatpolskie
+## TEXTFILEPARAM = #plik#
+%% PLIK_WEJ := PLIK_OUT+"/"+plik_vat+".xml"
+// poczatek xml
+<?xml version="1.0" encoding="UTF-8"?>
+//<tns:JPK xmlns="http://jpk.mf.gov.pl/wzor/2016/03/09/03094/" xmlns:etd="http://crd.gov.pl/xml/schematy/dziedzinowe/mf/2016/01/25/eD/DefinicjeTypy/" >
+<tns:JPK xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tns="http://jpk.mf.gov.pl/wzor/2016/10/26/10261/" xmlns:etd="http://crd.gov.pl/xml/schematy/dziedzinowe/mf/2016/01/25/eD/DefinicjeTypy/">
+%% callfrm["raporty_jpk_ngl.prn"]
+%% rejop["t0:zmienkluczrej","0"]
+%% if(rejop["t0:wezpierwszyrek",""]) goto sprzedaz
+%% goto zakup
+%% sprzedaz:
+%% suma := .
+%% lp := .
+%% petla_t0:
+%% ustawczekajinfo["Nastepny","Next"]
+<tns:SprzedazWiersz typ="G">
+<tns:LpSprzedazy>#rejwezp_k["t0:lpsprzedazy"]#S:0</tns:LpSprzedazy>
+%% xxs := rejwezp_s["t0:NrKontrahenta"]
+%% if(xxs="") xxs := "brak"
+<tns:NrKontrahenta>#xxs#S</tns:NrKontrahenta>
+%% d_string := rejwezp_s["t0:nazwanabywcy"]
+%% callalg["zamiana_end"]
+%% if(d_string="") d_string := "brak"
+<tns:NazwaKontrahenta>#d_string#S</tns:NazwaKontrahenta>
+%% d_string := rejwezp_s["t0:adresnabywcy"]
+%% callalg["zamiana_end"]
+%% if(d_string="") d_string := "brak"
+<tns:AdresKontrahenta>#d_string#S</tns:AdresKontrahenta>
+%% d_string := rejwezp_s["t0:nrdokumentu"]
+%% callalg["zamiana_end"]
+<tns:DowodSprzedazy>#d_string#S</tns:DowodSprzedazy>
+%% d_string := Studatas[rejwezp_d["t0:datawystawienia"]]
+%%  d_string_z := "."
+%%  d_string_na := "-"
+%%  callsl["gl_zmien_tekst"]
+<tns:DataWystawienia>#d_string#S</tns:DataWystawienia>
+%% if(rejwezp_d["t0:datasprzedazy"]='') goto omin_dataspr
+%% d_string := Studatas[rejwezp_d["t0:datasprzedazy"]]
+%%  d_string_z := "."
+%%  d_string_na := "-"
+%%  callsl["gl_zmien_tekst"]
+<tns:DataSprzedazy>#d_string#S</tns:DataSprzedazy>
+%% omin_dataspr:
+%% if(rejwezp_k["t0:K_10"]=.) goto omin_k10
+<tns:K_10>#rejwezp_k["t0:K_10"]#S:2</tns:K_10>
+%% omin_k10:
+%% if(rejwezp_k["t0:K_11"]=.) goto omin_k11
+<tns:K_11>#rejwezp_k["t0:K_11"]#S:2</tns:K_11>
+%% omin_k11:
+%% if(rejwezp_k["t0:K_12"]=.) goto omin_k12
+<tns:K_12>#rejwezp_k["t0:K_12"]#S:2</tns:K_12>
+%% omin_k12:
+%% if(rejwezp_k["t0:K_13"]=.) goto omin_k13
+<tns:K_13>#rejwezp_k["t0:K_13"]#S:2</tns:K_13>
+%% omin_k13:
+%% if(rejwezp_k["t0:K_14"]=.) goto omin_k14
+<tns:K_14>#rejwezp_k["t0:K_14"]#S:2</tns:K_14>
+%% omin_k14:
+%% if(rejwezp_k["t0:K_15"]=.) goto omin_k15
+<tns:K_15>#rejwezp_k["t0:K_15"]#S:2</tns:K_15>
+<tns:K_16>#0+rejwezp_k["t0:K_16"]#S:2</tns:K_16>
+%% suma := suma+rejwezp_k["t0:K_16"]
+%% omin_k15:
+%% if(rejwezp_k["t0:K_17"]=.) goto omin_k17
+<tns:K_17>#rejwezp_k["t0:K_17"]#S:2</tns:K_17>
+<tns:K_18>#0+rejwezp_k["t0:K_18"]#S:2</tns:K_18>
+%% suma := suma+rejwezp_k["t0:K_18"]
+%% omin_k17:
+%% if(rejwezp_k["t0:K_19"]=.) goto omin_k19
+<tns:K_19>#rejwezp_k["t0:K_19"]#S:2</tns:K_19>
+<tns:K_20>#0+rejwezp_k["t0:K_20"]#S:2</tns:K_20>
+%% suma := suma+rejwezp_k["t0:K_20"]
+%% omin_k19:
+%% if(rejwezp_k["t0:K_21"]=.) goto omin_k21
+<tns:K_21>#rejwezp_k["t0:K_21"]#S:2</tns:K_21>
+%% omin_k21:
+%% if(rejwezp_k["t0:K_22"]=.) goto omin_k22
+<tns:K_22>#rejwezp_k["t0:K_22"]#S:2</tns:K_22>
+%% omin_k22:
+%% if(rejwezp_k["t0:K_23"]=.) goto omin_k23
+<tns:K_23>#rejwezp_k["t0:K_23"]#S:2</tns:K_23>
+<tns:K_24>#0+rejwezp_k["t0:K_24"]#S:2</tns:K_24>
+%% suma := suma+rejwezp_k["t0:K_24"]
+%% omin_k23:
+%% if(rejwezp_k["t0:K_25"]=.) goto omin_k25
+<tns:K_25>#rejwezp_k["t0:K_25"]#S:2</tns:K_25>
+<tns:K_26>#0+rejwezp_k["t0:K_26"]#S:2</tns:K_26>
+%% suma := suma+rejwezp_k["t0:K_26"]
+%% omin_k25:
+%% if(rejwezp_k["t0:K_27"]=.) goto omin_k27
+<tns:K_27>#rejwezp_k["t0:K_27"]#S:2</tns:K_27>
+<tns:K_28>#0+rejwezp_k["t0:K_28"]#S:2</tns:K_28>
+%% suma := suma+rejwezp_k["t0:K_28"]
+%% omin_k27:
+%% if(rejwezp_k["t0:K_29"]=.) goto omin_k29
+<tns:K_29>#rejwezp_k["t0:K_29"]#S:2</tns:K_29>
+<tns:K_30>#0+rejwezp_k["t0:K_30"]#S:2</tns:K_30>
+%% suma := suma+rejwezp_k["t0:K_30"]
+%% omin_k29:
+%% if(rejwezp_k["t0:K_31"]=.) goto omin_k31
+<tns:K_31>#rejwezp_k["t0:K_31"]#S:2</tns:K_31>
+%% omin_k31:
+%% if(rejwezp_k["t0:K_32"]=.) goto omin_k32
+<tns:K_32>#rejwezp_k["t0:K_32"]#S:2</tns:K_32>
+<tns:K_33>#0+rejwezp_k["t0:K_33"]#S:2</tns:K_33>
+%% suma := suma+rejwezp_k["t0:K_33"]
+%% omin_k32:
+%% if(rejwezp_k["t0:K_34"]=.) goto omin_k34
+<tns:K_34>#rejwezp_k["t0:K_34"]#S:2</tns:K_34>
+<tns:K_35>#0+rejwezp_k["t0:K_35"]#S:2</tns:K_35>
+%% suma := suma+rejwezp_k["t0:K_35"]
+%% omin_k34:
+%% if(rejwezp_k["t0:K_36"]=.) goto omin_k36
+<tns:K_36>#rejwezp_k["t0:K_36"]#S:2</tns:K_36>
+%% suma := suma+rejwezp_k["t0:K_36"]
+%% omin_k36:
+%% if(rejwezp_k["t0:K_37"]=.) goto omin_k37
+<tns:K_37>#rejwezp_k["t0:K_37"]#S:2</tns:K_37>
+%% suma := suma+rejwezp_k["t0:K_37"]
+%% omin_k37:
+%% if(rejwezp_k["t0:K_38"]=.) goto omin_k38
+<tns:K_38>#rejwezp_k["t0:K_38"]#S:2</tns:K_38>
+%% suma := suma-rejwezp_k["t0:K_38"]
+%% omin_k38:
+%% if(rejwezp_k["t0:K_39"]=.) goto omin_k39
+<tns:K_39>#rejwezp_k["t0:K_39"]#S:2</tns:K_39>
+%% suma := suma-rejwezp_k["t0:K_39"]
+%% omin_k39:
+%% lp := lp+1
+</tns:SprzedazWiersz>
+%% rejwstawp_k["t0:iID",id_ngl]
+%% rejwstawp_l["t0:oLog",.T.]
+%% if(rejop["t0:weznastepnyrek",""]) goto petla_t0
+<tns:SprzedazCtrl>
+<tns:LiczbaWierszySprzedazy>#lp#S:0</tns:LiczbaWierszySprzedazy>
+%% suma := 0+suma
+<tns:PodatekNalezny>#suma#S:2</tns:PodatekNalezny>
+</tns:SprzedazCtrl>
+%% zakup:
+%% rejop["t1:zmienkluczrej","0"]
+%% if(not(rejop["t1:wezpierwszyrek",""])) goto po_zakup
+%% suma := .
+%% lp := .
+%% petla_t1:
+%% ustawczekajinfo["Nastepny","Next"]
+<tns:ZakupWiersz typ="G">
+<tns:LpZakupu>#rejwezp_k["t1:lpzakupu"]#S:0</tns:LpZakupu>
+<tns:NrDostawcy>#rejwezp_s["t1:nridwystawcy"]#S</tns:NrDostawcy>
+%% d_string := rejwezp_s["t1:nazwawystawcy"]
+%% callalg["zamiana_end"]
+<tns:NazwaDostawcy>#d_string#S</tns:NazwaDostawcy>
+%% d_string := rejwezp_s["t1:adreswystawcy"]
+%% callalg["zamiana_end"]
+<tns:AdresDostawcy>#d_string#S</tns:AdresDostawcy>
+%% d_string := rejwezp_s["t1:nrfaktury"]
+%% callalg["zamiana_end"]
+<tns:DowodZakupu>#d_string#S</tns:DowodZakupu>
+%% d_string := Studatas[rejwezp_d["t1:datazakupu"]]
+%%  d_string_z := "."
+%%  d_string_na := "-"
+%%  callsl["gl_zmien_tekst"]
+<tns:DataZakupu>#d_string#S</tns:DataZakupu>
+%% if(rejwezp_d["t1:datawplywufaktury"]='') goto po_dataw
+%% d_string := Studatas[rejwezp_d["t1:datawplywufaktury"]]
+%%  d_string_z := "."
+%%  d_string_na := "-"
+%%  callsl["gl_zmien_tekst"]
+<tns:DataWplywu>#d_string#S</tns:DataWplywu>
+%% po_dataw:
+%% if(rejwezp_k["t1:K_43"]=.) goto omin_k43
+<tns:K_43>#rejwezp_k["t1:K_43"]#S:2</tns:K_43>
+<tns:K_44>#0+rejwezp_k["t1:K_44"]#S:2</tns:K_44>
+%% suma := suma+rejwezp_k["t1:K_44"]
+%% omin_k43:
+%% if(rejwezp_k["t1:K_45"]=.) goto omin_k45
+<tns:K_45>#rejwezp_k["t1:K_45"]#S:2</tns:K_45>
+<tns:K_46>#0+rejwezp_k["t1:K_46"]#S:2</tns:K_46>
+%% suma := suma+rejwezp_k["t1:K_46"]
+%% omin_k45:
+%% if(rejwezp_k["t1:K_47"]=.) goto omin_k47
+<tns:K_47>#rejwezp_k["t1:K_47"]#S:2</tns:K_47>
+%% suma := suma+rejwezp_k["t1:K_47"]
+%% omin_k47:
+%% if(rejwezp_k["t1:K_48"]=.) goto omin_k48
+<tns:K_48>#rejwezp_k["t1:K_48"]#S:2</tns:K_48>
+%% suma := suma+rejwezp_k["t1:K_48"]
+%% omin_k48:
+%% if(rejwezp_k["t1:K_49"]=.) goto omin_k49
+<tns:K_49>#rejwezp_k["t1:K_49"]#S:2</tns:K_49>
+%% suma := suma+rejwezp_k["t1:K_49"]
+%% omin_k49:
+%% if(rejwezp_k["t1:K_50"]=.) goto omin_k50
+<tns:K_50>#rejwezp_k["t1:K_50"]#S:2</tns:K_50>
+%% suma := suma+rejwezp_k["t1:K_50"]
+%% omin_k50:
+%% lp := lp+1
+</tns:ZakupWiersz>
+%% rejwstawp_k["t1:iID",id_ngl]
+%% rejwstawp_l["t1:oLog",.T.]
+%% if(rejop["t1:weznastepnyrek",""]) goto petla_t1
+<tns:ZakupCtrl>
+<tns:LiczbaWierszyZakupow>#lp#S:0</tns:LiczbaWierszyZakupow>
+%% suma := 0+suma
+<tns:PodatekNaliczony>#suma#S:2</tns:PodatekNaliczony>
+</tns:ZakupCtrl>
+// koniec xml
+%% po_zakup:
+</tns:JPK>
+%% out:
+%% rejwstawp_l["naz:olog",.T.]
+%% ustawczekajinfo["Stop",""]
+%% ExitFrm[0]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

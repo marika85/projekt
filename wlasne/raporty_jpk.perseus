@@ -1,0 +1,2513 @@
+//
+% IJPK_FA_W.DBF
+%<JPK_FA_W.DBF
+%<DOK-EMISJA-FK.DBF
+
+% IJPK_FA_W.DIC
+%<JPK_FA_W.DIC
+%<DOK-EMISJA-FK.DIC
+
+% IJPK_FA_F.DBF
+%<JPK_FA_F.DBF
+%<DOK-EMISJA-FK.DBF
+112,0,,,12
+
+% IJPK_FA_F.DIC
+%<JPK_FA_F.DIC
+%<DOK-EMISJA-FK.DIC
+"NrFryKorygowanej",158,Estring    #Numer faktury korygowanej
+"OkresFryKorygowanej",159,Estring #Dla faktury koryguj¹cej - okres, do którego odnosi siê udzielany opust lub obni¿ka, w przypadku gdy podatnik udziela opustu lub obni¿ki ceny w odniesieniu do wszystkich dostaw towarów lub us³ug dokonanych lub œwiadczonych na rzecz jednego odbiorcy w danym okresie
+
+% DOK-EMISJA-FK.DBF
+198,string,20    # WALUTA/nip
+199,string,100   # info
+200,2100         # ko symbol
+201,2000         # ko konto
+202,2000         # vat konto
+203,string,20,2  # rej VAT
+204,string,20,2  # klas VAT
+205,2000         # netto konto
+206,string,10    # typ dok
+207,ydate        # data fa
+208,ydate        # data termin
+209,ydate        # data pod
+210,ydate        # data w
+211,string,40    # nazwa pliku
+212,2002         # konto netto kls
+213,2000         # ko konto roznic
+214,2002         # konto netto kls roznic
+215,xkwota,,4    # kurs 1
+216,xkwota,,4    # kurs 2
+217,xkwota,,x    # BRUTTO jako klucz
+218,xkwota,,x    # netto jako klucz
+219,xkwota,,x    # VAT jako klucz
+220,log          # Ksiegowac
+221,log          # Zmieniony
+222,string,1     # Znacznik
+223,log          # Na Wn Minus
+224,string,10    # do kursu
+225,xkwota,,x    # BRUTTO PLN jako klucz
+226,xkwota,,x    # NETTO PLN jako klucz
+227,xkwota,,x    # VAT PLN jako klucz
+230,string,200   # komentarz
+1,0,,,11
+217,0,,,11 
+207,0,,,5 
+
+% DOK-EMISJA-FK.DIC
+"NR_F_RY",112,Estring
+"NR_F_RY_K",158,Estring
+"NIP",120,Estring,"NIP"
+"N-nip",120,Estring,"NIP"
+"T-nip",118,Estring,"NIP"
+"f_waluta",198,Estring,"waluta"
+"f_info",199,Estring,"Info"
+"f_symbol",200,Estring,"Symbol"
+"f_konto",201,Estring,"Konto"
+"f_konto_brutto",201,Estring,"Konto"
+"f_konto_vat",202,Estring,"Konto VAT"
+"f_rejestr_vat",203,Estring,"Rej VAT"
+"f_klas_vat",204,Estring,"Klas VAT"
+"f_konto_netto",205,Estring,"Konto NETTO"
+"f_typ_dok",206,Estring,"Typ"
+"f_data_fa",207,Edata
+"f_data_termin",208,Edata
+"f_data_pod",209,Edata
+"f_data_w",210,Edata
+"f_nazwa_pliku",211,Estring
+"f_konto_kls",212,Estring,"Konto KLS"
+"f_konto_netto_r",213,Estring,"Konto roznic"
+"f_konto_kls_r",214,Estring,"Konto KLS roznic"
+"f_kurs",215,Ekwota
+"f_kurs2",216,Ekwota
+"f_brutto",217,Ekwota
+"f_netto",218,Ekwota
+"f_vat",219,Ekwota
+"f_log",220,Elog
+"f_zmien",221,Elog
+"f_znak",222,Estring
+"f_na_wn_netto",223,Elog
+"f_do_kursu",224,Estring
+"kurs",215,Ekwota
+"kurs2",216,Ekwota
+"f_brutto_pln",225,Ekwota
+"f_netto_pln",226,Ekwota
+"f_vat_pln",227,Ekwota
+"f_komentarz",230,Estring
+//
+  
+
+% X-KONWERTUJ-UTF8-TO-WIN
+iconv -c -f UTF-8 -t CP1250 $1 >$1.txt
+//
+
+% X-KONWERTUJ-WIN-TO-UTF8
+iconv -c -f CP1250 -t UTF-8 $1 >$1.txt
+//
+
+// wspolna czesc do sprawdzania poprawnosci wypelnienia elementow naglowek i podmiot1
+% ustal_okres_vat.alg
+ finnop["openmain",""]
+ dat1 := zrokiem[finnokrd1['']]
+ dat1 := dat1 - A_date[dat1,"D"]+1
+ dat2 := dat1 + 32
+ dat2 := dat2 - A_date[dat2,"D"]
+//%% okalert["dat1="+dat1+"$dat2="+dat2]
+ finnop["close",""]
+
+% sprawdz_podmiot1.alg
+if(not(rejwezp_s["naz:NIP"]="")) goto po_nip
+rejop["tmp:dodajrek",""]
+tekst := "Element: IdentyfikatorPodmiotu - brak numeru NIP ***********"
+xrejwstawp_s["tmp:t_opis",tekst]
+rejop["tmp:zapiszrek",""]
+po_nip:
+if(not(rejwezp_s["naz:PelnaNazwa"]="")) goto ok_nazwa
+rejop["tmp:dodajrek",""]
+tekst := "Element: IdentyfikatorPodmiotu - brak nazwy podmiotu ***********"
+xrejwstawp_s["tmp:t_opis",tekst]
+rejop["tmp:zapiszrek",""]
+ok_nazwa:
+//okalert["wariant="+rejwezp_s["naz:WariantFormularza"]]
+if (rejwezp_s["naz:WariantFormularza"] == "3") goto ok_poczta
+if(not(rejwezp_s["naz:KodUrzedu"]="")) goto sprawdz_kod
+rejop["tmp:dodajrek",""]
+tekst := "Element: Naglowek - brak kodu urz|edu skarbowego ***********"
+xrejwstawp_s["tmp:t_opis",tekst]
+rejop["tmp:zapiszrek",""]
+goto po_naglowek
+sprawdz_kod:
+us_ok := .N.
+rejop["us:otworzrej","URZAD-SKARB.RXR"]
+if(rejop["us:znajdzrek",rejwezp_s["naz:KodUrzedu"]]) us_ok := .T.
+rejop["us:zamknijrej",""]
+if(us_ok) goto po_naglowek
+rejop["tmp:dodajrek",""]
+tekst := "Element: Naglowek - nieprawid|lowy kod urz|edu skarbowego ***********"
+xrejwstawp_s["tmp:t_opis",tekst]
+rejop["tmp:zapiszrek",""]
+po_naglowek:
+if(not(rejwezp_s["naz:Wojewodztwo"]="")) goto ok_woj
+rejop["tmp:dodajrek",""]
+tekst := "Element: AdresPodmiotu - brak nazwy wojew|odztwa ***********"
+xrejwstawp_s["tmp:t_opis",tekst]
+rejop["tmp:zapiszrek",""]
+ok_woj:
+if(not(rejwezp_s["naz:Powiat"]="")) goto ok_pow
+rejop["tmp:dodajrek",""]
+tekst := "Element: AdresPodmiotu - brak nazwy powiatu ***********"
+xrejwstawp_s["tmp:t_opis",tekst]
+rejop["tmp:zapiszrek",""]
+ok_pow:
+if(not(rejwezp_s["naz:Gmina"]="")) goto ok_gmina
+rejop["tmp:dodajrek",""]
+tekst := "Element: AdresPodmiotu - brak nazwy gminy ***********"
+xrejwstawp_s["tmp:t_opis",tekst]
+rejop["tmp:zapiszrek",""]
+ok_gmina:
+if(not(rejwezp_s["naz:NrDomu"]="")) goto ok_dom
+rejop["tmp:dodajrek",""]
+tekst := "Element: AdresPodmiotu - brak numeru domu ***********"
+xrejwstawp_s["tmp:t_opis",tekst]
+rejop["tmp:zapiszrek",""]
+ok_dom:
+if(not(rejwezp_s["naz:Miejscowosc"]="")) goto ok_miasto
+rejop["tmp:dodajrek",""]
+tekst := "Element: AdresPodmiotu - brak nazwy miejscowo|sci ***********"
+xrejwstawp_s["tmp:t_opis",tekst]
+rejop["tmp:zapiszrek",""]
+ok_miasto:
+if(not(rejwezp_s["naz:KodPocztowy"]="")) goto ok_kod
+rejop["tmp:dodajrek",""]
+tekst := "Element: AdresPodmiotu - brak kodu pocztowego ***********"
+xrejwstawp_s["tmp:t_opis",tekst]
+rejop["tmp:zapiszrek",""]
+ok_kod:
+if(not(rejwezp_s["naz:Poczta"]="")) goto ok_poczta
+rejop["tmp:dodajrek",""]
+tekst := "Element: AdresPodmiotu - brak nazwy poczty ***********"
+xrejwstawp_s["tmp:t_opis",tekst]
+rejop["tmp:zapiszrek",""]
+ok_poczta:
+//
+% wariant_jpk_v7mk.DLG
+PRZYCISK_CANCELID = 1
+##DEFWINDOW =,,,,ADPH,lwhite/black&white,lwhite/red&black/white,magenta/black&white,,"Wyb|or wariantu JPK_VATDEKL"
+##11,0,P,,,,,,,,Zmienna:jpk_v7
+##0,,ADP,,@3
+##1,,ADP,,@4
+
+
+Rodzaj deklaracji:  #11              #
+
+
+
+     #0        #   #1        #
+
+% TABLICA-AKCJI-wariant_jpk_v7mk
+"AKCJA-F2-POLE11",W-VAT-POLE11
+"AKCJA-PO-POLU11",W-VAT-PO-POLU11
+"AKCJA-BUTTON0",W-VAT-AKCE
+"AKCJA-PRZED-WYSWIETLENIEM",!exdialogop["idzdopozycji","11"]
+% W-VAT-POLE11.ALG
+A_ok := .N.
+d_string := WezNazwaString["JPK_V7M (1)","JPK_V7M (1),JPK_V7K (1)","Rodzaj deklaracji"]
+if(d_string="") ExitAlg[0]
+A_ok := .T.
+//
+% W-VAT-PO-POLU11.ALG
+if(OkNazwaString[jpk_v7,"JPK_V7M (1),JPK_V7K (1), ,"]) exitAlg[0]
+okalert["Niepoprawna warto|s|c!"]
+ExDialogOp["IdzDoPozycji","11"]
+ExitAlg[0]
+//
+% W-VAT-AKCE.ALG
+//if(not(wjv = "")) goto koniec
+if(not(jpk_v7 = "")) goto koniec
+okalert["Wprowad|x rodzaj deklaracji"]
+exdialogop["idzdopozycji","11"]
+Exitalg[0]
+koniec:
+exdialogop["koniecwykonywania",""]
+Exitalg[0]
+//
+% ustal_parametry_jpkv7.dlg
+PRZYCISK_CANCELID=90
+##DEFWINDOW = ,,,,ADHS,&&black/white,&&white/lblue,,&&lwhite/blue,"Ustawienia do JPK_V7"
+##90,,ADP,,@5
+##12,BGTL,ADP,,"Przypisanie klasyfikacji do pozycji deklaracji"
+##14,BGTL,ADP,,"Przenie|s definicje ze wzorca"
+##10,BGTL,ADP,,"Definicje pozycji deklaracji VAT"
+##11,BGTL,ADP,,"Przenie|s definicje ze wzorca"
+//##13,BGTL,ADP,,"Dodatkowe dane dla deklaracji"
+
+
+   #12                                          #  #14                         #
+
+
+   #10                            #                #11                         #
+
+
+     #90           #
+
+//
+% TABLICA-AKCJI-ustal_parametry_jpkv7
+"AKCJA-PRZED-WYSWIETLENIEM",USTAL-PRZED
+"AKCJA-BUTTON10",!callalgfile["std/std.alg;vat/vat.alg","USTAL-DEFINIOWANIE1"]
+"AKCJA-BUTTON11",przepisz_definicjex
+"AKCJA-BUTTON14",!callalgfile["std/std.alg;vat/vat.alg","przepisz_definicje_vatdekl"]
+"AKCJA-BUTTON12",!callalgfile["vat/vat.alg","LOOK-DEKLARACJA7"]
+"AKCJA-BUTTON13",dodatkowe_jpkv7
+//
+% przepisz_definicje_vatdekl.alg
+if(not(Yesnalert["UWAGA!!!! $Istniej|aca definicja przyporz|adkowa|n przepadnie. $ Czy mimo to kontynuowa|c?"])) exitalg[0]
+odczytaj_k := 2
+ksiega := ""
+wzor := ""
+podkat := ""
+exdialogop["idzdodialogu","wybierz_rodzaj_dzialania1"]
+if(odczytaj_k=2) ExitAlg[0]
+ksieg1 := wzor
+podkat := "vat_stru\"
+if(odczytaj_k=0) ksieg1 := ksiega
+if(odczytaj_k=0) podkat := ""
+ksieg2 := nazwa_ksieg
+if(not(yesnalert["Czy kopiowa|c definicje przyporz|adkowa|n z "+ksieg1 +" do "+ksieg2+"?"])) exitalg[0]
+elem_id := DodajLogElem["SRODOWISKO","Przenoszenie sprawozdania","","Przenoszenie przyporz|adkowa|n klasyfikacji VAT do p|ol deklaracji z "+ ksieg1+" do "+ksieg2]
+dyskOp["UsunPlik",ksieg2+"\data\vat_dekl7.*",""]
+dyskOp["UsunPlik",ksieg2+"\data\vat_dekp7.*",""]
+dyskOp["UsunPlik",ksieg2+"\data\vat_klas7.*",""]
+errmess := "OK"
+//okalert["co="+ksieg1+"\data\std\"+nazwa_sprawozdania1+".dbf $gdzie="+ksieg2+"\data\std"]
+if(not(DyskOp["KopiujPlik",ksieg1+"\data\"+podkat+"vat_dekl7.dbf",ksieg2+"\data"])) errmess := "|Xle"
+if(not(DyskOp["KopiujPlik",ksieg1+"\data\"+podkat+"vat_klas7.dbf",ksieg2+"\data"])) errmess := "|Xle"
+DodajLogElemKoniec[elem_id,errmess]
+RejOp["D:OtworzRejSprawdz","vat_dekl7.rjr"]
+ if(Rejop["D:WezPierwszyRek",""]) goto sa_definicje
+Okalert["Nie odczytano |zadnych definicji"]
+sa_definicje:
+rejop["d:zamknijrej",""]
+
+% dodatkowe_jpkv7.alg
+nazwa_sprawozdania := "VATDEKL"
+ raport := ToStr["#os_ksieg#S&#nazwa_ksieg#S&#nazwa_sprawozdania#S"]
+ IF(RejOp["N:OtworzRejSprawdz","FRM_MEMO.RJR"]) GOTO mem_otw
+ OkAlert["Nie mog|e otworzy|c rejestru z parametrami !"]
+ goto _esc1
+ mem_otw:
+ if (RejOp["N:ZnajdzRek",raport])goto read_param
+ RejOp["N:DodajRek",""]
+ xRejWstawP_S["N:frm_frm",raport] 
+ RejOp["N:ZapiszRek",""]
+ read_param:
+ telefon := RejWezP_S["N:FRM_str5"]
+ rodzajk := 2
+ p1 := RejWezP_L["N:FRM_log3"]
+ if(not(p1)) p1 := .N.
+ p2 := RejWezP_L["N:FRM_log4"]
+ if(not(p2)) p2 := .N.
+ p3 := RejWezP_L["N:FRM_log5"]
+ if(not(p3)) p3 := .N.
+ p4 := RejWezP_L["N:FRM_log6"]
+ if(not(p4)) p4 := .N.
+ p5 := RejWezP_L["N:FRM_log7"]
+ if(not(p5)) p5 := .N.
+ str7 := RejWezP_S["N:FRM_str7"]
+ str8 := RejWezP_S["N:FRM_str8"]
+ str10 := RejWezP_S["N:FRM_str10"]
+ email := RejWezP_S["N:FRM_str12"]
+exdialogop["idzdodialogu","DIALOG-VATDEKL"]
+ if(D_POS = 4) drukuj := .N.
+ if (D_POS = 4) goto _esc1
+ RejWstawP_S["N:FRM_str5",telefon]
+ RejwstawP_K["N:FRM_kwota2",rodzajk]
+ RejWstawP_L["N:FRM_log3",p1]
+ RejWstawP_L["N:FRM_log4",p2]
+ RejWstawP_L["N:FRM_log5",p3]
+ RejWstawP_L["N:FRM_log6",p4]
+ RejWstawP_L["N:FRM_log7",p5]
+ RejWstawP_S["N:frm_str7",str7]
+ RejWstawP_S["N:frm_str8",str8]
+ RejWstawP_S["N:frm_str10",str10]
+ RejWstawP_S["N:frm_str12",email]
+ RejOp["N:ZamknijRej",""]
+_esc1:
+
+% przepisz_definicjex.alg
+nazwa_sprawozdania := "VATDEKL"
+nazwa_sprawozdania1 := "vatdekl"
+nazwa_sprawozdania2 := "vatdekl"
+wydruk_std := "vatdekl.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "JPK_V7"
+naz_rej := nazwa_sprawozdania
+naz_rej1 := nazwa_sprawozdania1
+callalgfile["std/std.alg","przepisz_definicje"]
+
+% ustal-definiowanie1.alg
+czy_filtr := .N.
+callalg["ustal-definiowanie"]
+
+% ustal-definiowanie2.alg
+czy_filtr := .T.
+callalg["ustal-definiowanie"]
+
+% ustal-definiowanie.alg
+nazwa_sprawozdania := "VATDEKL"
+nazwa_sprawozdania1 := "vatdekl"
+nazwa_sprawozdania2 := "vatdekl"
+wydruk_std := "vatdekl.frm"
+sprawozdanie := "0_00"
+nazwa_spr := "JPK_V7"
+naz_rej := nazwa_sprawozdania
+naz_rej1 := nazwa_sprawozdania1
+oddzial := ""
+//wydruk := wydruk_std
+FinnOp["OpenMainX",""]
+ksg := nazwa_ksieg
+rok_1 := rok_ksieg
+opis_ksg := opis_ksieg
+ROK1 := POCZROK_KSIEG
+if(rejwezp_s["naz:CelZlozenia"]="1") goto nie_korekta
+if(deklaracja=.N.) goto nie_korekta
+if(rejwezp_d["naz:datado"]>= rok1) goto nie_korekta
+// tu odszukanie ksiegi ktorej dotyczy korekta
+ rejop["hk:otworzrej","h-ksiegi.rjr"]
+ if (not(rejop["hk:wezpierwszyrek",""])) goto nie_korekta
+ petla_hkX:
+ ks_s := rejwezp_s["hk:ks_sym"]
+ if (not(FinnOp["OpenMain",ks_s])) goto next_hkx
+ d_p := poczrok_ksieg
+ d_data := d_p
+ callsl["gl_koniec_rok()"]
+ d_k := d_data
+ if (d_k >=rejwezp_d["naz:datado"] and d_p<= rejwezp_d["naz:datado"]) goto ustal_klucz
+ zamknij_hkx:
+ finnop["close",""]
+ next_hkx:
+ if (rejop["hk:weznastepnyrek",""]) goto petla_hkx
+ goto nie_korekta
+ustal_klucz:
+rok1 := poczrok_ksieg
+nie_korekta:
+max_mies := lmies_ksieg
+if(lmies_ksieg=.) max_mies := 12
+mies_pocz := A_DATE[rok1,"M"]
+ROK2 := C_Date[A_Date[rok1,"Y"]+1,A_Date[rok1,"M"],01]-1
+daty := ToStr["#stuDataS[rok1]#S - #StuDataS[rok2]#S"]
+miesiace := "BO     -"
+wykaz := ""
+wykaz1 := ""
+lp := 1
+mies := mies_pocz
+dataxd := rok1
+pp:
+miesxs := strcut[studatas[dataxd],0,7]
+miesiace := miesiace +miesxs+"-"
+znak := ","
+if(lp=1) znak := ""
+wykaz := wykaz+ znak+miesxs
+if(mies=3 or mies=6 or mies=9 or mies=12) wykaz1 := wykaz1+ znak+miesxs
+lp := lp+1
+mies := mies+1
+if(mies>12) mies := mies-12
+dataxd := dataxd+40
+dataxd := dataxd-A_DAte[dataxd,"D"]+1
+if(lp<max_mies+1) goto pp
+miesiace := miesiace + "BZ     -"
+if(StrCut[wykaz1,0,1]=",") wykaz1 := StrCut[wykaz1,1,StrLen[wykaz1]-1]
+callalgfile["vat/vat.alg;std/std.alg","definiowanie"]
+FinnOp["Close",""]
+//
+% ustal-przed.alg
+ExDialogOp["IdzDoPozycji","90"]
+//
+% DIALOG-VATDEKL.DLG
+##DEFWINDOW= ,,,,ADHS,,&&white/lblue,,&&lwhite/blue,"Dane dodatkowe "
+##10,0,P,,"1. art.119 ustawy",,,,,,zmienna:p2,,0,10,T
+##11,0,P,,"",,,,,,zmienna:p2,,O,10,N
+##12,0,P,,"2. art.120 ust.4 i 5 ustawy",,,,,,zmienna:p3,,0,12,T
+##13,0,P,,"",,,,,,zmienna:p3,,O,12,N
+##14,0,P,,"3. art.122 ustawy",,,,,,zmienna:p4,,0,14,T
+##15,0,P,,"",,,,,,zmienna:p4,,O,14,N
+##19,0,P,,"4. art.136 ustawy",,,,,,zmienna:p5,,0,19,T
+##20,0,P,,"",,,,,,zmienna:p5,,O,19,N
+##30,0,0,," ",,&&black/lwhite,&&black/lwhite,,,zmienna:str10,,0,30,"T"
+##31,0,0,,"",,&&black/lwhite,&&black/lwhite,,,zmienna:str10,,O,30,"N"
+##17,0,0,," ",,&&black/lwhite,&&black/lwhite,,,zmienna:p1,,0,17,T
+##18,0,0,,"",,&&black/lwhite,&&black/lwhite,,,zmienna:p1,,O,17,N
+##27,0,P,,,,,,,,zmienna:str7,string:2
+##28,0,P,,,,,,,,zmienna:str8,string:2
+##29,0,P,,,,,,,,zmienna:telefon
+##34,0,P,,,,,,,,zmienna:email
+##16,,AD,,@3,,&&black/lwhite,&&lwhite/blue
+//##4,,AD,,@4,,&&black/lwhite,&&lwhite/blue
+
+Podatnik wykonywa|l czynno|sci, o kt|orych mowa w:
+ #10                                                   #
+ #12                                                   # 
+ #14                                                   # 
+ #19                                                   # 
+
+Podatnik korzysta z obni|zenia zobowi|azania
+podatkowego (art.108d):                        #30 #<tak
+
+Podatnik wnioskuje o zaliczenie zwrotu podatku
+na poczet przysz|lych zobowi|aza|n podatkowych:   #17 #<tak
+// 
+//Dane osoby sporz|adzaj|acej deklaracj|e:
+//Nazwisko : #27                                         #
+//Imi|e:     #28                 #  tel.: #29            #
+//E-mail:    #34                                         #
+
+// #16           #    #4             #
+ #16           #
+
+//
+//
+% RAPORTY_JPK.ALG
+finnop["@0openmainx",""]
+  rejop["KA:otworzrej1","WYKAZ_KS_OKR.RJR"]
+  rok_old := .
+  rok := A_date[poczrok_ksieg,"Y"]
+  INFO_TXT0 := ""
+  INFO_TXT1 := ""
+  INFO_TXT2 := ""
+  INFO_TXT3 := ""
+  INFO_TXT4 := ""
+  INFO_TXT5 := ""
+  INFO_TXT6 := ""
+  wjv := ""
+  jpk_v7 := ""
+  deklaracja := .N.
+  ewidencja := .N.
+  z01 := ""
+  telefon := ""
+  rodzajk := 2
+  p1 := .N.
+  p2 := .N.
+  p3 := .N.
+  p4 := .N.
+  p5 := .N.
+  str7 := ""
+  str8 := ""
+  str10 := ""
+  email := ""
+  exdialogop["idzdodialogu","POKAZ_RAPORTY_JPK"]
+  rejop["KA:zamknijrej",""]
+finnop["@0Close",""]
+//
+% ustal_zmienne_vat.alg
+lpks := 0
+lpkz := 0
+suma_s := 0
+suma_z := 0
+rejop["t0:zmienkluczrej","11"]
+  key := tostr["#rejwezp_k[""naz:id_nagl""]#S:0"]
+if(not(rejop["t0:znajdzrek",key])) exitalg[0]
+petla_tt:
+if(not(rejwezp_k["t0:iID"]=rejwezp_k["naz:id_nagl"])) exitalg[0]
+if(not(rejwezp_s["t0:nrdokumentu"]="")) lpks := lpks+1
+if(not(rejwezp_s["t0:nrdokumentu"]="")) suma_s := suma_s+rejwezp_k["t0:K_16"]+rejwezp_k["t0:K_18"]+rejwezp_k["t0:K_20"]+rejwezp_k["t0:K_24"]+rejwezp_k["t0:K_26"]+rejwezp_k["t0:K_28"]+rejwezp_k["t0:K_30"]
+if(not(rejwezp_s["t0:nrdokumentu"]="")) suma_s := suma_s+rejwezp_k["t0:K_33"]+rejwezp_k["t0:K_35"]+rejwezp_k["t0:K_36"]+rejwezp_k["t0:K_37"]-rejwezp_k["t0:K_38"]-rejwezp_k["t0:K_39"]
+if(not(rejwezp_s["t0:nrfaktury"]="")) lpkz := lpkz+1
+if(not(rejwezp_s["t0:nrfaktury"]="")) suma_z := suma_z+rejwezp_k["t0:K_44"]+rejwezp_k["t0:K_46"]+rejwezp_k["t0:K_47"]+rejwezp_k["t0:K_48"]+rejwezp_k["t0:K_49"]+rejwezp_k["t0:K_50"]
+if(rejop["t0:weznastepnyrekn",""]) goto petla_tt
+//
+% ustal_zmienne_vatdekl.alg
+lpks := 0
+lpkz := 0
+suma_s := 0
+suma_z := 0
+//rejop["t0:zobaczdbf",""]
+rejop["t0:zmienkluczrej","11"]
+  key := tostr["#rejwezp_k[""naz:id_nagl""]#S:0"]
+//  okalert["przed_ustal"]
+if(not(rejop["t0:znajdzrek",key])) exitalg[0]
+//okalert["po_ustal"]
+petla_tt:
+if(not(rejwezp_k["t0:iID"]=rejwezp_k["naz:id_nagl"])) exitalg[0]
+if(not(rejwezp_s["t0:dowodsprzedazy"]="")) lpks := lpks+1
+if(not(rejwezp_s["t0:dowodsprzedazy"]="")) suma_s := suma_s+rejwezp_k["t0:K_16"]+rejwezp_k["t0:K_18"]+rejwezp_k["t0:K_20"]+rejwezp_k["t0:K_24"]+rejwezp_k["t0:K_26"]+rejwezp_k["t0:K_28"]+rejwezp_k["t0:K_30"]
+if(not(rejwezp_s["t0:dowodsprzedazy"]="")) suma_s := suma_s+rejwezp_k["t0:K_32"]+rejwezp_k["t0:K_33"]+rejwezp_k["t0:K_34"]-rejwezp_k["t0:K_35"]-rejwezp_k["t0:K_36"]
+if(not(rejwezp_s["t0:dowodzakupu"]="")) lpkz := lpkz+1
+if(not(rejwezp_s["t0:dowodzakupu"]="")) suma_z := suma_z+rejwezp_k["t0:K_41"]+rejwezp_k["t0:K_43"]+rejwezp_k["t0:K_44"]+rejwezp_k["t0:K_45"]+rejwezp_k["t0:K_46"]+rejwezp_k["t0:K_47"]
+if(rejop["t0:weznastepnyrekn",""]) goto petla_tt
+//
+% POKAZ_RAPORTY_JPK.DLG
+PRZYCISK_CANCELID = 0
+##DEFWINDOW = ,,,,ADPSH,lwhite/black&white,lwhite/red&black/white,magenta/black&white,,"Raporty do JPK"
+//##20,D,0,,,,&&lblue/white,,,,ZMIENNA:INFO_TXT0
+//##21,D,0,,,,&&lblue/white,,,,ZMIENNA:INFO_TXT1
+//##22,D,0,,,,&&lblue/white,,,,ZMIENNA:INFO_TXT2
+//##23,D,0,,,,&&lblue/white,,,,ZMIENNA:INFO_TXT3
+//##24,D,0,,,,&&lblue/white,,,,ZMIENNA:INFO_TXT4
+//##25,D,0,,,,&&lblue/white,,,,ZMIENNA:INFO_TXT5
+//##26,D,0,,,,&&lblue/white,,,,ZMIENNA:INFO_TXT6
+##20,,ADP,,"Archiwum"
+##21,,ADP,,"Archiwum"
+##22,,ADP,,"Archiwum"
+##23,,ADP,,"Archiwum"
+##24,,ADP,,"Archiwum"
+##25,,ADP,,"Archiwum"
+##26,,ADP,,"Archiwum"
+##28,,ADP,,"Archiwum"
+##0,,ADP,,@5
+##1,,ADP,,"Dane o firmie"
+##10,,ADP,," JPK VA%T%(do 2020.09.30)"
+##18,,ADP,," JPK %V%AT z deklaracj|a(od 2020.10.01)"
+##11,,ADP,," JPK Faktury %Z%akupu"
+//##12,,ADP,," JPK Faktury %S%przeda|zy"
+##12,,ADP,," JPK Faktury %S%przeda|zy/Zakupu"
+##13,,ADP,," JPK %D%ziennik zapis|ow i obrot|owka"
+##14,,ADP,," JPK Wyci|agi %b%ankowe"
+##15,,ADP,," JPK %M%agazyny"
+##16,,ADP,," JPK K%P%iR"
+##17,,ADP,," JPK Sprawozdania"
+
+ #10                                #  #20              #
+
+
+ #18                                #  #28              #
+
+//
+// #11                                #  #21              #
+//
+
+ #12                                #  #22              #
+
+
+ #13                                #  #23              #
+
+
+ #14                                #  #24              #  
+
+
+ #15                                #  #25              #
+
+
+ #16                                #  #26              #
+
+
+ #17                                #
+
+ 
+ 
+                       #0         #    #1               #
+//
+% TABLICA-SL-AKCJI-POKAZ_RAPORTY_JPK
+"AKCJA-PRZED-WYSWIETLENIEM",JPK_R->ustaw_dialog_JPK
+"AKCJA-BUTTON1",JPK_R->start_dialog_dane_o
+"AKCJA-BUTTON10",JPK_R->start_dialog_JPK
+"AKCJA-BUTTON11",JPK_R->start_dialog_JPK
+"AKCJA-BUTTON12",JPK_R->start_dialog_JPK
+"AKCJA-BUTTON13",JPK_R->start_dialog_JPK
+"AKCJA-BUTTON14",JPK_R->start_dialog_JPK
+"AKCJA-BUTTON15",JPK_R->start_dialog_JPK
+"AKCJA-BUTTON16",JPK_R->start_dialog_JPK
+"AKCJA-BUTTON17",JPK_R->start_dialog_JPK
+"AKCJA-BUTTON18",JPK_R->start_dialog_JPK
+"AKCJA-BUTTON20",JPK_R->start_dialog_JPK_a
+"AKCJA-BUTTON21",JPK_R->start_dialog_JPK_a
+"AKCJA-BUTTON22",JPK_R->start_dialog_JPK_a
+"AKCJA-BUTTON23",JPK_R->start_dialog_JPK_a
+"AKCJA-BUTTON24",JPK_R->start_dialog_JPK_a
+"AKCJA-BUTTON25",JPK_R->start_dialog_JPK_a
+"AKCJA-BUTTON26",JPK_R->start_dialog_JPK_a
+"AKCJA-BUTTON28",JPK_R->start_dialog_JPK_a
+% RAPORT_INFO_KL2.DLG
+%< RAPORT_INFO_KL.XX1
+ Nazwa: #200                                                              #
+%< RAPORT_INFO_KL.XX2
+                  Telefon: #215          #
+
+% RAPORT_INFO_KL1.DLG
+%< RAPORT_INFO_KL.XX1
+ Nazwisko: #216                         #         Imi|e:#217               #
+ Data urodzenia: #218     #       Telefon: #215          #
+%< RAPORT_INFO_KL.XX2
+
+% RAPORT_INFO_KL.DLG
+%< RAPORT_INFO_KL.XX1
+ Nazwa: #200                                                              #
+%< RAPORT_INFO_KL.XX2
+                  Telefon: #215          #
+% RAPORT_INFO_KL.XX1
+##200,D,0,,,,&&blue/white,,,,POLE:NAZ:PelnaNazwa
+##216,D,0,,,,&&blue/white,,,,POLE:NAZ:Nazwisko
+##217,D,0,,,,&&blue/white,,,,POLE:NAZ:ImiePierwsze
+##218,D,0,,,,&&blue/white,,,,POLE:NAZ:DataUrodzenia
+##201,D,0,,,,&&blue/white,,,,POLE:NAZ:NIP
+##202,D,0,,,,&&blue/white,,,,POLE:NAZ:Regon
+##203,D,0,,,,&&blue/white,,,,POLE:NAZ:KodKraju
+##204,D,0,,,,&&blue/white,,,,POLE:NAZ:Wojewodztwo
+##205,D,0,,,,&&blue/white,,,,POLE:NAZ:Powiat
+##206,D,0,,,,&&blue/white,,,,POLE:NAZ:Gmina
+##207,D,0,,,,&&blue/white,,,,POLE:NAZ:Ulica
+##208,D,0,,,,&&blue/white,,,,POLE:NAZ:NrDomu
+##209,D,0,,,,&&blue/white,,,,POLE:NAZ:NrLokalu
+##210,D,0,,,,&&blue/white,,,,POLE:NAZ:Miejscowosc
+##211,D,0,,,,&&blue/white,,,,POLE:NAZ:KodPocztowy
+##212,D,0,,,,&&blue/white,,,,POLE:NAZ:Poczta
+##213,D,0,,,,&&blue/white,,,,POLE:NAZ:KodUrzedu
+##214,D,0,,,,&&blue/white,,,,POLE:NAZ:mail
+##215,D,0,,,,&&blue/white,,,,POLE:NAZ:telefon
+% RAPORT_INFO_KL.XX2
+   Nip: #201              #    Regon: #202         #   Kraj: #203#
+  Woj.: #204              #   Powiat: #205         #  Gmina: #206          #
+ Ulica: #207                             ##208##209# 
+   Kod: #211    # Miasto:  #210                     # Poczta: #212         #
+    US: #213    # E-mail:  #214                                            # 
+//
+
+% POKAZ_RAPORTY_JPK_FA_F.DLG
+##319,DZ,ACPH,,"Dane pobierane wed|lug",,,&&lwhite/blue,,&&black/white
+##320,0,P,,"modu|lu fakturowania",,,,,,ZMIENNA:WG_FA_F,,A,2,0
+##321,0,P,,"modu|lu VAT",,,,,,ZMIENNA:WG_FA_F,,,2,1
+##322,0,P,,"d.faktury",,,,,,ZMIENNA:DAT_FA_F,,A,3,0
+##323,0,P,,"d.us|lugi",,,,,,ZMIENNA:DAT_FA_F,,,3,1
+##324,0,P,,"d.obow.",,,,,,ZMIENNA:DAT_FA_F,,,3,2
+%<POKAZ_RAPORTY_JPK_XX1.DLG
+%<POKAZ_RAPORTY_JPK_XX2_FA.DLG
+//
+% POKAZ_RAPORTY_JPK_WB.DLG
+%<POKAZ_RAPORTY_JPK_XX1.DLG
+%<POKAZ_RAPORTY_JPK_XX2.DLG
+//
+% POKAZ_RAPORTY_JPK_KR.DLG
+%<POKAZ_RAPORTY_JPK_XX1.DLG
+%<POKAZ_RAPORTY_JPK_XX2.DLG
+//
+//
+% POKAZ_RAPORTY_JPK_VAT.DLG
+%<POKAZ_RAPORTY_JPK_XX1.DLG
+%<POKAZ_RAPORTY_JPK_XX21.DLG
+%<POKAZ_RAPORTY_JPK_XX22.DLG
+%<POKAZ_RAPORTY_JPK_XX23.DLG
+% POKAZ_RAPORTY_JPK_VAT1.DLG
+%<POKAZ_RAPORTY_JPK_XX1.DLG
+%<POKAZ_RAPORTY_JPK_XX21.DLG
+%<POKAZ_RAPORTY_JPK_XX24.DLG
+//%<POKAZ_RAPORTY_JPK_XX23.DLG
+% POKAZ_RAPORTY_JPK_XX2.DLG
+%<POKAZ_RAPORTY_JPK_XX21.DLG
+%<POKAZ_RAPORTY_JPK_XX22.DLG
+%<POKAZ_RAPORTY_JPK_XX23.DLG
+//
+//
+% POKAZ_RAPORTY_JPK_VATDEKL.DLG
+%<POKAZ_RAPORTY_JPK_XX1.DLG
+%<POKAZ_RAPORTY_JPK_XX21.DLG
+%<POKAZ_RAPORTY_JPK_XX25.DLG
+//
+% POKAZ_RAPORTY_JPK_PKPIR.DLG
+%<POKAZ_RAPORTY_JPK_XX1.DLG
+%<POKAZ_RAPORTY_JPK_XX2.DLG
+//
+% POKAZ_RAPORTY_JPK_XX1.DLG
+//
+PRZYCISK_CANCELID = 0
+##DEFWINDOW = ,,,,ADPSH,lwhite/black&white,lwhite/red&black/white,magenta/black&white,,"Raporty do JPK"  
+##400,D,ADPH,,"Dane informacyjne firmy",,,,,,DIALOG:RAPORT_INFO_KL
+##401,DZ,ADPH,,"Dane do raportu"
+##300,D,P,,,,,,,,POLE:NAZ:KodFormularza
+##301,D,P,,,,,,,,POLE:NAZ:WariantFormularza
+##302,0,P,,"z|lo|zenie",,,,,,POLE:NAZ:CelZlozenia,,,1,"1"
+##303,0,P,,"korekta",,,,,,POLE:NAZ:CelZlozenia,,,1,"2"
+##304,D,ACP,,,,,,,,POLE:NAZ:DataWytworzeniaJPK
+##305,0,ACP,,,,,,,,POLE:NAZ:DataOd
+##306,0,ACP,,,,,,,,POLE:NAZ:DataDo
+##307,D,P,,,,,,,,POLE:NAZ:DomyslnyKodWaluty
+##308,0,P,,,,,,,,POLE:NAZ:CelZlozenia1
+##309,0,0,," ",,&&black/lwhite,&&lblue/lwhite,,,ZMIENNA:ewidencja,,0,309,T
+##310,0,0,," ",,&&black/lwhite,&&lblue/lwhite,,,ZMIENNA:ewidencja,,O,309,N
+##311,0,0,," ",,&&black/lwhite,&&lblue/lwhite,,,ZMIENNA:deklaracja,,0,311,T
+##312,0,0,," ",,&&black/lwhite,&&lblue/lwhite,,,ZMIENNA:deklaracja,,O,311,N
+##0,,ADP,,@5
+##1,,ADP,,"Wykonaj"
+##2,,ADP,,"%P%odgl|ad"
+##3,,ADP,,"Parametryzacja JPK_V7"
+##10,0,ACPH,,"Zapisz w",,,,,,ZMIENNA:PLIK_OUT,4003
+##11,D,P,,,,,,,,ZMIENNA:PLIK_OW
+
+% POKAZ_RAPORTY_JPK_XX21.DLG
+  
+#400
+
+
+
+
+
+
+                                                                                 #400<
+                                                                                
+                                                                                
+#401
+
+% POKAZ_RAPORTY_JPK_XX22.DLG
+ Formularz: #300       # Wariant: #301# Cel: #302     # #303    #  Waluta: #307#
+
+% POKAZ_RAPORTY_JPK_XX24.DLG
+ Data od: #305     # Data do: #306     #    Data wytworzenia #304              #
+
+
+ Formularz: #300       # Wariant: #301# Cel: #308#<(0 -z|lo|zenie, >=1 - korekta)
+ 
+ 
+                                                                                 #401<
+                                                                                 
+ #0        #                  #2        #
+//
+% POKAZ_RAPORTY_JPK_XX23.DLG
+ 
+ Data od: #305     # Data do: #306     #    Data wytworzenia #304              #
+ 
+ 
+                                                                                 #401<
+                                                                                 
+ #0        #                  #2        #
+//
+% POKAZ_RAPORTY_JPK_XX25.DLG
+ Data od: #305     # Data do: #306     #    Data wytworzenia #304              #
+
+
+ Formularz: #300       # Wariant: #301#   Cel: #302     #  #303    # 
+                                                              korygowany element:
+                                                                #309#<ewidencja
+
+  #3                          #                                 #311#<deklaracja
+
+                                                                                 #401<
+                                                                                 
+ #0        #                  #2        #
+//
+% POKAZ_RAPORTY_JPK_XX2_FA.DLG
+##16,,ADP,,"Wyb|or ksi|ag"
+  
+#400
+
+
+
+
+
+                                                                                 #400<
+                                                                                
+                                                                                
+#401
+
+ #319
+   #320                #  #321          #   #322         # #323     # #324    #
+                                                                                #319<
+
+ Formularz: #300       # Wariant: #301# Cel: #302     # #303    #  Waluta: #307#
+
+ 
+ Data od: #305     # Data do: #306     #    Data wytworzenia #304              #
+ 
+ 
+                                                                                 #401<
+                                                                                 
+ #0        #                  #2        #                        #16            #
+//
+//
+% TABLICA-SL-AKCJI-POKAZ_RAPORTY_JPK_WB
+"AKCJA-PRZED-WYSWIETLENIEM",JPK_R->ustaw_dialog_JPK_WB
+"AKCJA-PO-POLU305",JPK_R->po_ustaw_dialog_JPK_WB
+"AKCJA-PO-POLU306",JPK_R->po_ustaw_dialog_JPK_WB
+"AKCJA-BUTTON1",JPK_R->dialog_JPK_export_drukuj("WB")
+"AKCJA-BUTTON2",JPK_R->dialog_JPK_podglad("WB")
+
+% TABLICA-SL-AKCJI-POKAZ_RAPORTY_JPK_FA_F
+"AKCJA-PRZED-WYSWIETLENIEM",JPK_R->ustaw_dialog_JPK_FA_F
+"AKCJA-PO-POLU305",JPK_R->po_ustaw_dialog_JPK_FA_F
+"AKCJA-PO-POLU306",JPK_R->po_ustaw_dialog_JPK_FA_F
+"AKCJA-BUTTON1",JPK_R->dialog_JPK_export_drukuj("FA_F")
+"AKCJA-BUTTON2",JPK_R->dialog_JPK_podglad("FA_F")
+"AKCJA-BUTTON16",JPK_R->WYBIERZ_KSIEGI_KS
+//
+% TABLICA-SL-AKCJI-POKAZ_RAPORTY_JPK_KR
+"AKCJA-PRZED-WYSWIETLENIEM",JPK_R->ustaw_dialog_JPK_KR
+"AKCJA-BUTTON1",JPK_R->dialog_JPK_export_drukuj("KR")
+"AKCJA-BUTTON2",JPK_R->dialog_JPK_podglad("KR")
+//
+% export_drukuj_JPK_KR.alg
+callalgfile["jpk_tworz_kr.alg","JPK_KR"]
+
+% TABLICA-SL-AKCJI-POKAZ_RAPORTY_JPK_VAT
+"AKCJA-PRZED-WYSWIETLENIEM",JPK_R->ustaw_dialog_JPK_VAT
+"AKCJA-PO-POLU305",JPK_R->po_ustaw_dialog_JPK_VAT
+"AKCJA-BUTTON1",JPK_R->dialog_JPK_export_drukuj("VAT")
+"AKCJA-BUTTON2",JPK_R->dialog_JPK_podglad("VAT")
+
+% TABLICA-SL-AKCJI-POKAZ_RAPORTY_JPK_VAT1
+"AKCJA-PRZED-WYSWIETLENIEM",JPK_R->ustaw_dialog_JPK_VAT
+"AKCJA-PO-POLU305",JPK_R->po_ustaw_dialog_JPK_VAT
+"AKCJA-PO-POLU306",JPK_R->po_ustaw_dialog_JPK_VAT
+"AKCJA-BUTTON1",JPK_R->dialog_JPK_export_drukuj("VAT")
+"AKCJA-BUTTON2",JPK_R->dialog_JPK_podglad("VAT")
+
+% TABLICA-SL-AKCJI-POKAZ_RAPORTY_JPK_VATDEKL
+"AKCJA-PRZED-WYSWIETLENIEM",JPK_R->ustaw_dialog_JPK_VATDEKL
+"AKCJA-PO-POLU305",JPK_R->po_ustaw_dialog_JPK_VATDEKL
+"AKCJA-BUTTON1",JPK_R->dialog_JPK_export_drukuj("VATDEKL")
+"AKCJA-BUTTON2",JPK_R->dialog_JPK_podglad("VATDEKL")
+"AKCJA-BUTTON3",JPK_R->dialog_PARAMETRY_JPKV7
+//"AKCJA-BUTTON10",USTAL-DEFINIOWANIE
+//"AKCJA-BUTTON13",dodatkowe_jpkv7
+
+% export_drukuj_JPK_VAT.alg
+callalgfile["jpk_tworz_vat.alg","JPK_VAT"]
+
+% TABLICA-SL-AKCJI-POKAZ_RAPORTY_JPK_PKPIR
+"AKCJA-PRZED-WYSWIETLENIEM",JPK_R->ustaw_dialog_JPK_PKPIR
+"AKCJA-BUTTON1",JPK_R->dialog_JPK_export_drukuj("PKPIR")
+"AKCJA-BUTTON2",JPK_R->dialog_JPK_podglad("PKPIR")
+//
+% export_drukuj_JPK_PKPIR.alg
+callalgfile["kpir/pkpir.alg;jpk_tworz_kpir.alg","JPK_PKPIR"]
+
+% ARCH_JPK-MENU
+P = 3,,ADS
+*0,@5
+
+% ARCH_JPK-MENU-R
+P = 3,,ADS
+*0,@5
+*30," Drukuj"
+
+% ARCH_JPK_WB-EDYCJA.DIC
+"JPK_WB",0
+
+% ARCH_MENU.MEN
+D=,"Wykaz",AB
+10,,,,5,"Id"
+111,,,,15,"KodFormularza"
+114,,,,20,"DataWytworzeniaJPK"
+115,,,,10,"Data od"
+116,,,,10,"Data do"
+
+//
+% ARCH_JPK_WB.MEN
+D=,"Dane ",AB
+LINIA-DIALOG = ARCH_JPK_WB-EDYCJA,"Kolumny"
+112,,,,10,"DataOperacji"
+115,,,,15,"KwotaOperacji"
+113,,,,35,"NazwaPodmiotu"
+114,,,,,"OpisOperacji"
+//
+% POKAZ_ARCHIWUM_JPK_WB.DLG
+PRZYCISK_CANCELID = 0
+##DEFWINDOW = 3,,,,ADPSH,lwhite/black&white,lwhite/red&black/white,magenta/black&white,,"Archiwalne dane do JPK"  
+##99,0,P,,,,,,,,MENU_ROZWIJANE:ARCH_JPK-MENU
+##100,0,ACPH,,,,,,,,MENU_NA_REKORDY:ARCH_MENU,NAZ,JEDENKLUCZ,1
+##101,0,ACPMH,,,,,,,,MENU_NA_REKORDY:ARCH_JPK_WB,T1,JEDENKLUCZ,11
+ #99                    #
+                           
+
+#100
+
+
+
+
+                                                                                                        #100<
+
+
+                                                                                                    
+#101
+
+                                                                                                        #101<
+//
+% TABLICA-SL-AKCJI-POKAZ_ARCHIWUM_JPK_WB
+"AKCJA-PRZED-WYSWIETLENIEM",JPK_R->ustaw_dialog_ARCHIWUM_JPK_WB
+"AKCJA-LINIAMENU100",JPK_R->ustaw_dialog_ARCHIWUM_JPK_WB_linia
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+% ARCH_JPK_FA_F-EDYCJA.DIC
+"JPK_FA_F",0
+
+//
+% ARCH_JPK_FA_F.MEN
+D=,"Dane ",AB
+LINIA-DIALOG = ARCH_JPK_FA_F-EDYCJA,"Kolumny"
+111,,,,10,"DataOperacji"
+112,,,,15,"Numer"
+113,,,,35,"Nazwa adres"
+134,,,,10,"Warto|s|C"
+//
+% POKAZ_ARCHIWUM_JPK_FA_F.DLG
+PRZYCISK_CANCELID = 0
+##DEFWINDOW = 3,,,,ADPSH,lwhite/black&white,lwhite/red&black/white,magenta/black&white,,"Archiwalne dane do JPK"  
+##99,0,P,,,,,,,,MENU_ROZWIJANE:ARCH_JPK-MENU
+##100,0,ACPH,,,,,,,,MENU_NA_REKORDY:ARCH_MENU,NAZ,JEDENKLUCZ,1
+##101,0,ACPMH,,,,,,,,MENU_NA_REKORDY:ARCH_JPK_FA_F,T1,JEDENKLUCZ,11
+ #99                    #
+                           
+
+#100
+
+
+
+
+                                                                                                        #100<
+
+
+                                                                                                    
+#101
+
+                                                                                                        #101<
+//
+% TABLICA-SL-AKCJI-POKAZ_ARCHIWUM_JPK_FA_F
+"AKCJA-PRZED-WYSWIETLENIEM",JPK_R->ustaw_dialog_ARCHIWUM_JPK_FA_F
+"AKCJA-LINIAMENU100",JPK_R->ustaw_dialog_ARCHIWUM_JPK_FA_F_linia
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// archiwum dla dziennika
+% VIEW_ARCH_KR-T0-EDYCJA.DIC
+"JPK_KR_OS",0
+
+% ARCH_KR_T0.MEN
+D=,"Obroty i salda kont",AB
+LINIA-DIALOG = VIEW_ARCH_KR-T0-EDYCJA,"Kolumny"
+111,,,,14,"Konto"
+120,,,,13,"BO WN"
+121,,,,13,"BO MA"
+122,,,,13,"Obroty WN"
+123,,,,13,"Obroty MA"
+124,,,,14,"Narastaj|aco WN"
+125,,,,14,"Narastaj|aco MA"
+126,,,,14,"Saldo WN"
+127,,,,14,"Saldo MA"
+//
+% VIEW_ARCH_KR-T1-EDYCJA.DIC
+"JPK_KR_DN",0
+
+% ARCH_KR_T1.MEN
+D=,"Dziennik",AB
+LINIA-DIALOG = VIEW_ARCH_KR-T1-EDYCJA,"Kolumny"
+112,,,,10,"Nr zapisu"
+114,,,,8,"Dokument"
+116,,,,11,"Data oper"
+117,,,,11,"Data dok"
+118,,,,11,"Data ksieg"
+119,,,,11,"Osoba"
+121,,,,15,"Kwota zapisu"
+120,,,,,"Tre|s|c zapisu"
+//
+% VIEW_ARCH_KR-DZ-EDYCJA.DIC
+"JPK_KR_DZ",0
+
+% ARCH_KR_DZ.MEN
+D=,"Zapisy",AB
+LINIA-DIALOG = VIEW_ARCH_KR-DZ-EDYCJA,"Kolumny"
+112,,,,10,"Nr zapisu"
+113,,,,14,"Konto WN"
+114,,,,14,"Kwota WN"
+115,,,,11,"Kwota WN dew"
+116,,,,3,"Dew"
+118,,,,14,"Konto WN"
+119,,,,14,"Kwota WN"
+120,,,,11,"Kwota WN dew"
+121,,,,3,"Dew"
+//
+% POKAZ_ARCHIWUM_JPK_KR.DLG
+PRZYCISK_CANCELID = 0
+##DEFWINDOW = 3,,,,ADPSH,lwhite/black&white,lwhite/red&black/white,magenta/black&white,,"Archiwalne dane do JPK_KR"  
+##99,0,P,,,,,,,,MENU_ROZWIJANE:ARCH_JPK-MENU
+##4,,ADP,," Obroty i salda kont"
+##2,,ADP,," Dziennik"
+##3,,ADP,," Zapisy"
+##100,0,ACPH,,,,,,,,MENU_NA_REKORDY:ARCH_MENU,NAZ,JEDENKLUCZ,1
+##101,0,ACPMH,,,,,,,,MENU_NA_REKORDY
+ #99                    #
+                           
+
+#100
+
+
+
+
+                                                                                                        #100<
+
+
+                                                                                                    
+                                  #4                  #  #2                  #  #3                  #
+
+
+#101
+
+                                                                                                        #101<
+//
+% TABLICA-SL-AKCJI-POKAZ_ARCHIWUM_JPK_KR
+"AKCJA-PRZED-WYSWIETLENIEM",JPK_R->ustaw_dialog_ARCHIWUM_JPK_KR
+"AKCJA-LINIAMENU100",JPK_R->ustaw_dialog_ARCHIWUM_JPK_KR_linia
+"AKCJA-BUTTON4",JPK_R->ustaw_obr
+"AKCJA-BUTTON2",JPK_R->ustaw_dz
+"AKCJA-BUTTON3",JPK_R->ustaw_zap
+
+// archiwum dla deklaracji VAT
+% ARCH_JPK-MENU-VAT
+P = 3,,ADS
+*0,@5
+*30," Drukuj"
+*8,"Sprawd|x NIP"
+9," Kontrola NIP ZAKUP'u (MF)"
+
+10," Kontrola NIP SPRZEDA|Z (MF)"
+
+% VIEW_ARCH_VAT-T0-EDYCJA.DIC
+"JPK_VAT",0
+
+% VIEW_ARCH_VAT-T1-EDYCJA.DIC
+"JPK_VAT",0
+
+% ARCH_VAT_T0.MEN
+D=,"Sprzeda|z",AB
+LINIA-DIALOG = VIEW_ARCH_VAT-T0-EDYCJA,"Kolumny"
+111,,,,5,"lp"
+114,,,,20,"Faktura"
+112,,,,10,"Data sprz."
+115,,,,35,"Nazwa nabywcy"
+116,,,,,"Adres nabywcy"
+//
+
+% ARCH_VAT_T1.MEN
+D=,"Zakupy",AB
+LINIA-DIALOG = VIEW_ARCH_VAT-T1-EDYCJA,"Kolumny"
+146,,,,5,"lp"
+150,,,,20,"Faktura"
+149,,,,13,"NIP"
+147,,,,35,"Wystawca"
+148,,,,,"Adres wystawcy"
+//
+% VIEW_ARCH_VATDEKL-T0-EDYCJA.DIC
+"JPK_VATE",0
+
+% VIEW_ARCH_VATDEKL-T1-EDYCJA.DIC
+"JPK_VATE",0
+
+% ARCH_VATDEKL_T0.MEN
+D=,"Sprzeda|z",AB
+LINIA-DIALOG = VIEW_ARCH_VATDEKL-T0-EDYCJA,"Kolumny"
+111,,,,5,"lp"
+115,,,,20,"Faktura"
+117,,,,10,"Data sprz."
+114,,,,35,"Nazwa nabywcy"
+112,,,,4,"Kraj"
+113,,,,,"NIP"
+//
+
+% ARCH_VATDEKL_T1.MEN
+D=,"Zakupy",AB
+LINIA-DIALOG = VIEW_ARCH_VATDEKL-T1-EDYCJA,"Kolumny"
+175,,,,5,"lp"
+179,,,,20,"Faktura"
+180,,,,10,"Data zak."
+178,,,,35,"Wystawca"
+176,,,,4,"Kraj"
+177,,,,,"NIP"
+//
+//
+% POKAZ_ARCHIWUM_JPK_VAT.DLG
+PRZYCISK_CANCELID = 0
+##DEFWINDOW = 3,,,,ADPSH,lwhite/black&white,lwhite/red&black/white,magenta/black&white,,"Archiwalne dane do JPK_VAT"  
+##99,0,P,,,,,,,,MENU_ROZWIJANE:ARCH_JPK-MENU-VAT
+##2,,ADP,," Sprzeda|z"
+##3,,ADP,," Zakupy"
+##100,0,ACPH,,,,,,,,MENU_NA_REKORDY:ARCH_MENU,NAZ,JEDENKLUCZ,1
+##101,0,ACPMH,,,,,,,,MENU_NA_REKORDY
+##21,D,0,,,,&&red/white,,,,ZMIENNA:LPKS,xkwota:0
+##22,D,0,,,,&&red/white,,,,ZMIENNA:SUMA_S,xkwota:2
+##23,D,0,,,,&&red/white,,,,ZMIENNA:LPKZ,xkwota:0
+##24,D,0,,,,&&red/white,,,,ZMIENNA:SUMA_Z,xkwota:2
+##200,DZ,AD,,,,&&lblue/white
+ #99                    #
+                           
+
+#100
+
+
+
+
+                                                                                                           #100<
+
+
+                                                                                                    
+                                                         #2                  #  #3                  #
+
+									   
+#101
+
+                                                                                                           #101<
+
+#200Lp sprzeda|zy:#21   #  VAT nale|zny: #22           #   Lp zakup|ow:#23   #  VAT naliczony: #24           ##200
+//
+//
+% POKAZ_ARCHIWUM_JPK_VATDEKL.DLG
+PRZYCISK_CANCELID = 0
+##DEFWINDOW = 3,,,,ADPSH,lwhite/black&white,lwhite/red&black/white,magenta/black&white,,"Archiwalne dane do JPK_VATDEKL"  
+##99,0,P,,,,,,,,MENU_ROZWIJANE:ARCH_JPK-MENU-VATDEKL
+##2,,ADP,," Sprzeda|z"
+##3,,ADP,," Zakupy"
+##4,,ADP,," Deklaracja"
+##100,0,ACPH,,,,,,,,MENU_NA_REKORDY:ARCH_MENU,NAZ,JEDENKLUCZ,1
+##101,0,ACPMH,,,,,,,,MENU_NA_REKORDY
+##21,D,0,,,,&&red/white,,,,ZMIENNA:LPKS,xkwota:0
+##22,D,0,,,,&&red/white,,,,ZMIENNA:SUMA_S,xkwota:2
+##23,D,0,,,,&&red/white,,,,ZMIENNA:LPKZ,xkwota:0
+##24,D,0,,,,&&red/white,,,,ZMIENNA:SUMA_Z,xkwota:2
+##200,DZ,AD,,,,&&lblue/white
+ #99                    #
+                           
+
+#100
+
+
+
+
+                                                                                                           #100<
+
+
+                                                                                                    
+                                       #2                  #  #3                  #  #4                  #
+
+  
+#101
+
+                                                                                                           #101<
+
+#200Lp sprzeda|zy:#21   #  VAT nale|zny: #22           #   Lp zakup|ow:#23   #  VAT naliczony: #24           ##200
+//
+% TABLICA-SL-AKCJI-POKAZ_ARCHIWUM_JPK_VAT,TABLICA-SL-AKCJI-POKAZ_ARCHIWUM_JPK_VATDEKL
+"AKCJA-PRZED-WYSWIETLENIEM",JPK_R->ustaw_dialog_ARCHIWUM_JPK_VAT
+"AKCJA-LINIAMENU100",JPK_R->ustaw_dialog_ARCHIWUM_JPK_VAT_linia
+"AKCJA-BUTTON2",JPK_R->ustaw_spr
+"AKCJA-BUTTON3",JPK_R->ustaw_zak
+"AKCJA-BUTTON4",JPK_R->drukuj_formularz_dekl
+"AKCJA-BUTTON30",JPK_R->drukuj_jpkvatxx
+"AKCJA-BUTTON9",JPK_R->drukuj_jpk_vat_sprawdz_nip(0)
+"AKCJA-BUTTON10",JPK_R->drukuj_jpk_vat_sprawdz_nip(1)
+
+% VIEW_ARCH_PKPIR-T0-EDYCJA.DIC
+"JPK_PKPIR_S",0
+
+% ARCH_PKPIR_T0.MEN
+D=,"Spisy",AB
+LINIA-DIALOG = VIEW_ARCH_PKPIR-T0-EDYCJA,"Kolumny"
+111,,,,14,"Spis BO"
+112,,,,14,"Spis BZ"
+113,,,,14,"Suma KUP"
+114,,,,14,"Doch|od"
+115,,,,14,"Data spisu okresowego"
+116,,,,14,"Warto|s|c spisu okresowego"
+//
+% VIEW_ARCH_PKPIR-T1-EDYCJA.DIC
+"JPK_PKPIR_Z",0
+
+% ARCH_PKPIR_T1.MEN
+D=,"PKPIR",AB
+LINIA-DIALOG = VIEW_ARCH_PKPIR-T1-EDYCJA,"Kolumny"
+111,,,,10,"Lp"
+113,,,,20,"Dokument"
+112,,,,11,"Data oper"
+114,,,,20,"Kontrahent"
+116,,,,,"Opis zdarzenia"
+//
+% POKAZ_ARCHIWUM_JPK_PKPIR.DLG
+PRZYCISK_CANCELID = 0
+##DEFWINDOW = 3,,,,ADPSH,lwhite/black&white,lwhite/red&black/white,magenta/black&white,,"Archiwalne dane do JPK_PKPIR"  
+##99,0,P,,,,,,,,MENU_ROZWIJANE:ARCH_JPK-MENU
+##4,,ADP,," Spisy z natury"
+##2,,ADP,," Pozycje PKPIR"
+##100,0,ACPH,,,,,,,,MENU_NA_REKORDY:ARCH_MENU,NAZ,JEDENKLUCZ,1
+##101,0,ACPMH,,,,,,,,MENU_NA_REKORDY
+ #99                    #
+                           
+
+#100
+
+
+
+
+                                                                                                        #100<
+
+
+                                                                                                    
+                                  #4                  #  #2                  #  
+
+
+#101
+
+                                                                                                        #101<
+//
+% TABLICA-SL-AKCJI-POKAZ_ARCHIWUM_JPK_PKPIR
+"AKCJA-PRZED-WYSWIETLENIEM",JPK_R->ustaw_dialog_ARCHIWUM_JPK_PKPIR
+"AKCJA-LINIAMENU100",JPK_R->ustaw_dialog_ARCHIWUM_JPK_PKPIR_linia
+"AKCJA-BUTTON4",JPK_R->ustaw_spis
+"AKCJA-BUTTON2",JPK_R->ustaw_zapis
+"AKCJA-BUTTON30",JPK_R->drukuj_jpkpkpir
+
+% ustaw_filtr.alg
+//okalert["zakupy="+zakupy]
+   A_OK := .T.
+  if(PLIK_MODUL=="JPK_VAT") goto _vat
+  if(PLIK_MODUL=="JPK_VATDEKL") goto _vatdekl
+  exitalg[0]
+_vat:
+ if(zakupy) goto _zakupy_vat
+if(rejwezp_s["t0:NrDokumentu"] = "") A_OK := .N.
+exitalg[0]
+ _zakupy_vat:
+ if (rejwezp_s["t0:NrFaktury"] = "") A_OK := .N.
+exitalg[0]
+_vatdekl:
+if(zakupy) goto _zakupy_vatdekl
+//  okalert["2 aa=."+rejwezp_s["t0:DowodSprzedazy"]+".$bb=."+rejwezp_s["t0:DowodZakupu"]]
+  if(rejwezp_s["t0:DowodSprzedazy"] = "") A_OK := .N.
+  exitalg[0]
+_zakupy_vatdekl:
+//  okalert["1 aa=."+rejwezp_s["t1:DowodSprzedazy"]+".$bb=."+rejwezp_s["t1:DowodZakupu"]]
+  if(rejwezp_s["t0:DowodZakupu"] = "") A_OK := .N.
+  exitalg[0]
+
+% wybierz_spr.ALG
+ zakupy := .N.
+ callalg["ustaw_filtr"]
+ 
+% wybierz_zak.ALG
+ zakupy := .T.
+ callalg["ustaw_filtr"]
+ 
+% wybierz_sprx.ALG
+   A_OK := .N.
+  if(PLIK_MODUL=="JPK_VAT") goto _vat
+  if(PLIK_MODUL=="JPK_VATDEKL") goto _vatdekl
+_vat:
+if(not(rejwezp_s["t0:NrDokumentu"] = "")) A_OK := .T.
+exitalg[0]
+_vatdekl:
+  if(not(rejwezp_s["t0:DowodSprzedazy"] = "")) A_OK := .T.
+  exitalg[0]
+
+% wybierz_zakx.ALG
+   A_OK := .N.
+  if(PLIK_MODUL=="JPK_VAT") goto _vat
+  if(PLIK_MODUL=="JPK_VATDEKL") goto _vatdekl
+_vat:
+ if (not(rejwezp_s["t1:NrFaktury"] = "")) A_OK := .T.
+exitalg[0]
+_vatdekl:
+if(not(rejwezp_s["t1:DowodZakupu"] = "")) A_OK := .T.
+exitalg[0]
+
+% SL.raporty-do-jpk-raport
+  
+implements("JPK_R");
+
+define WYBIERZ_KSIEGI_KS()
+{
+  callalg("WYBIERZ-KSIEGI_KS");
+}
+define konwertuj_na_utf()
+{      
+  variable file,pw,po;
+  po = dajazmienna_S("PLIK_OUT");
+  pw = dajazmienna_S("PLIK_WEJ");
+  file = po+"/t.utf8.xml";
+  ustawazmienna_S("PLIK_OUT",file);
+  gl_konwertuj_plik_na_utf8("cp1250");         
+  ustawazmienna_S("PLIK_OUT",po);  
+  if (not dyskop("kopiujplik",file,pw)) {
+          okalert("Kopiowanie",file,pw);                  
+          gl_alert_errmess();
+  }
+  () = dyskop("usunplik",file);
+}
+
+define zrob_srodowisko_jpk(m)
+{
+  variable kat,xkat,dt,l;
+  l = 0;
+  kat = wezzmiennasrod("DOC_ARCHIWUM");
+  if (not dyskop("jestkatalog",kat)) {
+    if (not (dyskop("zalozkatalog",kat))) return l;
+  }
+  xkat = kat+"/"+rejwezp_s("NAZ:oPrg");
+  if (not dyskop("jestkatalog",xkat)) {
+    if (not (dyskop("zalozkatalog",xkat))) return l;
+  }
+  xkat = xkat+"/"+m;
+  if (not dyskop("jestkatalog",xkat)) {
+    if (not (dyskop("zalozkatalog",xkat))) return l;
+  }
+  dt = rejwezp_s("NAZ:DataWytworzeniaJPK");
+  dt = gl_cut_znak(".",dt);
+  dt = gl_cut_znak(":",dt);
+  xkat = xkat+"/"+dt;
+  if (not dyskop("jestkatalog",xkat)) {
+    if (not (dyskop("zalozkatalog",xkat))) return l;
+  }
+  ustawazmienna_S("D_STRING",xkat);
+  return 1;
+}
+
+define zapisz_dane_do_archiwum(m)
+{
+  variable t,l;
+  ustawazmienna_S("D_STRING");
+  l = zrob_srodowisko_jpk(m);
+  if (l) {
+    t = dajazmienna_S("D_STRING");
+    variable kat = dajazmienna_S("PLIK_OUT");
+    if (not(dyskop("kopiujplik",kat+"/*.xml",t))) {
+      okalert("Problem ze stworzeniem archiwum !");
+    }
+  } else {
+    okalert("Problem z za|lo|zeniem struktury archiwum !");
+  }
+}
+define filtr_wyslane()
+{
+  ustawazmienna_L("A_OK",0);
+  if (rejwezp_l("NAZ:oLog")) ustawazmienna_L("A_OK",1);
+}
+private define daj_jklucz(co,m)
+{
+  variable ks = wezzmiennasrod("O*ksiegozbior");
+   switch (co)
+     { case 0: return "!DSS.raport_JPK_"+m+"_"+ks; }
+     { case 1: return "!DSS.raport_JPK_FA_"+m+"_"+ks; }
+     { case 2: return "!DSS.raport_JPK_FA_WG"+m+"_"+ks; }
+}
+
+define data_wytworzenia()
+{
+  return studatas(dajazmienna_D("D_DZISIAJ"))+"T"+wezgodzine();
+}
+define start_dialog_dane_o()
+{
+  finnmenufunkcja(99,"");
+}
+define czy_sa_dane(m)
+{
+  variable l=".";
+  variable ks = wezzmiennasrod("O*ksiegozbior");  
+  if (rejop("x:otworzrejsprawdz","JPK_"+m+".RXR")) {
+    () = rejop("x:zmienkluczrej","12");
+    if (rejop("x:znajdzrek",ks+"*N")) l = "S|a niewys|lane dane !";
+    () = rejop("x:zamknijrej");
+  }
+  return l;
+}
+
+define ustaw_dialog_JPK()
+{
+  ustawazmienna_S("INFO_TXT0",czy_sa_dane("VAT"));
+  ustawazmienna_S("INFO_TXT1",czy_sa_dane("FA_F"));
+  ustawazmienna_S("INFO_TXT2",czy_sa_dane("FA_F"));
+  ustawazmienna_S("INFO_TXT3",czy_sa_dane("KR_OS")+" "+czy_sa_dane("KR_DN"));
+  ustawazmienna_S("INFO_TXT4",czy_sa_dane("WB"));
+  ustawazmienna_S("INFO_TXT5",czy_sa_dane("MAG"));
+  ustawazmienna_S("INFO_TXT6",czy_sa_dane("PKPIR_S")+" "+czy_sa_dane("PKPIR_Z"));
+}
+
+define ustaw_nazwe_do_jpk(t,ll)
+{
+  ustawazmienna_S("STD_FIRMA1");
+  ustawazmienna_S("STD_FIRMA2");
+  ustawazmienna_S("STD_FIRMA3");
+  ustawazmienna_S("STD_NIP");
+  ustawazmienna_S("STD_REGON");
+  ustawazmienna_S("std_wojew");
+  ustawazmienna_S("std_powiat");
+  ustawazmienna_S("std_gmina");
+  ustawazmienna_S("std_ulica");
+  ustawazmienna_S("std_dom");
+  ustawazmienna_S("std_lokal");
+  ustawazmienna_S("std_kodus");
+  ustawazmienna_S("std_miasto");
+  ustawazmienna_S("std_kodpoc");
+  ustawazmienna_S("std_poczta");
+  ustawazmienna_S("std_osfiz");
+  ustawazmienna_S("std_nazwisko");
+  ustawazmienna_S("std_imie");
+  ustawazmienna_S("std_dataur");
+  ustawazmienna_S("std_tel1");
+  ustawazmienna_S("std_email");
+  ustaw_zL("osfiz",0);
+  () = callalg("ODCZYTAJ-DANE-UZYTKOWNIKA");
+//  okalert("osfiz="+ string(daj_zL("osfiz")));
+  variable naz;
+  naz = dajazmienna_S("STD_FIRMA1")+" "+dajazmienna_S("STD_FIRMA2")+" "+dajazmienna_S("STD_FIRMA3");
+//
+  if (not(ll)) { 
+  () = rejop("NAZ:dodajtemprek");
+  xrejwstawp_l("NAZ:oLog",ll);
+  xrejwstawp_k("NAZ:iID",1);
+  xrejwstawp_s("NAZ:oPrg",wezzmiennasrod("O*ksiegozbior"));
+  xrejwstawp_s("NAZ:xx",t);
+}
+//
+  xrejwstawp_s("NAZ:KodFormularza",t+" (1)");
+  if (t == "JPK_FA_F") xrejwstawp_s("NAZ:KodFormularza","JPK_FA (1)");
+  xrejwstawp_s("NAZ:WariantFormularza","1");
+  if ((t == "JPK_FA_F") and (dajazmienna_D("D_DZISIAJ") >= stringnadate("19.07.01")) ) {
+    xrejwstawp_s("NAZ:KodFormularza","JPK_FA (2)");
+    xrejwstawp_s("NAZ:WariantFormularza","2");
+  }
+  if ((t == "JPK_FA_F") and (dajazmienna_D("D_DZISIAJ") >= stringnadate("19.11.01")) ) {
+    xrejwstawp_s("NAZ:KodFormularza","JPK_FA (3)");
+    xrejwstawp_s("NAZ:WariantFormularza","3");
+  }
+  xrejwstawp_s("NAZ:CelZlozenia","1");
+  xrejwstawp_k("NAZ:CelZlozenia1",0);
+  xrejwstawp_s("NAZ:DataWytworzeniaJPK",data_wytworzenia);
+  xrejwstawp_d("NAZ:DataOd",dajazmienna_D("poczrok_ksieg"));
+  variable d_data;
+  ustawazmienna_D("d_data",dajazmienna_D("poczrok_ksieg"));
+  gl_koniec_rok();
+  xrejwstawp_d("NAZ:DataDo",dajazmienna_D("D_DATA"));
+  ustaw_zD("dat1",rejwezp_d("NAZ:DataOd"));
+  ustaw_zD("dat2",rejwezp_d("NAZ:DataDo"));
+  if (t == "JPK_VAT")
+    {
+  xrejwstawp_s("NAZ:KodFormularza",daj_zS("wjv"));
+  if (daj_zS("wjv") == "JPK_VAT (2)") xrejwstawp_s("NAZ:WariantFormularza","2");
+  if (daj_zS("wjv") == "JPK_VAT (3)") xrejwstawp_s("NAZ:WariantFormularza","3");
+  () = callalg("ustal_okres_vat");
+  xrejwstawp_d("NAZ:DataOd",dajazmienna_D("dat1"));
+  xrejwstawp_d("NAZ:DataDo",dajazmienna_D("dat2"));
+  }
+  if (t == "JPK_VATDEKL")
+    {
+  xrejwstawp_s("NAZ:KodFormularza",daj_zS("jpk_v7"));
+  () = callalg("ustal_okres_vat");
+  xrejwstawp_d("NAZ:DataOd",dajazmienna_D("dat1"));
+  xrejwstawp_d("NAZ:DataDo",dajazmienna_D("dat2"));
+  }
+  if (t == "JPK_PKPIR") {
+           xrejwstawp_s("NAZ:KodFormularza","JPK_PKPIR (2)");
+           xrejwstawp_s("NAZ:WariantFormularza","2");
+     }
+  xrejwstawp_s("NAZ:DomyslnyKodWaluty","PLN");
+  xrejwstawp_s("NAZ:KodUrzedu",dajazmienna_S("STD_kodus"));
+//
+  xrejwstawp_s("NAZ:NIP",dajazmienna_S("STD_NIP"));
+  xrejwstawp_s("NAZ:PelnaNazwa",naz);
+  xrejwstawp_s("NAZ:Regon",dajazmienna_S("STD_REGON"));
+  xrejwstawp_s("NAZ:KodKraju","PL");
+  xrejwstawp_s("NAZ:Wojewodztwo",dajazmienna_S("STD_wojew"));
+  xrejwstawp_s("NAZ:Powiat",dajazmienna_S("STD_powiat"));
+  xrejwstawp_s("NAZ:Gmina",dajazmienna_S("STD_gmina"));
+  xrejwstawp_s("NAZ:Ulica",dajazmienna_S("STD_ulica"));
+  xrejwstawp_s("NAZ:NrDomu",dajazmienna_S("STD_dom"));
+  xrejwstawp_s("NAZ:NrLokalu",dajazmienna_S("STD_lokal"));
+  xrejwstawp_s("NAZ:Miejscowosc",dajazmienna_S("STD_miasto"));
+  xrejwstawp_s("NAZ:KodPocztowy",dajazmienna_S("STD_kodpoc"));
+  xrejwstawp_s("NAZ:Poczta",dajazmienna_S("STD_poczta"));
+  xrejwstawp_s("NAZ:mail",dajazmienna_S("STD_email"));
+  xrejwstawp_s("NAZ:OsobaFizyczna","2");
+  if(daj_zL("osfiz")) xrejwstawp_s("NAZ:OsobaFizyczna","1");
+  xrejwstawp_s("NAZ:Nazwisko",dajazmienna_S("STD_nazwisko"));
+  xrejwstawp_s("NAZ:ImiePierwsze",dajazmienna_S("STD_imie"));
+  xrejwstawp_s("NAZ:DataUrodzenia",dajazmienna_S("STD_dataur"));
+  xrejwstawp_s("NAZ:Telefon",dajazmienna_S("STD_tel1"));
+ () = rejop("NAZ:zapiszrek");  
+}
+
+define start_dialog_JPK()
+{
+  ustawazmienna_S("PLIK_OUT");
+  ustawazmienna_S("PLIK_OW");
+  variable id=gl_daj_dpos();
+  variable m,t;
+  if (id == 10) m = "VAT";
+  if (id == 11) m = "FA_W";
+  if (id == 12) m = "FA_F";
+  if (id == 13) m = "KR";
+  if (id == 14) m = "WB";
+  if (id == 15) m = "MAG";
+  if (id == 16) m = "PKPIR";
+  if (id == 18) m = "VATDEKL";
+  if (id == 17) {
+    () = callalgfile("sf/jpk_sf.alg","IMPORT-SF");
+    () = exdialogop("wyswietlpozycje","*");
+    return;
+  }
+  if (m=="MAG") {
+  okalert("JPK w przygotowaniu");
+  return;
+  }
+  ustaw_zS("wjv","");
+  if (m == "VAT") {
+  ustaw_zS("wjv","JPK_VAT (3)");
+//  () = exdialogop("idzdodialogu","wariant_jpk_vat");
+//  if (daj_zK("D_POS") == 1) return;
+ }
+  if (m == "VATDEKL") {
+  ustaw_zS("jpk_v7","JPK_V7M (1)");
+  () = exdialogop("idzdodialogu","wariant_jpk_v7mk");
+  if (daj_zK("D_POS") == 1) return;
+ }
+  if (rejop("NAZ:otworzrejsprawdz","JPK_NGL.RXR")) {
+    () = rejop("NAZ:zmienkluczrej","3");
+    () = rejop("TMP:otworzrejtemp","TRANSAKCJE-PERSEUS-FK.RJR");
+    t = "JPK_"+m;
+    if (not(rejop("NAZ:znajdzrek",t+"*N"))) {
+      ustaw_nazwe_do_jpk(t,0);
+    } else {
+      ustaw_nazwe_do_jpk(t,1);    
+    }
+    
+    ustawazmienna_S("PLIK_OUT",global_dajparams(daj_jklucz(0,m)));
+    if (apuste("PLIK_OUT")) ustawazmienna_S("PLIK_OUT","roboczy/"+t);
+    
+    if (t=="JPK_KR")     {
+    () = rejop("T0:otworzrejtemp","T_JPK_KR_OS.RXR");
+    () = rejop("T1:otworzrejtemp","T_JPK_KR_DN.RXR");
+    () = rejop("DZ:otworzrejtemp","T_JPK_KR_DZ.RXR");
+   
+    } 
+     if (t=="JPK_PKPIR") {
+    () = rejop("T0:otworzrejtemp","T_JPK_PKPIR_S.RXR");
+    () = rejop("T1:otworzrejtemp","T_JPK_PKPIR_Z.RXR");
+     }
+     if (t=="JPK_VATDEKL")     {
+    () = rejop("T0:otworzrejtemp","T_JPK_VATE.RXR");
+    () = rejop("T1:otworzrejtemp","T_JPK_VATE.RXR");
+    () = rejop("T2:otworzrejtemp","T_JPK_VATD.RXR");
+   
+    } 
+
+     if (not(t=="JPK_PKPIR" or t=="JPK_KR" or t=="JPK_VATDEKL"))    {
+    () = rejop("T0:otworzrejtemp","T_"+t+".RXR");
+    () = rejop("T1:otworzrejtemp","T_"+t+".RXR");
+}
+    
+    if (t == "JPK_FA_F") {
+      ustawazmienna_I("WG_FA_F",stringnaliczbe(global_dajparams(daj_jklucz(1,m))));
+      ustawazmienna_I("DAT_FA_F",stringnaliczbe(global_dajparams(daj_jklucz(2,m))));
+      
+      () = rejop("T00:otworzrejtemp","T_JPK_FA_W.RXR");
+      () = rejop("T10:otworzrejtemp","T_JPK_FA_W.RXR");
+    }
+    variable dpos=dajazmienna_K("D_POS");
+    
+    if (rejwezp_s("naz:KodFormularza") == "JPK_VAT (3)") () = exdialogop("idzdodialogu","POKAZ_RAPORTY_"+t+"1");
+    else () = exdialogop("idzdodialogu","POKAZ_RAPORTY_"+t);
+    ustawazmienna_K("D_POS",dpos);
+    
+    if (t == "JPK_FA_F") {
+    
+      global_piszparams(daj_jklucz(1,m),string(dajazmienna_I("WG_FA_F")));
+      global_piszparams(daj_jklucz(2,m),string(dajazmienna_I("DAT_FA_F")));
+      () = rejop("T10:zamknijrej");
+      () = rejop("T00:zamknijrej");    
+    }
+    if (t == "JPK_KR") {
+      () = rejop("DZ:zamknijrej");
+    }
+    if (t == "JPK_VATDEKL") {
+      () = rejop("T2:zamknijrej");
+    }
+    
+    () = rejop("T1:zamknijrej");
+    () = rejop("T0:zamknijrej");
+    global_piszparams(daj_jklucz(0,m),dajazmienna_S("PLIK_OUT"));    
+    
+//    () = exdialogop("wyswietlpozycje","*");
+    () = rejop("TMP:zamknijrej");
+    () = rejop("NAZ:zamknijrej");
+  
+  } else { okalert("Problem z otwarciem danych !"); }
+}
+
+define start_dialog_JPK_a()
+{
+  variable ks = wezzmiennasrod("O*ksiegozbior");
+  ustawazmienna_S("PLIK_OUT");
+  ustawazmienna_S("PLIK_OW");
+  variable id=gl_daj_dpos();
+  variable m,t;
+  if (id == 20) m = "VAT";
+  if (id == 21) m = "FA_W";
+  if (id == 22) m = "FA_F";
+  if (id == 23) m = "KR";
+  if (id == 24) m = "WB";
+  if (id == 25) m = "MAG";
+  if (id == 26) m = "PKPIR";
+  if (id == 28) m = "VATDEKL";
+  if (m=="MAG") {
+  okalert("JPK w przygotowaniu");
+  return;
+  }
+  ustaw_zS("wjv","");
+  ustaw_zS("jpk_v7","");
+  if (m == "VAT") {
+  ustaw_zS("wjv","JPK_VAT (3)");
+//  () = exdialogop("idzdodialogu","wariant_jpk_vat");
+//  if (daj_zK("D_POS") == 1) return;
+ }
+  t = "JPK_"+m;
+  if (rejop("NAZ:otworzrejsprawdz","JPK_NGL.RXR")) {
+    () = rejop("NAZ:zmienkluczrej","3");
+    if (not(rejop("NAZ:znajdzrek",t+"*T"))) {
+      ustaw_nazwe_do_jpk(t,0);
+//    } else {
+//      ustaw_nazwe_do_jpk(t,1);    
+    }
+    
+    ustawazmienna_S("PLIK_OUT",global_dajparams(daj_jklucz(0,m)));
+    if (apuste("PLIK_OUT")) ustawazmienna_S("PLIK_OUT","roboczy/"+t+"/"+ks);
+    
+    if (t=="JPK_KR")     {
+      () = rejop("T0:otworzrej1","JPK_KR_OS.RXR");
+      () = rejop("T1:otworzrej1","JPK_KR_DN.RXR");
+      () = rejop("DZ:otworzrej1","JPK_KR_DZ.RXR");
+    } 
+     if (t=="JPK_PKPIR") {
+    () = rejop("T0:otworzrej1","JPK_PKPIR_S.RXR");
+    () = rejop("T1:otworzrej1","JPK_PKPIR_Z.RXR");
+     }
+     if (t=="JPK_VATDEKL")     {
+    () = rejop("T0:otworzrej1","JPK_VATE.RXR");
+    () = rejop("T1:otworzrej1","JPK_VATE.RXR");
+    () = rejop("T2:otworzrej1","JPK_VATD.RXR");
+    } 
+     if (not(t=="JPK_PKPIR" or t=="JPK_KR" or t=="JPK_VATDEKL"))    {
+      () = rejop("T0:otworzrej1",t+".RXR");
+      () = rejop("T1:otworzrej1",t+".RXR");
+    }
+
+    if (t == "JPK_FA_F") {
+      () = rejop("T00:otworzrej1","JPK_FA_W.RXR");
+      () = rejop("T10:otworzrej1","JPK_FA_W.RXR");
+    }
+    
+    ustawazmienna_S("PLIK_MODUL",strup(t));
+    () = rejop("naz:zmienkluczrej","1");
+    () = exdialogop("idzdodialogu","POKAZ_ARCHIWUM_"+t);
+    () = rejop("naz:zmienkluczrej","3");
+    
+    if (t == "JPK_FA_F") {
+      () = rejop("T10:zamknijrej");
+      () = rejop("T00:zamknijrej");    
+    }
+    if (t == "JPK_KR") {
+      () = rejop("DZ:zamknijrej");
+    }
+    if (t == "JPK_VATDEKL") {
+      () = rejop("T2:zamknijrej");
+    }
+    () = rejop("T1:zamknijrej");
+    () = rejop("T0:zamknijrej");
+    global_piszparams(daj_jklucz(0,m),dajazmienna_S("PLIK_OUT"));    
+    () = rejop("NAZ:zamknijrej");
+    
+  } else { okalert("Problem z otwarciem danych !"); }
+}
+
+
+define czy_w_okresie(d)
+{
+  variable dd;
+  dd = stringnadate(d);
+  variable poz,datap,datak,dataz;
+  datap = dajazmienna_D("DataOd");
+  datak = dajazmienna_D("DataDo");
+  poz = gl_por_daty(datap,datak,dd);
+  return poz;
+}
+
+define ustaw_dialog_JPK_WB()
+{
+  return;
+  ustawazmienna_D("DataOd",rejwezp_d("NAZ:DataOd"));
+  ustawazmienna_D("DataDo",rejwezp_d("NAZ:DataDo"));
+  () = ustawczekajinfo("Start4","Przygotowanie danych. Prosz|e czeka|c ...");
+  () = rejop("t0:wyczyscrej");
+  () = rejop("t1:wyczyscrej");
+  () = rejop("t0:zmienkluczrej","1");
+  () = rejop("t1:zmienkluczrej","1");
+  variable ks = wezzmiennasrod("O*ksiegozbior");  
+  variable key,d;
+  if (rejop("x:otworzrejsprawdz","JPK_WB.RXR")) {
+  
+    () = rejop("x:zmienkluczrej","12");
+    if (rejop("x:znajdzrek",ks+"*N")) {
+      variable skwota=0;
+      do {
+        () = ustawczekajinfo("Nastepny","Next");
+        if (not(ks == rejwezp_s("x:oPrg"))) break;
+        if (not(rejwezp_l("x:oLog"))) {
+        
+        d = datanas(rejwezp_d("x:DataOperacji"));
+        if (czy_w_okresie(d) == 0 ) {
+          key = rejwezp_s("x:xx");
+          key = rejwezp_s("x:NumerRachunku");
+          if (not(rejop("t0:znajdzrek",key))) {
+            () = rejop("t0:dodajrek");
+            () = rejop("x:przeniespola","t0:");
+            xrejwstawp_s("t0:xx",key);
+            xrejwstawp_k("t0:SaldoKoncowe",rejwezp_k("x:SaldoPoczatkowe"));
+            () = rejop("t0:zapiszrek");
+          }
+          () = rejop("t1:dodajrek");
+          () = rejop("x:przeniespola","t1:");
+          () = rejop("t1:zapiszrek");
+          if (rejop("t0:znajdzrek",rejwezp_s("t1:NumerRachunku"))) {
+            skwota = kwotarop("+",rejwezp_k("t0:SaldoKoncowe"),rejwezp_k("t1:KwotaOperacji"),2);
+            rejwstawp_k("t0:SaldoKoncowe",skwota);
+          }
+        }
+        }
+      } while (rejop("x:weznastepnyrek"));
+    }
+    () = rejop("x:zamknijrej");
+  }
+ () = ustawczekajinfo("Stop","");
+  ustawazmienna_S("PLIK_OW",gl_kwotanas(rejwezp_k("t0:liczbarekordow"),0));
+}
+
+define po_ustaw_dialog_JPK_WB()
+{
+//  ustaw_dialog_JPK_WB;
+//  () = exdialogop("wyswietlpozycje","11");
+}
+//////////////////////////////////////////////////////////////////////////////////
+define ustaw_dialog_JPK_FA_F()
+{
+  ustawazmienna_D("DataOd",rejwezp_d("NAZ:DataOd"));
+  ustawazmienna_D("DataDo",rejwezp_d("NAZ:DataDo"));
+  () = ustawczekajinfo("Start4","Przygotowanie danych. Prosz|e czeka|c ...");
+  () = rejop("t0:wyczyscrej");
+  () = rejop("t1:wyczyscrej");
+  () = rejop("t00:wyczyscrej");
+  () = rejop("t10:wyczyscrej");
+  () = rejop("t0:zmienkluczrej","1");
+  () = rejop("t1:zmienkluczrej","1");
+  () = rejop("t00:zmienkluczrej","1");
+  () = rejop("t10:zmienkluczrej","1");
+  variable ks = wezzmiennasrod("O*ksiegozbior");  
+  variable key,d;
+  
+  if (rejop("x:otworzrejsprawdz","JPK_FA_F.RXR")) {
+    () = rejop("x:zmienkluczrej","12");
+    if (rejop("x:znajdzrek",ks+"*N")) {
+      variable skwota=0;
+      do {
+        () = ustawczekajinfo("Nastepny","Next");
+        if (not(ks == rejwezp_s("x:oPrg"))) break;
+        if (not(rejwezp_l("x:oLog"))) {
+        
+        d = datanas(rejwezp_d("x:P_1"));
+        if (czy_w_okresie(d) == 0 ) {
+          key = rejwezp_s("x:xx");
+          if (not(rejop("t0:znajdzrek",key))) {
+            () = rejop("t0:dodajrek");
+            () = rejop("x:przeniespola","t0:");
+            xrejwstawp_s("t0:xx",key);
+            () = rejop("t0:zapiszrek");
+          }
+          () = rejop("t1:dodajrek");
+          () = rejop("x:przeniespola","t1:");
+          () = rejop("t1:zapiszrek");
+        }
+        }
+      } while (rejop("x:weznastepnyrek"));
+    }
+    () = rejop("x:zamknijrej");
+  }
+  
+ () = ustawczekajinfo("Stop","");
+  ustawazmienna_S("PLIK_OW",gl_kwotanas(rejwezp_k("t0:liczbarekordow"),0));
+}
+
+define po_ustaw_dialog_JPK_FA_F()
+{
+//  ustaw_dialog_JPK_FA_F;
+//  () = exdialogop("wyswietlpozycje","11");
+}
+define po_ustaw_dialog_JPK_VAT()
+{
+    variable raport = "", kor = "0", nip = "";
+    xrejwstawp_s("NAZ:KodFormularza",daj_zS("wjv"));
+    if (daj_zS("wjv") == "JPK_VAT (2)") xrejwstawp_s("NAZ:WariantFormularza","2");
+    if (daj_zS("wjv") == "JPK_VAT (3)") {
+    xrejwstawp_s("NAZ:WariantFormularza","3");
+	if (rejop("n:otworzrejsprawdz","FRM_MEMO.RJR"))
+	 {
+      ustaw_zS("d_string",rejwezp_s("naz:nip"));
+     () =  callalg("zamiana_kresek");
+     nip = daj_zS("d_string");
+	 raport = nip+"JPK_VAT&"+strcut(studatas(rejwezp_d("naz:dataod")),0,7);
+      if (rejop("n:znajdzrek",raport)) kor = rejwezp_s("n:FRM_str0");
+      () = rejop("n:zamknijrej");
+  }
+	  xrejwstawp_s("naz:CelZlozenia1",kor);
+     () = exdialogop("wyswietlpozycje","308");
+}
+  () = exdialogop("wyswietlpozycje","300");
+  () = exdialogop("wyswietlpozycje","301");
+}
+//
+define po_ustaw_dialog_JPK_VATDEKL()
+{
+    variable raport = "", kor = "0", nip = "";
+    xrejwstawp_s("NAZ:KodFormularza",daj_zS("jpk_v7"));
+    xrejwstawp_s("NAZ:WariantFormularza","1");
+  () = exdialogop("wyswietlpozycje","300");
+  () = exdialogop("wyswietlpozycje","301");
+}
+
+///////////////////////////////////////////////////////////////////////////////// 
+///////////////////////////////////////////////////////////////////////////////// 
+///////////////////////////////////////////////////////////////////////////////// 
+define dialog_JPK_export_drukuj_WB()
+{
+  variable f;
+  () = ustawczekajinfo("Start4","Generowanie danych. Prosz|e czeka|c ...");
+  if (rejop("t0:wezpierwszyrek")) {
+    do {
+      () = ustawczekajinfo("Nastepny","Next");
+      f = rejwezp_s("t0:xx"); 
+      f = gl_ren_znak("\\","_",f);
+      f = gl_ren_znak("/","_",f);
+      f = gl_ren_znak("-","_",f);
+      
+      ustawazmienna_S("PLIK_WB",f);
+      idzdowydruku("raporty_jpk_wb.prn");
+      
+      konwertuj_na_utf();
+
+    } while (rejop("t0:weznastepnyrek"));
+  }
+  () = ustawczekajinfo("Stop",""); 
+  gl_zapisz_jpk("t1:","WB",wezzmiennasrod("O*Ksiegozbior"),1);
+  
+}
+
+define dialog_JPK_export_drukuj_FA_F()
+{
+  variable f;
+  () = ustawczekajinfo("Start4","Generowanie danych. Prosz|e czeka|c ...");
+  if (rejop("t0:wezpierwszyrek")) {
+    ustawazmienna_S("PLIK_FA_F","JPK_FA_F");
+      () = ustawczekajinfo("Nastepny","Next");
+      idzdowydruku("raporty_jpk_fa_f.prn");
+      konwertuj_na_utf();
+      
+  }
+  () = ustawczekajinfo("Stop",""); 
+}
+define dialog_JPK_export_drukuj_KR()
+{
+() = callalgfile("jpk_tworz_kr.alg","JPK_KR");
+      konwertuj_na_utf();
+}
+define dialog_JPK_export_drukuj_VAT()
+{
+() = callalgfile("jpk_tworz_vat.alg","JPK_VAT");
+      konwertuj_na_utf();
+//  if (yesnalert("Czy wywo|la|c Klient JPK 2.0 ?")) {
+//    wolajsystems("X-START-REMOTE-PROGRAM-JPK",1);
+//  }
+}
+//
+define dialog_JPK_export_drukuj_VATDEKL()
+{
+() = callalgfile("jpk_tworz_vatdekl.alg","JPK_VATDEKL");
+      konwertuj_na_utf();
+//  if (yesnalert("Czy wywo|la|c Klient JPK 2.0 ?")) {
+//    wolajsystems("X-START-REMOTE-PROGRAM-JPK",1);
+//  }
+}
+
+define dialog_JPK_export_drukuj_PKPIR()
+{
+() = callalgfile("jpk_tworz_kpir.alg","JPK_PKPIR");
+      konwertuj_na_utf();
+}
+///////////////////////////////////////////////////////////////////////////////// 
+///////////////////////////////////////////////////////////////////////////////// 
+///////////////////////////////////////////////////////////////////////////////// 
+define JPK_wykonaj_test(m)
+{
+  ustawazmienna_L("OK",1);
+  if (m == "WB") () = callalgfile("raporty_jpk_view_wb.sl","wykonaj-test");
+  if (m == "FA_F") () = callalgfile("raporty_jpk_view_fa_f.sl","wykonaj-test");
+  if (m == "KR") () = callalgfile("raporty_jpk_view_kr.sl","wykonaj-test");
+  if (m == "VAT") () = callalgfile("raporty_jpk_view_vat.sl","wykonaj-test");
+  if (m == "VATDEKL") () = callalgfile("raporty_jpk_view_vatdekl.sl","wykonaj-test");
+  if (m == "PKPIR") () = callalgfile("raporty_jpk_view_kpir.sl","wykonaj-test");
+  variable l=0;
+  if (dajazmienna_L("OK")) l = 1;
+  return l;
+}
+define dialog_JPK_export_drukuj(m)
+{
+  variable l=0;
+  l = JPK_wykonaj_test(m);
+  if (l) {
+// oczyszczenie 
+    variable kat = dajazmienna_S("PLIK_OUT");
+// darek (problematyczne)    () = dyskop("usunplik",kat + "/*.xml");
+//
+    if (m == "WB") dialog_JPK_export_drukuj_WB();
+    if (m == "FA_F") dialog_JPK_export_drukuj_FA_F();
+    if (m == "KR") dialog_JPK_export_drukuj_KR();
+    if (m == "VAT") dialog_JPK_export_drukuj_VAT();
+    if (m == "VATDEKL") dialog_JPK_export_drukuj_VATDEKL();
+    if (m == "PKPIR") dialog_JPK_export_drukuj_PKPIR();
+    rejwstawp_l("NAZ:oLog",1);    
+//    
+    zapisz_dane_do_archiwum("JPK_"+m);
+//     
+  } else {
+    if (yesalert("Wykryto b|l|edne dane ! Czy wykona|c raport ?")) {
+    if (m == "WB") () = callalgfile("raporty_jpk_view_wb.sl","wykonaj-test-raport");
+    if (m == "FA_F") () = callalgfile("raporty_jpk_view_fa_f.sl","wykonaj-test-raport");      
+    if (m == "KR") () = callalgfile("raporty_jpk_view_kr.sl","wykonaj-test-raport");
+    if (m == "VAT") () = callalgfile("raporty_jpk_view_vat.sl","wykonaj-test-raport");
+    if (m == "VATDEKL") () = callalgfile("raporty_jpk_view_vatdekl.sl","wykonaj-test-raport");
+    if (m == "PKPIR") () = callalgfile("raporty_jpk_view_kpir.sl","wykonaj-test-raport");
+    }
+  }
+}
+
+define dialog_PARAMETRY_JPKV7()
+{
+ () = exdialogop("idzdodialogu","ustal_parametry_jpkv7");
+}
+define dialog_JPK_pole_NAZ()
+{
+  variable l=0;
+  if (pustepole("NAZ:PelnaNazwa")) {
+    okalert("Brak podanej nazwy !");
+    return l;
+  }
+  if (pustepole("NAZ:NIP")) {
+    okalert("Brak podanego numeru NIP !");
+    return l;
+  }
+if (rejwezp_s("NAZ:KodFormularza") == "JPK_VAT (3)")
+    {
+  if (pustepole("NAZ:CelZlozenia1")) {
+    okalert("Brak wybranego celu z|lo|zenia !");
+    return l;
+     }
+
+    }
+else {
+  if (pustepole("NAZ:Regon")) {
+    okalert("Brak podanego numeru REGON !");
+    return l;
+  }
+  if (pustepole("NAZ:KodKraju")) {
+    okalert("Brak podanego Kodu kraju !");
+    return l;
+  }
+  if (pustepole("NAZ:Wojewodztwo")) {
+    okalert("Brak podanego Wojew|odztwa !");
+    return l;
+  }
+  if (pustepole("NAZ:Powiat")) {
+    okalert("Brak podanego Powiatu !");
+    return l;
+  }
+  if (pustepole("NAZ:Gmina")) {
+    okalert("Brak podanej Gminy !");
+    return l;
+  }
+  if (pustepole("NAZ:Ulica")) {
+    okalert("Brak podanej Ulicy !");
+    return l;
+  }
+  if (pustepole("NAZ:NrDomu")) {
+    okalert("Brak podanego Numeru Domu !");
+    return l;
+  }
+  if (pustepole("NAZ:Miejscowosc")) {
+    okalert("Brak podanej Miejscowosci !");
+    return l;
+  }
+  if (pustepole("NAZ:KodPocztowy")) {
+    okalert("Brak podanego Kodu pocztowego !");
+    return l;
+  }
+  if (pustepole("NAZ:Poczta")) {
+    okalert("Brak podanej Poczty !");
+    return l;
+  }
+  if (pustepole("NAZ:KodUrzedu")) {
+    okalert("Brak podanego Kodu US !");
+    return l;
+  }
+  if (pustepole("NAZ:Mail")) {
+    okalert("Brak podanego adresu e-mail !");
+    return l;
+  }
+  }
+  return 1;
+}
+
+define dialog_JPK_podglad(m)
+{
+  ustawazmienna_L("JEST_PLIK_XML",0);
+  () = rejop("naz:zapiszrek");
+ if (not(dialog_JPK_pole_NAZ)) {
+   return ;
+ }
+  variable dpos=dajazmienna_K("D_POS");
+  
+  if (m == "WB") {
+  if(strin("L",daj_zS("cechy_wersji"))>-1)    {
+    ustawazmienna_D("DataOd",rejwezp_d("naz:dataod"));
+    ustawazmienna_D("Datado",rejwezp_d("naz:datado"));
+    ustaw_dialog_JPK_WB;
+    () = callalgfile("raporty_jpk_view_wb.sl","POKAZ-DANE");
+  }   else  {
+    okalert("Generator JPK_WB nie zosta|l zakupiony.$ W celu zapoznania si|e z warunkami zakupu $nale|zy zg|losi|c si|e do sprzedawcy systemu PerseusFK");
+  }
+  }
+  if (m == "FA_F") {
+    if(strin("L",daj_zS("cechy_wersji"))>-1)    {
+    ustawazmienna_D("DataOd",rejwezp_d("naz:dataod"));
+    ustawazmienna_D("Datado",rejwezp_d("naz:datado"));
+//    ustaw_dialog_JPK_FA_F;
+    () = callalgfile("raporty_jpk_view_fa_f.sl","POKAZ-DANE");
+    }    else {
+    okalert("Generator JPK_FA nie zosta|l zakupiony.$ W celu zapoznania si|e z warunkami zakupu $nale|zy zg|losi|c si|e do sprzedawcy systemu PerseusFK");
+  }
+  }
+  if (m == "KR") {
+  if(strin("L",daj_zS("cechy_wersji"))>-1)
+    {
+    () = rejop("t0:wyczyscrej");
+    () = rejop("t1:wyczyscrej");
+    () = rejop("dz:wyczyscrej");
+     () = callalgfile("ustaw_oczekujace.sl","SL.ODLOZONE_USTAW->kopiuj_plan_plus");   
+   () = callalgfile("jpk_tworz_kr.alg","JPK_KR_TW");
+  () = callalgfile("raporty_jpk_view_kr.sl","POKAZ-DANE");
+    }   else {
+      okalert("Generator JPK_KR nie zosta|l zakupiony.$ W celu zapoznania si|e z warunkami zakupu $nale|zy zg|losi|c si|e do sprzedawcy systemu PerseusFK");
+    }
+  }
+  
+  if (m == "PKPIR") {
+  if(strin("L",daj_zS("cechy_wersji"))>-1)
+    {
+    () = rejop("t0:wyczyscrej");
+    () = rejop("t1:wyczyscrej");
+   () = callalgfile("kpir/pkpir.alg;jpk_tworz_kpir.alg","JPK_PKPIR_TW");
+  () = callalgfile("raporty_jpk_view_kpir.sl","POKAZ-DANE");
+    }   else {
+      okalert("Generator JPK_PKPIR nie zosta|l zakupiony.$ W celu zapoznania si|e z warunkami zakupu $nale|zy zg|losi|c si|e do sprzedawcy systemu PerseusFK");
+    }
+  }
+
+  
+  if (m == "VAT") {
+    if(strin("L",daj_zS("cechy_wersji"))>-1 or strin("O",daj_zS("cechy_wersji"))>-1)    {
+    () = rejop("t0:wyczyscrej");
+    () = rejop("t1:wyczyscrej");
+   () = callalgfile("vat/vat.alg;std/std.alg;jpk_tworz_vat.alg","JPK_VAT_TW");
+  () = callalgfile("raporty_jpk_view_vat.sl","POKAZ-DANE");
+    }   else {
+      okalert("Generator JPK_VAT nie zosta|l zakupiony.$ W celu zapoznania si|e z warunkami zakupu $nale|zy zg|losi|c si|e do sprzedawcy systemu PerseusFK");
+}
+  }  
+  if (m == "VATDEKL") {
+    if(strin("H",daj_zS("cechy_wersji"))>-1)    {
+    () = rejop("t0:wyczyscrej");
+    () = rejop("t1:wyczyscrej");
+    () = rejop("t2:wyczyscrej");
+    ustawazmienna_D("Datado",rejwezp_d("naz:datado"));
+    ustawazmienna_D("Dataod",rejwezp_d("naz:dataod"));
+    ustawazmienna_S("ks_pocz",daj_zS("nazwa_ksieg"));
+    () = callalgfile("raporty_jpk.perseus;std/std.alg;vat/vat.alg","USTAL-DEFINIOWANIE2");
+    () = callalg("dodatkowe_jpkv7");
+   () = callalgfile("vat/vat.alg;std/std.alg;jpk_tworz_vatdekl.alg","JPK_VAT_TW");
+  () = callalgfile("raporty_jpk_view_vatdekl.sl","POKAZ-DANE");
+  if(not(daj_zS("ks_pocz")==daj_zS("nazwa_ksieg"))) finnop("close","");
+
+    }   else {
+      okalert("Generator JPK_V7X nie zosta|l zakupiony.$ W celu zapoznania si|e z warunkami zakupu $nale|zy zg|losi|c si|e do sprzedawcy systemu PerseusFK");
+}
+  }  
+//  if (dajazmienna_L("JEST_PLIK_XML")) () = exdialogop("koniecwykonywania");
+ () = exdialogop("koniecwykonywania");
+  ustawazmienna_K("D_POS",dpos);
+}
+///////////////////////////////////////////////////////////////////////////////// 
+///////////////////////////////////////////////////////////////////////////////// 
+define ustaw_dialog_JPK_KR()
+{
+  ustawazmienna_D("DataOd",rejwezp_d("NAZ:DataOd"));
+  ustawazmienna_D("DataDo",rejwezp_d("NAZ:DataDo"));
+  ustawazmienna_S("PLIK_OW","1");
+}
+
+define utworz_JPK_KR()
+{
+() = callalgfile("jpk_tworz_kr.alg","JPK_KR");
+}
+
+
+define ustaw_dialog_JPK_VAT()
+{
+  ustawazmienna_D("DataOd",rejwezp_d("NAZ:DataOd"));
+  ustawazmienna_D("DataDo",rejwezp_d("NAZ:DataDo"));
+  ustawazmienna_S("PLIK_OW","1");
+}
+
+define ustaw_dialog_JPK_VATDEKL()
+{
+  ustawazmienna_D("DataOd",rejwezp_d("NAZ:DataOd"));
+  ustawazmienna_D("DataDo",rejwezp_d("NAZ:DataDo"));
+  ustawazmienna_S("PLIK_OW","1");
+//  okalert("osfiz="+rejwezp_s("NAZ:OsobaFizyczna"));
+  if(rejwezp_s("NAZ:OsobaFizyczna")=="1") () = exdialogop("ustawmenuparam","400:RAPORT_INFO_KL1");
+  else  () = exdialogop("ustawmenuparam","400:RAPORT_INFO_KL2");
+}
+
+define utworz_JPK_VAT()
+{
+() = callalgfile("vat/vat.alg;std/std.alg;jpk_tworz_vat.alg","JPK_VAT");
+
+}
+
+define utworz_JPK_VATDEKL()
+{
+() = callalgfile("vat/vat.alg;std/std.alg;jpk_tworz_vatdekl.alg","JPK_VATDEKL");
+
+}
+
+define ustaw_dialog_JPK_PKPIR()
+{
+  ustawazmienna_D("DataOd",rejwezp_d("NAZ:DataOd"));
+  ustawazmienna_D("DataDo",rejwezp_d("NAZ:DataDo"));
+  ustawazmienna_S("PLIK_OW","1");
+}
+
+define utworz_JPK_PKPIR()
+{
+() = callalgfile("kpir/pkpir.alg;jpk_tworz_kpir.alg","JPK_PKPIR");
+}
+
+///////
+
+define ustaw_dialog_ARCHIWUM_JPK_WB()
+{
+  variable key;
+  if (not(rejop("naz:znajdzrek",dajazmienna_S("PLIK_MODUL")))) {
+    () = rejop("t1:wstawpustepola");
+  } else {
+    () = exdialogop("ustawmenuklucz","100:"+dajazmienna_S("PLIK_MODUL"));
+    key = string(rejwezp_k("naz:id_nagl"));
+    () = exdialogop("ustawmenuklucz","101:"+key);
+  }
+  () = exdialogop("ustawfiltralg","100:SL.JPK_R->filtr_wyslane");
+
+}
+
+define ustaw_dialog_ARCHIWUM_JPK_FA_F()
+{
+  variable key;
+  if (not(rejop("naz:znajdzrek",dajazmienna_S("PLIK_MODUL")))) {
+    () = rejop("t1:wstawpustepola");
+  } else {
+    () = exdialogop("ustawmenuklucz","100:"+dajazmienna_S("PLIK_MODUL"));
+    key = string(rejwezp_k("naz:id_nagl"));
+    () = exdialogop("ustawmenuklucz","101:"+key);
+  }
+  () = exdialogop("ustawfiltralg","100:SL.JPK_R->filtr_wyslane");
+
+}
+
+define ustaw_dialog_ARCHIWUM_JPK_KR()
+{
+  variable key;
+//  okalert("plik_modul="+dajazmienna_S("PLIK_MODUL"));
+  () = rejop("t0:wezpierwszyrek");
+  () = exdialogop("UstawMenuParam","101:ARCH_KR_T0,T0,JEDENKLUCZ,11");
+  if (not(rejop("naz:znajdzrek",dajazmienna_S("PLIK_MODUL")))) {
+    () = rejop("t0:wstawpustepola");
+    () = rejop("t1:wstawpustepola");
+    () = rejop("dz:wstawpustepola");
+  } else {
+    () = exdialogop("ustawmenuklucz","100:"+dajazmienna_S("PLIK_MODUL"));
+    key = string(rejwezp_k("naz:id_nagl"));
+    () = exdialogop("ustawmenuklucz","101:"+key);
+  }
+  () = exdialogop("ustawfiltralg","100:SL.JPK_R->filtr_wyslane");
+}
+
+define ustaw_dialog_ARCHIWUM_JPK_PKPIR()
+{
+  variable key;
+  () = rejop("t0:wezpierwszyrek");
+  () = exdialogop("UstawMenuParam","101:ARCH_PKPIR_T0,T0,JEDENKLUCZ,11");
+  if (not(rejop("naz:znajdzrek",dajazmienna_S("PLIK_MODUL")))) {
+  () = rejop("t0:wstawpustepola");
+    () = rejop("t1:wstawpustepola");
+  } else {
+    () = exdialogop("ustawmenuklucz","100:"+dajazmienna_S("PLIK_MODUL"));
+    key = string(rejwezp_k("naz:id_nagl"));
+    () = exdialogop("ustawmenuklucz","101:"+key);
+  }
+  () = exdialogop("ustawfiltralg","100:SL.JPK_R->filtr_wyslane");
+}
+
+define ustaw_dialog_ARCHIWUM_JPK_WB_linia()
+{
+  variable key;
+  key = string(rejwezp_k("naz:id_nagl"));
+  () = exdialogop("ustawmenuklucz","101:"+key);
+  () = exdialogop("wyswietlpozycje","101");
+}
+define ustaw_dialog_ARCHIWUM_JPK_FA_F_linia()
+{
+  variable key;
+  key = string(rejwezp_k("naz:id_nagl"));
+  () = exdialogop("ustawmenuklucz","101:"+key);
+  () = exdialogop("wyswietlpozycje","101");
+}
+
+define ustaw_dialog_ARCHIWUM_JPK_KR_linia()
+{
+  variable key;
+  key = string(rejwezp_k("naz:id_nagl"));
+  () = exdialogop("ustawmenuklucz","101:"+key);
+  () = exdialogop("wyswietlpozycje","101");
+}
+define ustaw_obr()
+{
+  variable key;
+ () = rejop("t0:wezpierwszyrek");
+  () = exdialogop("UstawMenuParam","101:ARCH_KR_T0,T0,JEDENKLUCZ,11");
+  key = string(rejwezp_k("naz:id_nagl"));
+  () = exdialogop("ustawmenuklucz","101:"+key);
+  () = exdialogop("wyswietlpozycje","101");
+}
+define ustaw_dz()
+{
+  variable key;
+ () = rejop("t1:wezpierwszyrek");
+  () = exdialogop("UstawMenuParam","101:ARCH_KR_T1,T1,JEDENKLUCZ,11");
+  key = string(rejwezp_k("naz:id_nagl"));
+  () = exdialogop("ustawmenuklucz","101:"+key);
+  () = exdialogop("wyswietlpozycje","101");
+}
+define ustaw_zap()
+{
+  variable key;
+ () = rejop("dz:wezpierwszyrek");
+  () = exdialogop("UstawMenuParam","101:ARCH_KR_DZ,DZ,JEDENKLUCZ,11");
+  key = string(rejwezp_k("naz:id_nagl"));
+  () = exdialogop("ustawmenuklucz","101:"+key);
+  () = exdialogop("wyswietlpozycje","101");
+}
+
+define ustaw_dialog_ARCHIWUM_JPK_VAT()
+{
+  variable key;
+//  okalert("plik_modul="+dajazmienna_S("PLIK_MODUL"));
+ustaw_zK("lpks",0);
+ustaw_zK("lpkz",0);
+ustaw_zK("suma_s",0);
+ustaw_zK("suma_z",0);
+if(dajazmienna_S("PLIK_MODUL") == "JPK_VAT") () = callalg("ustal_zmienne_vat");
+if(dajazmienna_S("PLIK_MODUL") == "JPK_VATDEKL") () = callalg("ustal_zmienne_vatdekl");
+  () = rejop("t0:wezpierwszyrek");
+if(dajazmienna_S("PLIK_MODUL") == "JPK_VAT")  () = exdialogop("UstawMenuParam","101:ARCH_VAT_T0,T0,JEDENKLUCZ,11");
+if(dajazmienna_S("PLIK_MODUL") == "JPK_VATDEKL")  () = exdialogop("UstawMenuParam","101:ARCH_VATDEKL_T0,T0,JEDENKLUCZ,11");
+  if (not(rejop("naz:znajdzrek",dajazmienna_S("PLIK_MODUL")))) {
+    () = rejop("t0:wstawpustepola");
+    () = rejop("t1:wstawpustepola");
+  } else {
+    () = exdialogop("ustawmenuklucz","100:"+dajazmienna_S("PLIK_MODUL"));
+    key = string(rejwezp_k("naz:id_nagl"));
+//	okalert("keyxx="+key);
+    () = exdialogop("ustawmenuklucz","101:"+key);
+  }
+  () = exdialogop("ustawfiltralg","100:SL.JPK_R->filtr_wyslane");
+  () = exdialogop("ustawfiltralg","101:wybierz_spr");
+}
+define ustaw_dialog_ARCHIWUM_JPK_VAT_linia()
+{
+  variable key;
+  key = string(rejwezp_k("naz:id_nagl"));
+  if(dajazmienna_S("PLIK_MODUL") == "JPK_VAT")  () = callalg("ustal_zmienne_vat");
+  if(dajazmienna_S("PLIK_MODUL") == "JPK_VATDEKL")  () = callalg("ustal_zmienne_vatdekl");
+  () = exdialogop("ustawmenuklucz","101:"+key);
+  () = exdialogop("wyswietlpozycje","101");
+  () = exdialogop("wyswietlpozycje","21");
+  () = exdialogop("wyswietlpozycje","22");
+  () = exdialogop("wyswietlpozycje","23");
+  () = exdialogop("wyswietlpozycje","24");
+}
+
+define ustaw_spr()
+{
+  variable key;
+ () = rejop("t0:wezpierwszyrek");
+  if(dajazmienna_S("PLIK_MODUL") == "JPK_VAT") () = exdialogop("UstawMenuParam","101:ARCH_VAT_T0,T0,JEDENKLUCZ,11");
+  if(dajazmienna_S("PLIK_MODUL") == "JPK_VATDEKL") () = exdialogop("UstawMenuParam","101:ARCH_VATDEKL_T0,T0,JEDENKLUCZ,11");
+  key = string(rejwezp_k("naz:id_nagl"));
+  () = exdialogop("ustawmenuklucz","101:"+key);
+  () = exdialogop("ustawfiltralg","101:wybierz_spr");
+  () = exdialogop("wyswietlpozycje","101");
+}
+define ustaw_zak()
+{
+  variable key;
+ () = rejop("t0:wezpierwszyrek");
+  if(dajazmienna_S("PLIK_MODUL") == "JPK_VAT") () = exdialogop("UstawMenuParam","101:ARCH_VAT_T1,T0,JEDENKLUCZ,11");
+  if(dajazmienna_S("PLIK_MODUL") == "JPK_VATDEKL") () = exdialogop("UstawMenuParam","101:ARCH_VATDEKL_T1,T0,JEDENKLUCZ,11");
+  key = string(rejwezp_k("naz:id_nagl"));
+  () = exdialogop("ustawmenuklucz","101:"+key);
+  () = exdialogop("ustawfiltralg","101:wybierz_zak");
+  () = exdialogop("wyswietlpozycje","101");
+}
+  
+define ustaw_dialog_ARCHIWUM_JPK_PKPIR_linia()
+{
+  variable key;
+  key = string(rejwezp_k("naz:id_nagl"));
+  () = exdialogop("ustawmenuklucz","101:"+key);
+  () = exdialogop("wyswietlpozycje","101");
+}
+define ustaw_spis()
+{
+  variable key;
+ () = rejop("t0:wezpierwszyrek");
+  () = exdialogop("UstawMenuParam","101:ARCH_PKPIR_T0,T0,JEDENKLUCZ,11");
+  key = string(rejwezp_k("naz:id_nagl"));
+  () = exdialogop("ustawmenuklucz","101:"+key);
+  () = exdialogop("wyswietlpozycje","101");
+}
+define ustaw_zapis()
+{
+  variable key;
+ () = rejop("t1:wezpierwszyrek");
+  () = exdialogop("UstawMenuParam","101:ARCH_PKPIR_T1,T1,JEDENKLUCZ,11");
+  key = string(rejwezp_k("naz:id_nagl"));
+  () = exdialogop("ustawmenuklucz","101:"+key);
+  () = exdialogop("wyswietlpozycje","101");
+}
+/////////////////////////////// DS
+define drukuj_jpk_vat_sprawdz_nip(i)
+{
+ variable t=dajazmienna_S("PLIK_MODUL");
+ variable v = "";
+ variable vv = "";
+ if (strin("VATDEKL",t) > -1) v = "dekl";
+ if (not(v == "")) vv = "DEKL";
+ if (i) {
+  () = callalgfile("raporty_jpk_view_vat"+v+".sl","SL.V_JPK_VAT"+vv+"->drukuj_jpk_vat_sprawdz_nip_s");
+ } else {
+  () = callalgfile("raporty_jpk_view_vat"+v+".sl","SL.V_JPK_VAT"+vv+"->drukuj_jpk_vat_sprawdz_nip_z");
+ }
+}
+//
+define drukuj_jpkvat()
+{
+variable key, a;
+//przepisanie danych do rejestrow pomocniczych
+() = rejop("tj0:otworzrejtemp","JPK_VAT.RXR");
+() = rejop("tj1:otworzrejtemp","JPK_VAT.RXR");
+() = rejop("t0:zmienkluczrej","11");
+  key = string(rejwezp_k("naz:id_nagl"));
+if (rejop("t0:znajdzrek",key))
+ {
+ do
+   {
+   if(not(rejwezp_k("t0:iID") == rejwezp_k("naz:id_nagl"))) break;
+   if(not(rejwezp_s("t0:nrdokumentu")=="")) 
+    {
+    () = rejop("tj0:dodajrek");
+    () = rejop("t0:przeniespola","tj0:");
+    () = rejop("tj0:zapiszrek");
+     }
+   if(not(rejwezp_s("t0:nrfaktury")==""))
+    {
+    () = rejop("tj1:dodajrek");
+    () = rejop("t0:przeniespola","tj1:");
+    () = rejop("tj1:zapiszrek");
+     }
+  } while (rejop("t0:weznastepnyrekn"));
+ }
+() = rejop("t0:wezpierwszyrek");
+ustaw_zS("jpk_r0","tj0:");
+ustaw_zS("jpk_r1","tj1:");
+() = callalgfile("raporty_jpk_view_vat.sl","DRUKUJ-VAT");
+() = rejop("tj0:zamknijrej");
+() = rejop("tj1:zamknijrej");
+  }
+
+define drukuj_jpkvatdekl()
+{
+variable key, a;
+//przepisanie danych do rejestrow pomocniczych
+() = rejop("tj0:otworzrejtemp","JPK_VATE.RXR");
+() = rejop("tj1:otworzrejtemp","JPK_VATE.RXR");
+() = rejop("t0:zmienkluczrej","11");
+  key = string(rejwezp_k("naz:id_nagl"));
+if (rejop("t0:znajdzrek",key))
+ {
+ do
+   {
+   if(not(rejwezp_k("t0:iID") == rejwezp_k("naz:id_nagl"))) break;
+   if(not(rejwezp_s("t0:DowodSprzedazy")=="")) 
+    {
+    () = rejop("tj0:dodajrek");
+    () = rejop("t0:przeniespola","tj0:");
+    () = rejop("tj0:zapiszrek");
+     }
+   if(not(rejwezp_s("t0:DowodZakupu")==""))
+    {
+    () = rejop("tj1:dodajrek");
+    () = rejop("t0:przeniespola","tj1:");
+    () = rejop("tj1:zapiszrek");
+     }
+  } while (rejop("t0:weznastepnyrekn"));
+ }
+() = rejop("t0:wezpierwszyrek");
+ustaw_zS("jpk_r0","tj0:");
+ustaw_zS("jpk_r1","tj1:");
+() = callalgfile("raporty_jpk_view_vatdekl.sl","DRUKUJ-VATDEKL");
+() = rejop("tj0:zamknijrej");
+() = rejop("tj1:zamknijrej");
+  }
+
+define drukuj_jpkvatxx()
+{
+ if(dajazmienna_S("PLIK_MODUL") == "JPK_VAT") drukuj_jpkvat;
+ if(dajazmienna_S("PLIK_MODUL") == "JPK_VATDEKL") drukuj_jpkvatdekl;
+}
+
+define drukuj_formularz_dekl()
+{
+variable key, a;
+//przepisanie danych do rejestrow pomocniczych
+() = rejop("tj2:otworzrejtemp","JPK_VATD.RXR");
+() = rejop("t2:zmienkluczrej","11");
+  key = string(rejwezp_k("naz:id_nagl"));
+if (rejop("t2:znajdzrek",key))
+ {
+ do
+   {
+   if(not(rejwezp_k("t2:iID") == rejwezp_k("naz:id_nagl"))) break;
+    () = rejop("tj2:dodajrek");
+    () = rejop("t2:przeniespola","tj2:");
+    () = rejop("tj2:zapiszrek");
+  } while (rejop("t2:weznastepnyrekn"));
+ }
+() = rejop("t2:wezpierwszyrek");
+ustaw_zS("jpk_r2","tj2:");
+() = callalgfile("raporty_jpk_view_vatdekl.sl","DRUKUJ-DEKLARACJE_VAT");
+() = rejop("tj2:zamknijrej");
+}

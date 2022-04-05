@@ -1,0 +1,32 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// Perseus Spolka z o.o 
+// Wszystkie prawa zastrzezone
+// 
+// Data utworzenia: 2001.09.01
+// Historia zmian
+// Data:2001.09.12
+//   Zmieniono .....
+// ============================================================
+// plik do inkludowania rozwiazan niestandardowych dla indywidualnych odbiorcow
+// (zmiany funkcji standardowych - dopisywane w pliku 99)
+// ============================================================
+//%<<<200
+% MENU-WLASNE.XXX
+*22,"W|lasne"
+11310," Hurtownia danych do JPK_VAT"
+*11310,"",,S
+11308," Odczyt danych z JPK"
+11311," Odczyt danych z OPERY"
+11309," Rejestr danych"
+
+% 11308.scn
+ALGOFILE= import_vat.alg;vat/vat.alg;std/std.alg,odczytaj_jpk_fa
+
+% 11309.scn
+ALGOFILE=import_vat.alg;vat\vat.alg,zobacz_rejestr_faktur_out
+
+% 11311.scn
+ALGOFILE=wspolne/wspolnefunkcje.sl;import_vat.alg;vat/vat.alg;std/std.alg;optima.sl,URUCHOM_OPERA_IMPORT
+
